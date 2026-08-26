@@ -1,49 +1,246 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - code</title>
+    <title>@ViewData["Title"] - QL Nhập Hàng & AHP</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/code.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">code</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "nhanvien";
+        var username = User.Identity.Name ?? "Người dùng";
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div>
+                    <div class="sidebar-title">QL NHẬP HÀNG</div>
+                    <div class="sidebar-subtitle">& Lựa chọn NCC (AHP)</div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - code - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <nav class="sidebar-nav">
+                <!-- Tổng quan -->
+                <div class="sidebar-group">
+                    <div class="sidebar-group-label">Tổng quan</div>
+                    <a asp-controller="Home" asp-action="Index"
+                       class="sidebar-link @(currentController == "Home" ? "active" : "")">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Danh mục & Hàng hóa -->
+                <div class="sidebar-group">
+                    <div class="sidebar-group-label">Danh mục & Hàng hóa</div>
+                    <a asp-controller="SanPham" asp-action="Index"
+                       class="sidebar-link @(currentController == "SanPham" ? "active" : "")">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Sản phẩm</span>
+                    </a>
+                    <a asp-controller="DanhMuc" asp-action="Index"
+                       class="sidebar-link @(currentController == "DanhMuc" ? "active" : "")">
+                        <i class="bi bi-tags"></i>
+                        <span>Danh mục</span>
+                    </a>
+                    <a asp-controller="DonViTinh" asp-action="Index"
+                       class="sidebar-link @(currentController == "DonViTinh" ? "active" : "")">
+                        <i class="bi bi-rulers"></i>
+                        <span>Đơn vị tính</span>
+                    </a>
+                    <a asp-controller="NhaCungCap" asp-action="Index"
+                       class="sidebar-link @(currentController == "NhaCungCap" ? "active" : "")">
+                        <i class="bi bi-building"></i>
+                        <span>Nhà cung cấp</span>
+                    </a>
+                </div>
+
+                <!-- Nhập hàng & Kho -->
+                <div class="sidebar-group">
+                    <div class="sidebar-group-label">Nhập hàng & Kho</div>
+                    <a asp-controller="PhieuNhap" asp-action="Index"
+                       class="sidebar-link @(currentController == "PhieuNhap" ? "active" : "")">
+                        <i class="bi bi-receipt"></i>
+                        <span>Phiếu nhập hàng</span>
+                    </a>
+                    <a asp-controller="TonKho" asp-action="Index"
+                       class="sidebar-link @(currentController == "TonKho" ? "active" : "")">
+                        <i class="bi bi-boxes"></i>
+                        <span>Quản lý tồn kho</span>
+                    </a>
+                    <a asp-controller="LichSuNhapHang" asp-action="Index"
+                       class="sidebar-link @(currentController == "LichSuNhapHang" ? "active" : "")">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Lịch sử biến động</span>
+                    </a>
+                </div>
+
+                <!-- Đánh giá AHP -->
+                @if (role == "admin" || role == "quanly")
+                {
+                    <div class="sidebar-group">
+                        <div class="sidebar-group-label">Đánh giá AHP</div>
+                        <a asp-controller="AHP" asp-action="Index"
+                           class="sidebar-link @(currentController == "AHP" && currentAction == "Index" ? "active" : "")">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Kỳ đánh giá</span>
+                        </a>
+                        <a asp-controller="AHP" asp-action="MaTranSoSanh"
+                           class="sidebar-link @(currentController == "AHP" && currentAction == "MaTranSoSanh" ? "active" : "")">
+                            <i class="bi bi-grid-3x3"></i>
+                            <span>Ma trận so sánh</span>
+                        </a>
+                        <a asp-controller="AHP" asp-action="ChamDiemNCC"
+                           class="sidebar-link @(currentController == "AHP" && currentAction == "ChamDiemNCC" ? "active" : "")">
+                            <i class="bi bi-star"></i>
+                            <span>Chấm điểm NCC</span>
+                        </a>
+                        <a asp-controller="AHP" asp-action="KetQuaXepHang"
+                           class="sidebar-link @(currentController == "AHP" && (currentAction == "KetQuaXepHang" || currentAction == "KetQuaTrongSo") ? "active" : "")">
+                            <i class="bi bi-trophy"></i>
+                            <span>Xếp hạng & Đề xuất</span>
+                        </a>
+                    </div>
+                }
+
+                <!-- Quản trị -->
+                @if (role == "admin")
+                {
+                    <div class="sidebar-group">
+                        <div class="sidebar-group-label">Quản trị hệ thống</div>
+                        <a asp-controller="NguoiDung" asp-action="Index"
+                           class="sidebar-link @(currentController == "NguoiDung" ? "active" : "")">
+                            <i class="bi bi-people"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                    </div>
+                }
+            </nav>
+
+            <!-- Sidebar Footer: User Info -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">
+                        @(username.Length > 0 ? username[0].ToString().ToUpper() : "U")
+                    </div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">@username</div>
+                        <div class="sidebar-user-role">
+                            @if (role == "admin")
+                            {
+                                <span>Quản trị viên</span>
+                            }
+                            else if (role == "quanly")
+                            {
+                                <span>Quản lý</span>
+                            }
+                            else
+                            {
+                                <span>Nhân viên</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- TOP HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="header-breadcrumb d-none d-md-block">
+                    <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                    @if (!string.IsNullOrEmpty(ViewData["Title"]?.ToString()) && currentController != "Home")
+                    {
+                        <span class="separator">/</span>
+                        <span class="current">@ViewData["Title"]</span>
+                    }
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="header-user-info">
+                    <i class="bi bi-person-circle" style="color: var(--gray-400);"></i>
+                    <span class="user-name">@username</span>
+                    @if (role == "admin")
+                    {
+                        <span class="user-role-badge badge-admin">Admin</span>
+                    }
+                    else if (role == "quanly")
+                    {
+                        <span class="user-role-badge badge-quanly">Quản lý</span>
+                    }
+                    else
+                    {
+                        <span class="user-role-badge badge-nhanvien">Nhân viên</span>
+                    }
+                </div>
+                <a asp-controller="Account" asp-action="Logout" class="btn-header-logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="d-none d-sm-inline">Đăng xuất</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <main role="main">
+                @RenderBody()
+            </main>
+
+            <footer class="page-footer">
+                &copy; 2026 - Hệ thống Quản lý Nhập hàng & Lựa chọn NCC bằng AHP | Phiên bản 1.0
+            </footer>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        <script>
+            function toggleSidebar() {
+                document.getElementById('sidebar').classList.toggle('show');
+                document.getElementById('sidebarOverlay').classList.toggle('show');
+            }
+
+            // Close sidebar on overlay click (already handled by onclick)
+            // Close sidebar when navigating on mobile
+            document.querySelectorAll('.sidebar-link').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        document.getElementById('sidebar').classList.remove('show');
+                        document.getElementById('sidebarOverlay').classList.remove('show');
+                    }
+                });
+            });
+        </script>
+        @await RenderSectionAsync("Scripts", required: false)
+    }
+    else
+    {
+        <!-- Unauthenticated: simple layout (Login page uses Layout = null, but just in case) -->
+        <div class="container py-5">
+            @RenderBody()
+        </div>
+
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    }
 </body>
 </html>

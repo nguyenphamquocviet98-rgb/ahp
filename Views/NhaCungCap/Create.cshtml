@@ -1,0 +1,73 @@
+@model code.Models.NhaCungCap
+@{
+    ViewData["Title"] = "Thêm nhà cung cấp mới";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <div class="d-flex align-items-center mb-3">
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h4 class="fw-bold text-dark mb-0">Thêm Nhà Cung Cấp Mới</h4>
+            </div>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="MaNhaCungCapCode" class="form-label fw-semibold">Mã NCC (Code)</label>
+                        <input asp-for="MaNhaCungCapCode" class="form-control rounded-3 font-monospace text-uppercase" placeholder="Ví dụ: NCC004" maxlength="20" />
+                        <span asp-validation-for="MaNhaCungCapCode" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="TenNhaCungCap" class="form-label fw-semibold">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                        <input asp-for="TenNhaCungCap" class="form-control rounded-3" placeholder="Nhập tên công ty / nhà phân phối..." required maxlength="100" />
+                        <span asp-validation-for="TenNhaCungCap" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="NguoiLienHe" class="form-label fw-semibold">Người liên hệ</label>
+                        <input asp-for="NguoiLienHe" class="form-control rounded-3" placeholder="Họ và tên..." maxlength="50" />
+                        <span asp-validation-for="NguoiLienHe" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                        <input asp-for="SoDienThoai" class="form-control rounded-3" placeholder="0901234567" maxlength="15" />
+                        <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                        <input asp-for="Email" type="email" class="form-control rounded-3" placeholder="contact@domain.com" maxlength="50" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DiaChi" class="form-label fw-semibold">Địa chỉ</label>
+                    <input asp-for="DiaChi" class="form-control rounded-3" placeholder="Địa chỉ trụ sở / kho hàng..." maxlength="150" />
+                    <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold d-block">Trạng thái hợp tác</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
+                            <label class="form-check-label" for="chkTrangThai">Đang hợp tác</label>
+                        </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light rounded-3 px-4">Hủy</a>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">
+                        <i class="bi bi-check-lg me-1"></i> Lưu nhà cung cấp
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

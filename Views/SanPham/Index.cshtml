@@ -1,0 +1,192 @@
+@model IEnumerable<code.Models.SanPham>
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+    var search = ViewData["Search"] as string;
+    var selectedDanhMuc = ViewData["SelectedDanhMuc"] as int?;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-left">
+        <h3><i class="bi bi-box-seam" style="color: var(--primary);"></i> Danh sách Sản phẩm</h3>
+        <p>Quản lý toàn bộ danh mục hàng hóa, đơn vị tính, đơn giá mặc định và tồn kho</p>
+    </div>
+    <div>
+        @if (isManagerOrAdmin)
+        {
+            <a asp-action="Create" class="btn btn-custom btn-custom-primary">
+                <i class="bi bi-plus-circle"></i> Thêm sản phẩm mới
+            </a>
+        }
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3" role="alert">
+        <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Bộ lọc & Tìm kiếm -->
+<div class="search-bar mb-4">
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center flex-wrap w-100">
+        <div class="input-group" style="flex: 1; min-width: 200px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm theo tên hoặc mã sản phẩm..." />
+        </div>
+        <select name="maDanhMuc" class="form-select" style="max-width: 220px;" asp-items="ViewBag.DanhMucs">
+            <option value="">-- Tất cả danh mục --</option>
+        </select>
+        <button type="submit" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-funnel"></i> Lọc
+        </button>
+        @if (!string.IsNullOrEmpty(search) || selectedDanhMuc.HasValue)
+        {
+            <a asp-action="Index" class="btn btn-custom btn-custom-outline" title="Đặt lại">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+        }
+    </form>
+</div>
+
+<!-- Bảng danh sách sản phẩm -->
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Mã SP</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>ĐVT</th>
+                    <th class="text-end">Giá mặc định</th>
+                    <th class="text-center" style="width: 100px;">Tồn kho</th>
+                    <th class="text-center" style="width: 120px;">Trạng thái</th>
+                    <th class="text-end" style="width: 140px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        var ton = item.TonKho?.SoLuongTon ?? 0;
+                        <tr>
+                            <td>
+                                <span class="code-badge">@(item.MaSanPhamCode ?? $"SP{item.MaSanPham:D3}")</span>
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.MaSanPham" class="fw-semibold" style="color: var(--gray-800);">
+                                    @item.TenSanPham
+                                </a>
+                            </td>
+                            <td>
+                                <span class="status-badge status-badge-secondary">
+                                    @(item.DanhMuc?.TenDanhMuc ?? "Chưa phân loại")
+                                </span>
+                            </td>
+                            <td>@(item.DonViTinh?.TenDonVi ?? "-")</td>
+                            <td class="text-end fw-semibold">
+                                @((item.GiaMacDinh ?? 0).ToString("N0")) đ
+                            </td>
+                            <td class="text-center">
+                                @if (ton < 20)
+                                {
+                                    <span class="status-badge status-badge-danger" title="Tồn kho thấp">@ton</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-success">@ton</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrangThai == true)
+                                {
+                                    <span class="status-badge status-badge-success">Đang kinh doanh</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-secondary">Ngừng bán</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="action-btn-group">
+                                    <a asp-action="Details" asp-route-id="@item.MaSanPham" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (isManagerOrAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.MaSanPham" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa"
+                                                onclick="confirmDelete(@item.MaSanPham, '@item.TenSanPham')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>Không tìm thấy sản phẩm nào.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: var(--danger);">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa sản phẩm
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Bạn có chắc chắn muốn xóa sản phẩm: <strong id="deleteProductName"></strong>?</p>
+                <small style="color: var(--gray-500);">Nếu sản phẩm đã phát sinh phiếu nhập, hệ thống sẽ chặn xóa để bảo đảm toàn vẹn dữ liệu.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" asp-action="Delete">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteProductId" />
+                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            document.getElementById('deleteProductId').value = id;
+            document.getElementById('deleteProductName').innerText = name;
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+    </script>
+}

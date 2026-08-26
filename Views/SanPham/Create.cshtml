@@ -1,0 +1,78 @@
+@model code.Models.SanPham
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card-custom">
+            <div class="card-body-custom">
+                <div class="d-flex align-items-center mb-4">
+                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" title="Quay lại" style="padding: 6px 10px;">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Thêm Sản Phẩm Mới</h4>
+                </div>
+
+                <form asp-action="Create" method="post" class="form-custom">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="MaSanPhamCode" class="form-label">Mã sản phẩm (Code)</label>
+                            <input asp-for="MaSanPhamCode" class="form-control font-mono text-uppercase" placeholder="Ví dụ: SP007" maxlength="20" />
+                            <span asp-validation-for="MaSanPhamCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="TenSanPham" class="form-label">Tên sản phẩm <span style="color: var(--danger);">*</span></label>
+                            <input asp-for="TenSanPham" class="form-control" placeholder="Nhập tên sản phẩm..." required maxlength="100" />
+                            <span asp-validation-for="TenSanPham" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="MaDanhMuc" class="form-label">Danh mục hàng hóa</label>
+                            <select asp-for="MaDanhMuc" class="form-select" asp-items="ViewBag.DanhMucs">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <span asp-validation-for="MaDanhMuc" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MaDonViTinh" class="form-label">Đơn vị tính</label>
+                            <select asp-for="MaDonViTinh" class="form-select" asp-items="ViewBag.DonViTinhs">
+                                <option value="">-- Chọn đơn vị tính --</option>
+                            </select>
+                            <span asp-validation-for="MaDonViTinh" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="GiaMacDinh" class="form-label">Giá mặc định (VNĐ)</label>
+                            <div class="input-group">
+                                <input asp-for="GiaMacDinh" type="number" step="1000" min="0" class="form-control" placeholder="Ví dụ: 150000" />
+                                <span class="input-group-text">đ</span>
+                            </div>
+                            <span asp-validation-for="GiaMacDinh" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Trạng thái kinh doanh</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
+                                <label class="form-check-label" for="chkTrangThai">Đang hoạt động / Kinh doanh</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> Lưu sản phẩm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

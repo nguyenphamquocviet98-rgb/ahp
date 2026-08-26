@@ -1,0 +1,53 @@
+@model code.Models.NguoiDung
+@{
+    ViewData["Title"] = "Thêm người dùng mới";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card-custom">
+            <div class="card-body-custom">
+                <div class="d-flex align-items-center mb-4">
+                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;"><i class="bi bi-arrow-left"></i></a>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Thêm Tài Khoản Người Dùng Mới</h4>
+                        <small style="color: var(--gray-500);">Cấp quyền truy cập hệ thống theo đúng vai trò</small>
+                    </div>
+                </div>
+
+                <form asp-action="Create" method="post" class="form-custom">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="TenDangNhap" class="form-label">Tên đăng nhập <span style="color: var(--danger);">*</span></label>
+                        <input asp-for="TenDangNhap" class="form-control font-mono" placeholder="Ví dụ: nhanvien2, ketoan1..." required maxlength="30" />
+                        <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MatKhau" class="form-label">Mật khẩu khởi tạo <span style="color: var(--danger);">*</span></label>
+                        <input asp-for="MatKhau" type="password" class="form-control" placeholder="Nhập mật khẩu..." required maxlength="100" />
+                        <span asp-validation-for="MatKhau" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="VaiTro" class="form-label">Phân quyền vai trò <span style="color: var(--danger);">*</span></label>
+                        <select asp-for="VaiTro" class="form-select">
+                            <option value="nhanvien">Nhân viên (nhanvien) - Nhập hàng, xem dữ liệu</option>
+                            <option value="quanly">Quản lý (quanly) - Quản lý hàng hóa, thực hiện AHP</option>
+                            <option value="admin">Quản trị viên (admin) - Toàn quyền hệ thống</option>
+                        </select>
+                        <span asp-validation-for="VaiTro" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary px-4">
+                            <i class="bi bi-person-plus me-1"></i> Tạo tài khoản
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

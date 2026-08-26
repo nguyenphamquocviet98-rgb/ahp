@@ -1,0 +1,62 @@
+@model code.Models.NguoiDung
+@{
+    ViewData["Title"] = "Chỉnh sửa người dùng - " + Model.TenDangNhap;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card-custom">
+            <div class="card-body-custom">
+                <div class="d-flex align-items-center mb-4">
+                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;"><i class="bi bi-arrow-left"></i></a>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Chỉnh Sửa Tài Khoản: @Model.TenDangNhap</h4>
+                        <span class="code-badge mt-1 d-inline-block">ID: #@Model.MaNguoiDung</span>
+                    </div>
+                </div>
+
+                <form asp-action="Edit" asp-route-id="@Model.MaNguoiDung" method="post" class="form-custom">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="MaNguoiDung" />
+                    <input type="hidden" asp-for="TenDangNhap" />
+                    <input type="hidden" asp-for="MatKhau" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input class="form-control font-mono" value="@Model.TenDangNhap" readonly style="background: var(--gray-50);" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Đổi mật khẩu mới (Bỏ trống nếu không đổi)</label>
+                        <input name="newPassword" id="newPassword" type="password" class="form-control" placeholder="Nhập mật khẩu mới..." maxlength="100" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="VaiTro" class="form-label">Phân quyền vai trò <span style="color: var(--danger);">*</span></label>
+                        <select asp-for="VaiTro" class="form-select">
+                            <option value="nhanvien" selected="@(Model.VaiTro == "nhanvien")">Nhân viên (nhanvien)</option>
+                            <option value="quanly" selected="@(Model.VaiTro == "quanly")">Quản lý (quanly)</option>
+                            <option value="admin" selected="@(Model.VaiTro == "admin")">Quản trị viên (admin)</option>
+                        </select>
+                        <span asp-validation-for="VaiTro" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-block">Trạng thái tài khoản</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="TrangThai" id="chkActive" value="true" @(Model.TrangThai == true ? "checked" : "")>
+                            <label class="form-check-label" for="chkActive">Đang hoạt động</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> Cập nhật tài khoản
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

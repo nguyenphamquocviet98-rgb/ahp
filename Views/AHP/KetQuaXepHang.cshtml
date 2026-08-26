@@ -1,0 +1,180 @@
+@model code.Models.ViewModels.KetQuaXepHangViewModel
+@{
+    ViewData["Title"] = "Kết quả xếp hạng & Đề xuất Nhà cung cấp - " + Model.TenKyDanhGia;
+    var deXuat = Model.NhaCungCapDeXuat?.NhaCungCap;
+    var tieuChis = Model.DanhSachTieuChi;
+    var trongSoMap = Model.TrongSos.ToDictionary(t => t.MaTieuChi ?? 0, t => t.TrongSo ?? 0);
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-11 col-md-12">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Thanh điều hướng -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center">
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại danh sách kỳ">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold text-dark mb-0 d-flex align-items-center">
+                            <i class="bi bi-trophy text-warning me-2"></i>Bảng Xếp Hạng & Đề Xuất Nhà Cung Cấp
+                        </h4>
+                        <span class="text-primary fw-semibold small">Kỳ đánh giá: @Model.TenKyDanhGia</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> In báo cáo AHP
+                    </button>
+                    <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-outline-primary btn-sm rounded-3">
+                        <i class="bi bi-pencil me-1"></i> Chấm điểm lại
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banner Vinh Danh NCC Đề Xuất Hạng 1 -->
+        @if (Model.NhaCungCapDeXuat != null && deXuat != null)
+        {
+            <div class="card border-0 shadow rounded-4 text-white p-4 mb-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-1 me-2 shadow-sm">
+                                <i class="bi bi-star-fill me-1"></i> HẠNG 1 - ĐƯỢC ĐỀ XUẤT NHẬP HÀNG
+                            </span>
+                            <span class="text-white-50 small">Thuật toán AHP + Weighted Sum Model</span>
+                        </div>
+                        <h2 class="fw-bold mb-2">@deXuat.TenNhaCungCap</h2>
+                        <p class="mb-3 text-light opacity-75 small">
+                            Mã: <strong>@(deXuat.MaNhaCungCapCode ?? $"NCC{deXuat.MaNhaCungCap:D3}")</strong> |
+                            Người LH: <strong>@(deXuat.NguoiLienHe ?? "—")</strong> |
+                            SĐT: <strong>@(deXuat.SoDienThoai ?? "—")</strong> |
+                            Địa chỉ: <strong>@(deXuat.DiaChi ?? "—")</strong>
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-warning text-dark fw-bold rounded-3 px-4 shadow-sm">
+                                <i class="bi bi-cart-plus me-1"></i> Tạo Phiếu Nhập Hàng Từ Đối Tác Này
+                            </a>
+                            <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@deXuat.MaNhaCungCap" class="btn btn-outline-light rounded-3 px-3">
+                                <i class="bi bi-building me-1"></i> Xem Hồ Sơ Đối Tác
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end text-center mt-3 mt-md-0">
+                        <div class="d-inline-block bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-25 text-center">
+                            <span class="text-uppercase small fw-semibold text-warning d-block">Điểm tổng hợp WSM</span>
+                            <h1 class="display-4 fw-bold mb-0 text-white font-monospace">
+                                @(Model.NhaCungCapDeXuat.DiemTong?.ToString("0.00") ?? "0.00")
+                            </h1>
+                            <small class="text-light opacity-75">Thang điểm 9.00</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Bảng Xếp Hạng Toàn Diện -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-list-ol text-primary me-2"></i>Bảng Tổng Hợp Điểm Số & Thứ Hạng Đối Tác
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle text-center mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 80px;">Thứ hạng</th>
+                            <th class="text-start" style="min-width: 220px;">Nhà cung cấp</th>
+                            @foreach (var tc in tieuChis)
+                            {
+                                decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
+                                <th>
+                                    <div class="fw-bold text-dark">@tc.TenTieuChi</div>
+                                    <small class="text-muted">W: @w.ToString("0.000")</small>
+                                </th>
+                            }
+                            <th class="bg-primary-subtle text-primary fw-bold" style="width: 150px;">Điểm tổng hợp (WSM)</th>
+                            <th style="width: 150px;">Đề xuất</th>
+                            <th style="width: 110px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.BangXepHang)
+                        {
+                            var ncc = item.NhaCungCap;
+                            int nccId = item.MaNhaCungCap ?? 0;
+                            bool isTop1 = item.XepHang == 1;
+
+                            <tr class="@(isTop1 ? "table-warning bg-opacity-25" : "")">
+                                <td>
+                                    @if (isTop1)
+                                    {
+                                        <span class="badge bg-warning text-dark fs-6 px-3 py-2 fw-bold">
+                                            <i class="bi bi-trophy-fill text-danger me-1"></i> #1
+                                        </span>
+                                    }
+                                    else if (item.XepHang == 2)
+                                    {
+                                        <span class="badge bg-secondary text-white fs-6 px-3 py-2">#2</span>
+                                    }
+                                    else if (item.XepHang == 3)
+                                    {
+                                        <span class="badge bg-info-subtle text-dark fs-6 px-3 py-2">#3</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted border fs-6 px-3 py-2">#@item.XepHang</span>
+                                    }
+                                </td>
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark fs-6">@(ncc?.TenNhaCungCap ?? "N/A")</div>
+                                    <small class="text-muted font-monospace">@(ncc?.MaNhaCungCapCode ?? $"NCC{nccId:D3}")</small>
+                                </td>
+                                @foreach (var tc in tieuChis)
+                                {
+                                    decimal d = 0;
+                                    if (Model.DiemMap.ContainsKey(nccId) && Model.DiemMap[nccId].ContainsKey(tc.MaTieuChi))
+                                    {
+                                        d = Model.DiemMap[nccId][tc.MaTieuChi];
+                                    }
+                                    <td class="font-monospace fw-semibold text-secondary">
+                                        @d.ToString("0.0")
+                                    </td>
+                                }
+                                <td class="bg-primary-subtle font-monospace fw-bold fs-5 text-primary">
+                                    @(item.DiemTong?.ToString("0.00") ?? "0.00")
+                                </td>
+                                <td>
+                                    @if (item.DeXuat == true)
+                                    {
+                                        <span class="badge bg-success fs-6 px-3 py-2">
+                                            <i class="bi bi-check-circle-fill me-1"></i> ĐỀ XUẤT
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@nccId" class="btn btn-outline-info btn-sm rounded-3" title="Xem hồ sơ đối tác">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,272 @@
+@model code.Models.ViewModels.MaTranSoSanhInputModel
+@{
+    ViewData["Title"] = "Ma trận so sánh cặp tiêu chí - " + Model.TenKyDanhGia;
+    var tieuChis = Model.DanhSachTieuChi;
+    int n = tieuChis.Count;
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+        }
+
+        <!-- Thanh điều hướng bước AHP -->
+        <div class="card-custom mb-4">
+            <div class="card-body-custom">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;"><i class="bi bi-arrow-left"></i></a>
+                        <div>
+                            <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Ma Trận So Sánh Cặp Tiêu Chí</h4>
+                            <span style="color: var(--primary); font-weight: 600; font-size: 13px;">Kỳ: @Model.TenKyDanhGia</span>
+                        </div>
+                    </div>
+                    <div class="ahp-steps">
+                        <span class="ahp-step active"><i class="bi bi-grid-3x3"></i> Bước 1: Ma trận & Trọng số</span>
+                        @if (Model.TrongSos.Any())
+                        {
+                            <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="ahp-step">
+                                <i class="bi bi-star"></i> Bước 2: Chấm điểm NCC
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="LuuVaTinhToanAHP" method="post" id="ahpMatrixForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="maKyDanhGia" value="@Model.MaKyDanhGia" />
+
+            <!-- Ma Trận 4x4 -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-grid-3x3" style="color: var(--primary);"></i> Nhập mức độ so sánh cặp (Thang đo Saaty 1–9)</h5>
+                    <span class="status-badge status-badge-secondary">Nửa đối xứng tự động tính 1/a</span>
+                </div>
+                <div class="card-body-custom">
+                    <div class="table-responsive">
+                        <table class="ahp-matrix-table">
+                            <thead>
+                                <tr>
+                                    <th class="ahp-header-cell" style="width: 180px;">Tiêu chí (Hàng \ Cột)</th>
+                                    @for (int j = 0; j < n; j++)
+                                    {
+                                        <th style="min-width: 140px;">
+                                            <div style="font-weight: 700; color: var(--primary);">@tieuChis[j].TenTieuChi</div>
+                                            <span class="status-badge @(tieuChis[j].LoaiTieuChi == "cost" ? "status-badge-warning" : "status-badge-info")" style="font-size: 10px;">
+                                                @(tieuChis[j].LoaiTieuChi == "cost" ? "Cost (Thấp tốt)" : "Benefit (Cao tốt)")
+                                            </span>
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < n; i++)
+                                {
+                                    <tr>
+                                        <td class="ahp-header-cell">@tieuChis[i].TenTieuChi</td>
+                                        @for (int j = 0; j < n; j++)
+                                        {
+                                            var val = Model.MaTran[i][j];
+                                            if (i == j)
+                                            {
+                                                <td class="ahp-diagonal">
+                                                    <input type="hidden" name="matrix[@i][@j]" value="1" />
+                                                    <span>1</span>
+                                                </td>
+                                            }
+                                            else if (j > i)
+                                            {
+                                                <td class="ahp-upper">
+                                                    <select name="matrix[@i][@j]" id="cell_@(i)_@(j)" class="form-select" onchange="onMatrixCellChange(@i, @j)">
+                                                        <!option value="1" @(Math.Abs(val - 1.0) < 0.01 ? "selected" : "")>1 (Như nhau)</!option>
+                                                        <!option value="2" @(Math.Abs(val - 2.0) < 0.01 ? "selected" : "")>2 (Trung gian)</!option>
+                                                        <!option value="3" @(Math.Abs(val - 3.0) < 0.01 ? "selected" : "")>3 (Hơi quan trọng)</!option>
+                                                        <!option value="4" @(Math.Abs(val - 4.0) < 0.01 ? "selected" : "")>4 (Trung gian)</!option>
+                                                        <!option value="5" @(Math.Abs(val - 5.0) < 0.01 ? "selected" : "")>5 (Quan trọng hơn nhiều)</!option>
+                                                        <!option value="6" @(Math.Abs(val - 6.0) < 0.01 ? "selected" : "")>6 (Trung gian)</!option>
+                                                        <!option value="7" @(Math.Abs(val - 7.0) < 0.01 ? "selected" : "")>7 (Rất quan trọng)</!option>
+                                                        <!option value="8" @(Math.Abs(val - 8.0) < 0.01 ? "selected" : "")>8 (Trung gian)</!option>
+                                                        <!option value="9" @(Math.Abs(val - 9.0) < 0.01 ? "selected" : "")>9 (Tuyệt đối)</!option>
+                                                        <!option value="0.5" @(Math.Abs(val - 0.5) < 0.01 ? "selected" : "")>1/2</!option>
+                                                        <!option value="0.333333" @(Math.Abs(val - 0.333333) < 0.01 ? "selected" : "")>1/3</!option>
+                                                        <!option value="0.25" @(Math.Abs(val - 0.25) < 0.01 ? "selected" : "")>1/4</!option>
+                                                        <!option value="0.2" @(Math.Abs(val - 0.2) < 0.01 ? "selected" : "")>1/5</!option>
+                                                        <!option value="0.166667" @(Math.Abs(val - 0.166667) < 0.01 ? "selected" : "")>1/6</!option>
+                                                        <!option value="0.142857" @(Math.Abs(val - 0.142857) < 0.01 ? "selected" : "")>1/7</!option>
+                                                        <!option value="0.125" @(Math.Abs(val - 0.125) < 0.01 ? "selected" : "")>1/8</!option>
+                                                        <!option value="0.111111" @(Math.Abs(val - 0.111111) < 0.01 ? "selected" : "")>1/9</!option>
+                                                    </select>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td class="ahp-lower">
+                                                    <input type="hidden" name="matrix[@i][@j]" id="hidden_cell_@(i)_@(j)" value="@val" />
+                                                    <span id="display_cell_@(i)_@(j)">@(FormatInverse(val))</span>
+                                                </td>
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillBalancedDemo()">
+                            <i class="bi bi-lightning-charge me-1"></i> Điền ma trận mẫu chuẩn (CR ≤ 0.1)
+                        </button>
+                        @if (isManagerOrAdmin)
+                        {
+                            <button type="submit" class="btn btn-custom btn-custom-primary px-4">
+                                <i class="bi bi-calculator me-1"></i> Lưu & Tính Trọng Số AHP
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Hướng dẫn thang đo Saaty -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-info-circle" style="color: var(--primary);"></i> Bảng thang đo tầm quan trọng Saaty (1–9)</h5>
+            </div>
+            <div class="card-body-custom p-0">
+                <div class="table-responsive">
+                    <table class="table-custom" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">Thang điểm</th>
+                                <th>Định nghĩa mức độ ưu tiên</th>
+                                <th>Ý nghĩa thực tiễn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="status-badge status-badge-primary">1</span></td>
+                                <td>Quan trọng như nhau (Equal Importance)</td>
+                                <td style="color: var(--gray-500);">Hai tiêu chí đóng góp ngang nhau vào mục tiêu lựa chọn NCC.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-badge-secondary">3</span></td>
+                                <td>Hơi quan trọng hơn (Moderate Importance)</td>
+                                <td style="color: var(--gray-500);">Kinh nghiệm và nhận định thiên về một tiêu chí hơn một chút.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-badge-success">5</span></td>
+                                <td>Quan trọng hơn nhiều (Strong Importance)</td>
+                                <td style="color: var(--gray-500);">Một tiêu chí thể hiện rõ ràng tầm quan trọng vượt trội.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-badge-warning">7</span></td>
+                                <td>Rất quan trọng hơn (Very Strong Importance)</td>
+                                <td style="color: var(--gray-500);">Tiêu chí có ảnh hưởng rất lớn và mang tính chi phối.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-badge-danger">9</span></td>
+                                <td>Tuyệt đối quan trọng hơn (Extreme Importance)</td>
+                                <td style="color: var(--gray-500);">Tiêu chí đạt mức ưu tiên tối cao tuyệt đối.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="status-badge status-badge-secondary">2,4,6,8</span></td>
+                                <td>Các mức trung gian</td>
+                                <td style="color: var(--gray-500);">Dùng khi cần thỏa hiệp giữa hai mức đánh giá liền kề.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public static string FormatInverse(double val)
+    {
+        if (Math.Abs(val - 1.0) < 0.01) return "1";
+        if (Math.Abs(val - 2.0) < 0.01) return "2";
+        if (Math.Abs(val - 3.0) < 0.01) return "3";
+        if (Math.Abs(val - 4.0) < 0.01) return "4";
+        if (Math.Abs(val - 5.0) < 0.01) return "5";
+        if (Math.Abs(val - 6.0) < 0.01) return "6";
+        if (Math.Abs(val - 7.0) < 0.01) return "7";
+        if (Math.Abs(val - 8.0) < 0.01) return "8";
+        if (Math.Abs(val - 9.0) < 0.01) return "9";
+        if (Math.Abs(val - 0.5) < 0.01) return "1/2";
+        if (Math.Abs(val - 0.333333) < 0.01) return "1/3";
+        if (Math.Abs(val - 0.25) < 0.01) return "1/4";
+        if (Math.Abs(val - 0.2) < 0.01) return "1/5";
+        if (Math.Abs(val - 0.166667) < 0.01) return "1/6";
+        if (Math.Abs(val - 0.142857) < 0.01) return "1/7";
+        if (Math.Abs(val - 0.125) < 0.01) return "1/8";
+        if (Math.Abs(val - 0.111111) < 0.01) return "1/9";
+        return val.ToString("0.000");
+    }
+}
+
+@section Scripts {
+    <script>
+        function onMatrixCellChange(i, j) {
+            const selectEl = document.getElementById('cell_' + i + '_' + j);
+            const val = parseFloat(selectEl.value);
+            const invVal = 1.0 / val;
+            const hiddenEl = document.getElementById('hidden_cell_' + j + '_' + i);
+            const displayEl = document.getElementById('display_cell_' + j + '_' + i);
+            if (hiddenEl) hiddenEl.value = invVal;
+            if (displayEl) displayEl.innerText = getDisplayFraction(invVal);
+        }
+
+        function getDisplayFraction(val) {
+            if (Math.abs(val - 1.0) < 0.01) return "1";
+            if (Math.abs(val - 2.0) < 0.01) return "2";
+            if (Math.abs(val - 3.0) < 0.01) return "3";
+            if (Math.abs(val - 4.0) < 0.01) return "4";
+            if (Math.abs(val - 5.0) < 0.01) return "5";
+            if (Math.abs(val - 6.0) < 0.01) return "6";
+            if (Math.abs(val - 7.0) < 0.01) return "7";
+            if (Math.abs(val - 8.0) < 0.01) return "8";
+            if (Math.abs(val - 9.0) < 0.01) return "9";
+            if (Math.abs(val - 0.5) < 0.01) return "1/2";
+            if (Math.abs(val - 0.333333) < 0.01) return "1/3";
+            if (Math.abs(val - 0.25) < 0.01) return "1/4";
+            if (Math.abs(val - 0.2) < 0.01) return "1/5";
+            if (Math.abs(val - 0.166667) < 0.01) return "1/6";
+            if (Math.abs(val - 0.142857) < 0.01) return "1/7";
+            if (Math.abs(val - 0.125) < 0.01) return "1/8";
+            if (Math.abs(val - 0.111111) < 0.01) return "1/9";
+            return val.toFixed(3);
+        }
+
+        function fillBalancedDemo() {
+            setVal(0, 1, 0.333333);
+            setVal(0, 2, 2.0);
+            setVal(0, 3, 0.5);
+            setVal(1, 2, 5.0);
+            setVal(1, 3, 3.0);
+            setVal(2, 3, 0.333333);
+        }
+
+        function setVal(i, j, val) {
+            const selectEl = document.getElementById('cell_' + i + '_' + j);
+            if (selectEl) {
+                for (let k = 0; k < selectEl.options.length; k++) {
+                    if (Math.abs(parseFloat(selectEl.options[k].value) - val) < 0.01) {
+                        selectEl.selectedIndex = k;
+                        break;
+                    }
+                }
+                onMatrixCellChange(i, j);
+            }
+        }
+    </script>
+}

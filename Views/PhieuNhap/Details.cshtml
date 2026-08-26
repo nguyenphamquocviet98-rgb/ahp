@@ -1,0 +1,382 @@
+@model code.Models.PhieuNhap
+@{
+    ViewData["Title"] = "Chi tiết phiếu nhập - " + (Model.MaPhieuNhapCode ?? $"PN{Model.MaPhieuNhap:D4}");
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+    var sanPhams = ViewBag.SanPhams as List<code.Models.SanPham> ?? new List<code.Models.SanPham>();
+
+    var tongTien = (Model.TongTien.HasValue && Model.TongTien.Value > 0)
+        ? Model.TongTien.Value
+        : (Model.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Card Thông tin chung Phiếu nhập -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại danh sách">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold text-dark mb-0 d-flex align-items-center">
+                            <i class="bi bi-receipt text-primary me-2"></i>
+                            PHIẾU NHẬP: @(Model.MaPhieuNhapCode ?? $"PN{Model.MaPhieuNhap:D4}")
+                        </h4>
+                        <small class="text-muted">Ngày tạo: @(Model.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</small>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-3 btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> In phiếu
+                    </button>
+                    @if (isManagerOrAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.MaPhieuNhap" class="btn btn-outline-primary rounded-3 btn-sm">
+                            <i class="bi bi-pencil me-1"></i> Sửa thông tin
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <span class="text-muted small d-block">Nhà cung cấp đối tác:</span>
+                        <strong class="text-primary fs-6">@(Model.NhaCungCap?.TenNhaCungCap ?? "N/A")</strong>
+                        <div class="small text-secondary mt-1">
+                            Người LH: @(Model.NhaCungCap?.NguoiLienHe ?? "—") | SĐT: @(Model.NhaCungCap?.SoDienThoai ?? "—")
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <span class="text-muted small d-block">Thông tin chứng từ:</span>
+                        <div class="small">Ngày nhập hàng: <strong>@(Model.NgayNhap?.ToString("dd/MM/yyyy") ?? "N/A")</strong></div>
+                        <div class="small text-muted mt-1">Người lập phiếu: <strong>@(Model.NguoiDung?.TenDangNhap ?? "Hệ thống")</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded-3 h-100 text-end">
+                        <span class="text-muted small d-block">Trạng thái phiếu:</span>
+                        <div class="mb-2">
+                            @if (Model.TrangThai == "xacnhan")
+                            {
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i> Đã xác nhận
+                                </span>
+                            }
+                            else if (Model.TrangThai == "huy")
+                            {
+                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                    <i class="bi bi-x-circle me-1"></i> Đã hủy
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                                    <i class="bi bi-clock me-1"></i> Chờ xử lý / Nháp
+                                </span>
+                            }
+                        </div>
+
+                        @if (isManagerOrAdmin)
+                        {
+                            <div class="d-flex justify-content-end gap-1">
+                                @if (Model.TrangThai != "xacnhan")
+                                {
+                                    <form asp-action="DoiTrangThai" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="maPhieuNhap" value="@Model.MaPhieuNhap" />
+                                        <input type="hidden" name="trangThaiMoi" value="xacnhan" />
+                                        <button type="submit" class="btn btn-success btn-sm rounded-2" onclick="return confirm('Xác nhận hoàn thành phiếu nhập này?')">
+                                            <i class="bi bi-check2"></i> Xác nhận
+                                        </button>
+                                    </form>
+                                }
+                                @if (Model.TrangThai != "huy")
+                                {
+                                    <form asp-action="DoiTrangThai" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="maPhieuNhap" value="@Model.MaPhieuNhap" />
+                                        <input type="hidden" name="trangThaiMoi" value="huy" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-2" onclick="return confirm('Bạn có chắc chắn muốn hủy phiếu nhập này?')">
+                                            <i class="bi bi-x"></i> Hủy
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Chi tiết các mặt hàng trong Phiếu nhập -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-boxes text-primary me-2"></i>Danh sách mặt hàng nhập
+                    </h5>
+                    <small class="text-muted">Tổng số mặt hàng: @(Model.ChiTietPhieuNhaps?.Count ?? 0)</small>
+                </div>
+
+                @if (Model.TrangThai != "huy")
+                {
+                    <button type="button" class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#themSanPhamModal">
+                        <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm vào phiếu
+                    </button>
+                }
+            </div>
+
+            @if (Model.ChiTietPhieuNhaps != null && Model.ChiTietPhieuNhaps.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light text-uppercase small text-muted text-center">
+                            <tr>
+                                <th style="width: 50px;">STT</th>
+                                <th style="width: 120px;">Mã SP</th>
+                                <th class="text-start">Tên sản phẩm</th>
+                                <th style="width: 100px;">ĐVT</th>
+                                <th style="width: 110px;">Số lượng</th>
+                                <th style="width: 150px;" class="text-end">Đơn giá nhập</th>
+                                <th style="width: 170px;" class="text-end">Thành tiền</th>
+                                @if (Model.TrangThai != "huy")
+                                {
+                                    <th style="width: 100px;">Thao tác</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int stt = 1; }
+                            @foreach (var ct in Model.ChiTietPhieuNhaps)
+                            {
+                                var sp = ct.SanPham;
+                                var tt = ct.ThanhTien ?? (ct.SoLuong * ct.DonGia ?? 0);
+                                <tr>
+                                    <td class="text-center text-muted fw-bold">@(stt++)</td>
+                                    <td class="text-center font-monospace small">
+                                        @(sp?.MaSanPhamCode ?? $"SP{sp?.MaSanPham:D3}")
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark">@(sp?.TenSanPham ?? "N/A")</strong>
+                                    </td>
+                                    <td class="text-center">@(sp?.DonViTinh?.TenDonVi ?? "-")</td>
+                                    <td class="text-center fw-bold fs-6">@ct.SoLuong</td>
+                                    <td class="text-end">@((ct.DonGia ?? 0).ToString("N0")) đ</td>
+                                    <td class="text-end fw-bold text-primary fs-6">@(tt.ToString("N0")) đ</td>
+                                    @if (Model.TrangThai != "huy")
+                                    {
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" title="Sửa số lượng/đơn giá"
+                                                        onclick="openEditDetail(@ct.MaChiTiet, '@sp?.TenSanPham', @(ct.SoLuong ?? 0), @(ct.DonGia ?? 0))">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <form asp-action="XoaChiTiet" method="post" class="d-inline" onsubmit="return confirm('Xóa sản phẩm này khỏi phiếu?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="maChiTiet" value="@ct.MaChiTiet" />
+                                                    <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="@(Model.TrangThai != "huy" ? 6 : 5)" class="text-end fw-bold text-uppercase fs-6">
+                                    Tổng cộng tiền hàng:
+                                </td>
+                                <td class="text-end fw-bold text-danger fs-5">
+                                    @(tongTien.ToString("N0")) VNĐ
+                                </td>
+                                @if (Model.TrangThai != "huy")
+                                {
+                                    <td></td>
+                                }
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted border rounded-3 bg-light">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                    <p class="mb-2">Phiếu nhập này chưa có sản phẩm nào.</p>
+                    @if (Model.TrangThai != "huy")
+                    {
+                        <button type="button" class="btn btn-primary btn-sm rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#themSanPhamModal">
+                            <i class="bi bi-plus-circle me-1"></i> Bấm vào đây để thêm sản phẩm
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm sản phẩm vào phiếu -->
+<div class="modal fade" id="themSanPhamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-plus-circle text-primary me-2"></i>Thêm sản phẩm vào phiếu nhập
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="ThemChiTiet" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maPhieuNhap" value="@Model.MaPhieuNhap" />
+
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Chọn sản phẩm <span class="text-danger">*</span></label>
+                        <select name="maSanPham" id="cboSanPham" class="form-select rounded-3" required onchange="onSanPhamSelected()">
+                            <option value="">-- Chọn sản phẩm --</option>
+                            @foreach (var sp in sanPhams)
+                            {
+                                <option value="@sp.MaSanPham" data-price="@(sp.GiaMacDinh ?? 0)" data-unit="@(sp.DonViTinh?.TenDonVi ?? "")">
+                                    @(sp.MaSanPhamCode ?? $"SP{sp.MaSanPham:D3}") - @sp.TenSanPham (@(sp.DonViTinh?.TenDonVi ?? "Cái"))
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Số lượng nhập <span class="text-danger">*</span></label>
+                            <input type="number" name="soLuong" id="txtSoLuong" class="form-control rounded-3" value="1" min="1" required oninput="calcPreview()" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Đơn giá nhập (VNĐ) <span class="text-danger">*</span></label>
+                            <input type="number" name="donGia" id="txtDonGia" class="form-control rounded-3" value="0" min="0" step="1000" required oninput="calcPreview()" />
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 text-end">
+                        <span class="text-muted small">Thành tiền tạm tính:</span>
+                        <h5 class="fw-bold text-primary mb-0" id="lblThanhTienPreview">0 đ</h5>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">
+                        <i class="bi bi-plus-lg me-1"></i> Thêm vào phiếu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa số lượng / đơn giá của sản phẩm -->
+<div class="modal fade" id="suaChiTietModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh sửa sản phẩm
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="SuaChiTiet" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maChiTiet" id="editMaChiTiet" />
+
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <span class="text-muted small d-block">Sản phẩm:</span>
+                        <strong class="text-dark fs-6" id="editTenSanPham"></strong>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Số lượng nhập <span class="text-danger">*</span></label>
+                            <input type="number" name="soLuong" id="editSoLuong" class="form-control rounded-3" min="1" required oninput="calcEditPreview()" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Đơn giá nhập (VNĐ) <span class="text-danger">*</span></label>
+                            <input type="number" name="donGia" id="editDonGia" class="form-control rounded-3" min="0" step="1000" required oninput="calcEditPreview()" />
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 text-end">
+                        <span class="text-muted small">Thành tiền mới:</span>
+                        <h5 class="fw-bold text-primary mb-0" id="lblEditThanhTienPreview">0 đ</h5>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">
+                        <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function onSanPhamSelected() {
+            const select = document.getElementById('cboSanPham');
+            const selectedOption = select.options[select.selectedIndex];
+            const price = selectedOption.getAttribute('data-price') || 0;
+            document.getElementById('txtDonGia').value = price;
+            calcPreview();
+        }
+
+        function calcPreview() {
+            const qty = parseFloat(document.getElementById('txtSoLuong').value) || 0;
+            const price = parseFloat(document.getElementById('txtDonGia').value) || 0;
+            const total = qty * price;
+            document.getElementById('lblThanhTienPreview').innerText = total.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function openEditDetail(id, name, qty, price) {
+            document.getElementById('editMaChiTiet').value = id;
+            document.getElementById('editTenSanPham').innerText = name;
+            document.getElementById('editSoLuong').value = qty;
+            document.getElementById('editDonGia').value = price;
+            calcEditPreview();
+            const modal = new bootstrap.Modal(document.getElementById('suaChiTietModal'));
+            modal.show();
+        }
+
+        function calcEditPreview() {
+            const qty = parseFloat(document.getElementById('editSoLuong').value) || 0;
+            const price = parseFloat(document.getElementById('editDonGia').value) || 0;
+            const total = qty * price;
+            document.getElementById('lblEditThanhTienPreview').innerText = total.toLocaleString('vi-VN') + ' đ';
+        }
+    </script>
+}

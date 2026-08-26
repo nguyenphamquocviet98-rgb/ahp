@@ -1,0 +1,140 @@
+@model code.Models.SanPham
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm - " + Model.TenSanPham;
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+    var ton = Model.TonKho?.SoLuongTon ?? 0;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-md-11">
+        <!-- Thông tin sản phẩm -->
+        <div class="card-custom mb-4">
+            <div class="card-body-custom">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" title="Quay lại" style="padding: 6px 10px;">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                        <div>
+                            <h4 class="fw-bold mb-0" style="color: var(--gray-900);">@Model.TenSanPham</h4>
+                            <span class="code-badge mt-1 d-inline-block">
+                                Mã: @(Model.MaSanPhamCode ?? $"SP{Model.MaSanPham:D3}")
+                            </span>
+                        </div>
+                    </div>
+                    @if (isManagerOrAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.MaSanPham" class="btn btn-custom btn-custom-primary">
+                            <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                        </a>
+                    }
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div style="padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); height: 100%;">
+                            <h6 class="fw-bold text-uppercase small mb-3" style="color: var(--gray-500);">Thông tin hàng hóa</h6>
+                            <div class="mb-3">
+                                <span style="color: var(--gray-500); font-size: 12px; display: block;">Danh mục:</span>
+                                <strong style="color: var(--gray-800);">@(Model.DanhMuc?.TenDanhMuc ?? "Chưa phân loại")</strong>
+                            </div>
+                            <div class="mb-3">
+                                <span style="color: var(--gray-500); font-size: 12px; display: block;">Đơn vị tính:</span>
+                                <strong style="color: var(--gray-800);">@(Model.DonViTinh?.TenDonVi ?? "Chưa thiết lập")</strong>
+                            </div>
+                            <div class="mb-3">
+                                <span style="color: var(--gray-500); font-size: 12px; display: block;">Giá nhập mặc định:</span>
+                                <strong style="color: var(--primary); font-size: 18px;">@((Model.GiaMacDinh ?? 0).ToString("N0")) VNĐ</strong>
+                            </div>
+                            <div>
+                                <span style="color: var(--gray-500); font-size: 12px; display: block;">Trạng thái:</span>
+                                @if (Model.TrangThai == true)
+                                {
+                                    <span class="status-badge status-badge-success">Đang kinh doanh</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-secondary">Ngừng bán</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div style="padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                            <h6 class="fw-bold text-uppercase small mb-2" style="color: var(--gray-500);">Tồn kho hiện tại</h6>
+                            <div style="font-size: 48px; font-weight: 700; color: @(ton < 20 ? "var(--danger)" : "var(--success)"); line-height: 1.1;">
+                                @ton
+                            </div>
+                            <div style="color: var(--gray-500); font-size: 12px; margin-top: 4px;">
+                                Cập nhật gần nhất: @(Model.TonKho?.NgayCapNhat?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa có")
+                            </div>
+                            <div class="mt-2">
+                                @if (ton < 20)
+                                {
+                                    <span class="status-badge status-badge-danger">Cảnh báo: Tồn kho thấp</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-success">Tồn kho an toàn</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử nhập hàng -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-clock-history" style="color: var(--primary);"></i> Lịch sử phiếu nhập sản phẩm này</h5>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.ChiTietPhieuNhaps != null && Model.ChiTietPhieuNhaps.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Nhà cung cấp</th>
+                                    <th>Ngày nhập</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ct in Model.ChiTietPhieuNhaps.OrderByDescending(c => c.PhieuNhap?.NgayNhap))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="code-badge">@(ct.PhieuNhap?.MaPhieuNhapCode ?? $"PN{ct.MaPhieuNhap:D4}")</span>
+                                        </td>
+                                        <td>@(ct.PhieuNhap?.NhaCungCap?.TenNhaCungCap ?? "N/A")</td>
+                                        <td style="color: var(--gray-500); font-size: 13px;">
+                                            @(ct.PhieuNhap?.NgayNhap?.ToString("dd/MM/yyyy") ?? "N/A")
+                                        </td>
+                                        <td class="text-center fw-bold">@ct.SoLuong</td>
+                                        <td class="text-end">@((ct.DonGia ?? 0).ToString("N0")) đ</td>
+                                        <td class="text-end fw-bold" style="color: var(--gray-800);">
+                                            @((ct.ThanhTien ?? (ct.SoLuong * ct.DonGia) ?? 0).ToString("N0")) đ
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Sản phẩm này chưa phát sinh phiếu nhập hàng nào.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

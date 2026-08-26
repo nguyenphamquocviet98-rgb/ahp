@@ -1,0 +1,142 @@
+@model IEnumerable<code.Models.NguoiDung>
+@{
+    ViewData["Title"] = "Quản lý Người dùng & Phân quyền";
+    var search = ViewData["Search"] as string;
+    var selectedRole = ViewData["SelectedRole"] as string;
+    var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("MaNguoiDung")?.Value;
+    int.TryParse(currentUserIdStr, out int currentUserId);
+}
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h3><i class="bi bi-people" style="color: var(--primary);"></i> Quản trị Người dùng & Phân quyền</h3>
+        <p>Quản lý danh sách tài khoản, phân bổ vai trò (Admin, Quản lý, Nhân viên) và trạng thái</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-custom btn-custom-primary"><i class="bi bi-person-plus"></i> Thêm tài khoản mới</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+}
+
+<!-- Bộ lọc -->
+<div class="search-bar mb-4">
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center flex-wrap w-100">
+        <div class="input-group" style="flex: 1; min-width: 200px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm theo tên đăng nhập..." />
+        </div>
+        <select name="role" class="form-select" style="max-width: 220px;">
+            <option value="">-- Tất cả vai trò --</option>
+            <option value="admin" selected="@(selectedRole == "admin")">Quản trị viên (Admin)</option>
+            <option value="quanly" selected="@(selectedRole == "quanly")">Quản lý (quanly)</option>
+            <option value="nhanvien" selected="@(selectedRole == "nhanvien")">Nhân viên (nhanvien)</option>
+        </select>
+        <button type="submit" class="btn btn-custom btn-custom-outline"><i class="bi bi-funnel"></i> Lọc</button>
+        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedRole))
+        {
+            <a asp-action="Index" class="btn btn-custom btn-custom-outline"><i class="bi bi-arrow-counterclockwise"></i></a>
+        }
+    </form>
+</div>
+
+<!-- Bảng danh sách -->
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 80px;" class="text-center">ID</th>
+                    <th>Tài khoản</th>
+                    <th class="text-center" style="width: 160px;">Vai trò</th>
+                    <th class="text-center" style="width: 120px;">Trạng thái</th>
+                    <th style="width: 150px;">Ngày tạo</th>
+                    <th class="text-end" style="width: 140px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var user in Model)
+                    {
+                        bool isSelf = user.MaNguoiDung == currentUserId;
+                        <tr>
+                            <td class="text-center" style="color: var(--gray-500); font-weight: 600;">#@user.MaNguoiDung</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 34px; height: 34px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--gray-800);">@user.TenDangNhap</strong>
+                                        @if (isSelf)
+                                        {
+                                            <span class="status-badge status-badge-primary ms-1">Bạn</span>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (user.VaiTro == "admin")
+                                {
+                                    <span class="status-badge status-badge-primary"><i class="bi bi-shield-check"></i> Admin</span>
+                                }
+                                else if (user.VaiTro == "quanly")
+                                {
+                                    <span class="status-badge status-badge-success"><i class="bi bi-person-gear"></i> Quản lý</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-secondary"><i class="bi bi-person"></i> Nhân viên</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (user.TrangThai == true)
+                                {
+                                    <span class="status-badge status-badge-success"><i class="bi bi-check-circle"></i> Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-danger"><i class="bi bi-lock"></i> Đã khóa</span>
+                                }
+                            </td>
+                            <td style="color: var(--gray-500); font-size: 13px;">
+                                @(user.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                            </td>
+                            <td class="text-end">
+                                <div class="action-btn-group">
+                                    <a asp-action="Edit" asp-route-id="@user.MaNguoiDung" class="btn btn-sm btn-outline-primary" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                    @if (!isSelf)
+                                    {
+                                        <form asp-action="ToggleTrangThai" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn @(user.TrangThai == true ? "khóa" : "mở khóa") tài khoản này?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.MaNguoiDung" />
+                                            <button type="submit" class="btn btn-sm @(user.TrangThai == true ? "btn-outline-danger" : "btn-outline-success")" title="@(user.TrangThai == true ? "Khóa" : "Mở khóa")">
+                                                <i class="bi @(user.TrangThai == true ? "bi-lock" : "bi-unlock")"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy người dùng nào.</p></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

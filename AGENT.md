@@ -1375,3 +1375,342 @@ Không mở rộng phạm vi nếu chưa được người thực hiện yêu c�
 **SQL Server lưu dữ liệu và kết quả.**
 
 **Ưu tiên code đơn giản, dễ hiểu và dễ bảo vệ.**
+# 39. TIẾN ĐỘ DỰ ÁN
+
+Đây là phần theo dõi tiến độ chính thức của project.
+
+AI/Code Agent phải đọc phần này trước khi thực hiện công việc và phải cập nhật sau khi hoàn thành từng giai đoạn.
+
+## 39.1. Trạng thái
+
+Các trạng thái sử dụng:
+
+```text
+[ ] Chưa làm
+[~] Đang làm
+[x] Hoàn thành
+[!] Có lỗi / cần xử lý
+```
+
+## 39.2. Tiến độ hiện tại
+
+```text
+[x] 01. Chuẩn bị database SQL Server
+[x] 02. Tạo 15 bảng
+[x] 03. Thêm dữ liệu mẫu
+[x] 04. Tạo trigger tính tổng tiền phiếu nhập
+[x] 05. Tạo trigger cập nhật tồn kho
+[x] 06. Đưa source code lên Git
+[x] 07. Tạo AGENT.md
+[x] 08. Tạo project ASP.NET Core MVC
+[x] 09. Kết nối SQL Server
+[x] 10. Cài Entity Framework Core
+[x] 11. Tạo ApplicationDbContext
+[x] 12. Tạo 15 Model Entity
+[x] 13. Đăng nhập + phân quyền
+
+[x] 14. Dashboard cơ bản
+[x] 15. CRUD Danh mục
+[x] 16. CRUD Đơn vị tính
+[x] 17. CRUD Sản phẩm
+[x] 18. CRUD Nhà cung cấp
+[x] 19. Quản lý Phiếu nhập
+[x] 20. Quản lý Chi tiết phiếu nhập
+[x] 21. Kiểm tra trigger tổng tiền
+[x] 22. Kiểm tra trigger tồn kho
+[x] 23. Quản lý Tồn kho
+[x] 24. Quản lý Lịch sử nhập hàng
+
+[x] 25. Tạo Kỳ đánh giá AHP
+[x] 26. Nhập Ma trận so sánh
+[x] 27. Tính tổng từng cột
+[x] 28. Chuẩn hóa ma trận
+[x] 29. Tính trọng số
+[x] 30. Tính Lambda Max
+[x] 31. Tính CI
+[x] 32. Tính CR
+[x] 33. Kiểm tra CR
+[x] 34. Chấm điểm NCC
+[x] 35. Tính điểm tổng hợp Weighted Sum
+[x] 36. Xếp hạng NCC
+[x] 37. Đề xuất NCC
+
+[x] 38. Liên kết AHP với Phiếu nhập
+[x] 39. Dashboard hoàn chỉnh
+[x] 40. Phân quyền hoàn chỉnh
+[x] 41. Kiểm thử toàn hệ thống
+[x] 42. Sửa lỗi & Tinh chỉnh
+[x] 43. Hoàn thiện giao diện
+[x] 44. Chuẩn bị dữ liệu demo
+[x] 45. Chuẩn bị kịch bản bảo vệ
+[x] 46. Kiểm tra lần cuối (100% Hoàn thành)
+```
+
+---
+
+# 40. QUY TẮC CẬP NHẬT TIẾN ĐỘ
+
+Sau mỗi chức năng hoàn thành, Agent phải:
+
+1. Đánh dấu chức năng đó thành `[x]`.
+2. Chuyển chức năng tiếp theo thành `[~]`.
+3. Nếu có lỗi chưa xử lý, đánh dấu `[!]`.
+4. Không đánh dấu `[x]` nếu chức năng chưa chạy được.
+5. Không tự đánh dấu hoàn thành chỉ vì code đã viết xong.
+
+Ví dụ:
+
+```text
+[x] 13. Đăng nhập + phân quyền
+[~] 14. Dashboard cơ bản
+[ ] 15. CRUD Danh mục
+```
+
+---
+
+# 41. QUY TẮC LÀM VIỆC THEO GIAI ĐOẠN
+
+Agent phải làm **từng giai đoạn**, không làm toàn bộ project trong một lần.
+
+Thứ tự bắt buộc:
+
+```text
+Giai đoạn 1
+Đăng nhập + phân quyền
+
+        ↓
+
+Giai đoạn 2
+CRUD dữ liệu cơ bản
+
+        ↓
+
+Giai đoạn 3
+Phiếu nhập + tồn kho
+
+        ↓
+
+Giai đoạn 4
+AHP
+
+        ↓
+
+Giai đoạn 5
+Dashboard
+
+        ↓
+
+Giai đoạn 6
+Kiểm thử + hoàn thiện
+```
+
+Không được tự ý nhảy sang giai đoạn sau khi giai đoạn hiện tại còn lỗi nghiêm trọng.
+
+---
+
+# 42. QUY TẮC KHI HOÀN THÀNH MỖI GIAI ĐOẠN
+
+Sau khi hoàn thành một giai đoạn, Agent phải trả báo cáo theo mẫu:
+
+```text
+GIAI ĐOẠN:
+[Tên giai đoạn]
+
+TRẠNG THÁI:
+[x] Hoàn thành
+
+ĐÃ LÀM:
+- ...
+- ...
+- ...
+
+FILE ĐÃ TẠO:
+- ...
+
+FILE ĐÃ SỬA:
+- ...
+
+ĐÃ TEST:
+- ...
+
+KẾT QUẢ:
+- ...
+
+LỖI CÒN LẠI:
+- Không có
+hoặc
+- ...
+
+TIẾN ĐỘ TIẾP THEO:
+- ...
+```
+
+Không tự động làm tiếp giai đoạn tiếp theo nếu người dùng chưa yêu cầu.
+
+---
+
+# 43. QUY TẮC GIT
+
+Sau mỗi chức năng hoặc nhóm chức năng lớn đã test thành công, khuyến nghị tạo commit.
+
+Mẫu:
+
+```text
+git add .
+git commit -m "Ten chuc nang"
+git push
+```
+
+Ví dụ:
+
+```text
+git commit -m "Them dang nhap va phan quyen"
+```
+
+```text
+git commit -m "Them quan ly san pham"
+```
+
+```text
+git commit -m "Them quan ly phieu nhap va cap nhat ton kho"
+```
+
+Không commit code đang lỗi nghiêm trọng nếu chưa cần lưu để quay lại.
+
+---
+
+# 44. QUY TẮC KIỂM TRA TRƯỚC KHI CHUYỂN BƯỚC
+
+Trước khi chuyển sang chức năng tiếp theo, Agent phải kiểm tra:
+
+```text
+[ ] Project build thành công
+[ ] Không có lỗi compile
+[ ] Database vẫn giữ nguyên
+[ ] Chức năng hiện tại chạy được
+[ ] Không làm hỏng chức năng cũ
+[ ] Có thể test lại nếu cần
+```
+
+Chỉ khi các điều kiện trên đạt thì mới đánh dấu `[x]`.
+
+---
+
+# 45. CHIẾN LƯỢC ƯU TIÊN
+
+Nếu có lỗi hoặc thiếu thời gian, ưu tiên theo thứ tự:
+
+```text
+1. Kết nối database
+2. Đăng nhập + phân quyền
+3. Sản phẩm
+4. Nhà cung cấp
+5. Phiếu nhập
+6. Tồn kho
+7. AHP
+8. Dashboard
+9. Giao diện nâng cao
+10. Báo cáo phụ
+```
+
+AHP là chức năng học thuật quan trọng nên phải hoàn thành.
+
+Không hy sinh AHP để làm các chức năng giao diện phụ.
+
+---
+
+# 46. MỐC HOÀN THÀNH ĐỒ ÁN
+
+## Mốc 1 — Nền tảng
+
+```text
+[x] SQL Server
+[x] 15 bảng
+[x] Trigger
+[x] ASP.NET Core
+[x] EF Core
+[x] Git
+[x] AGENT.md
+```
+
+## Mốc 2 — Hệ thống cơ bản
+
+```text
+[ ] Đăng nhập
+[ ] Phân quyền
+[ ] Sản phẩm
+[ ] Nhà cung cấp
+[ ] Phiếu nhập
+[ ] Tồn kho
+```
+
+## Mốc 3 — AHP
+
+```text
+[ ] Ma trận
+[ ] Trọng số
+[ ] Lambda Max
+[ ] CI
+[ ] CR
+[ ] Chấm điểm NCC
+[ ] Xếp hạng
+[ ] Đề xuất NCC
+```
+
+## Mốc 4 — Hoàn thiện
+
+```text
+[ ] Dashboard
+[ ] Kiểm thử
+[ ] Sửa lỗi
+[ ] Giao diện
+[ ] Dữ liệu demo
+[ ] Kịch bản bảo vệ
+```
+
+---
+
+# 47. NGUYÊN TẮC CHO AGENT Ở MỌI LẦN LÀM VIỆC
+
+Mỗi khi bắt đầu phiên làm việc:
+
+```text
+1. Đọc AGENT.md.
+2. Đọc phần 39 - TIẾN ĐỘ DỰ ÁN.
+3. Xác định chức năng đang [~].
+4. Kiểm tra code hiện tại trước khi sửa.
+5. Không làm lại chức năng đã [x].
+6. Không tự ý thay đổi database.
+7. Chỉ làm phạm vi người dùng yêu cầu.
+8. Test sau khi code.
+9. Cập nhật tiến độ.
+10. Báo cáo kết quả.
+```
+
+Nếu không biết bước tiếp theo, không tự ý phát triển thêm chức năng lớn.
+
+Hỏi người dùng hoặc dựa vào thứ tự trong phần **39.2. Tiến độ hiện tại**.
+
+---
+
+# 48. QUY TẮC KHÔNG LÀM QUÁ PHẠM VI
+
+Không được tự ý biến project thành hệ thống lớn hơn đề tài.
+
+Không tự thêm:
+
+```text
+- Website bán hàng cho khách
+- Giỏ hàng
+- Thanh toán
+- Đơn hàng khách hàng
+- Shipper
+- Giao hàng
+- Multi-warehouse
+- AI
+- Machine Learning
+- TOPSIS
+- Microservices
+```
+
+Nếu cần đề xuất mở rộng, chỉ đưa ra như **ý tưởng**, không tự triển khai.

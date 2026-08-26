@@ -1,8 +1,269 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var username = User.Identity?.Name ?? "Người dùng";
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "nhanvien";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Lời chào -->
+<div class="mb-4">
+    <h3 class="fw-bold mb-1" style="color: var(--gray-900);">
+        <i class="bi bi-speedometer2" style="color: var(--primary);"></i> Tổng quan hệ thống
+    </h3>
+    <p style="color: var(--gray-500); margin-bottom: 0;">
+        Xin chào, <strong>@username</strong>!
+        @if (role == "admin")
+        {
+            <span class="status-badge status-badge-primary"><i class="bi bi-shield-check"></i> Quản trị viên</span>
+        }
+        else if (role == "quanly")
+        {
+            <span class="status-badge status-badge-success"><i class="bi bi-person-gear"></i> Quản lý</span>
+        }
+        else
+        {
+            <span class="status-badge status-badge-secondary"><i class="bi bi-person"></i> Nhân viên</span>
+        }
+    </p>
+</div>
+
+<!-- 5 Thẻ KPI -->
+<div class="row g-3 mb-4">
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="kpi-card">
+            <div class="kpi-icon icon-primary">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Sản phẩm</div>
+                <div class="kpi-value">@Model.TongSanPham</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="kpi-card kpi-success">
+            <div class="kpi-icon icon-success">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Nhà cung cấp</div>
+                <div class="kpi-value">@Model.TongNhaCungCap</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="kpi-card kpi-info">
+            <div class="kpi-icon icon-info">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Phiếu nhập</div>
+                <div class="kpi-value">@Model.TongPhieuNhap</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-6 col-sm-6">
+        <div class="kpi-card kpi-warning">
+            <div class="kpi-icon icon-warning">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Tổng giá trị nhập</div>
+                <div class="kpi-value">@Model.TongGiaTriNhap.ToString("N0") <span class="kpi-unit">VNĐ</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-6 col-sm-12">
+        <div class="kpi-card kpi-secondary">
+            <div class="kpi-icon icon-secondary">
+                <i class="bi bi-boxes"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Tổng tồn kho</div>
+                <div class="kpi-value">@Model.TongSoLuongTon <span class="kpi-unit">đơn vị</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card AHP Spotlight -->
+<div class="mb-4">
+    <div class="ahp-spotlight">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="spotlight-badge mb-2">
+                    <i class="bi bi-trophy-fill"></i> KẾT QUẢ AHP MỚI NHẤT
+                </div>
+
+                @if (Model.NhaCungCapDeXuatGanNhat != null && Model.NhaCungCapDeXuatGanNhat.NhaCungCap != null)
+                {
+                    var ncc = Model.NhaCungCapDeXuatGanNhat.NhaCungCap;
+                    <div class="spotlight-ncc-name">
+                        <i class="bi bi-check-circle-fill" style="color: var(--success);"></i>
+                        @ncc.TenNhaCungCap
+                        <span class="status-badge status-badge-success">Đề xuất #1</span>
+                    </div>
+                    <p style="color: var(--gray-500); font-size: 13px; margin-bottom: 0;">
+                        Kỳ: <strong>@(Model.NhaCungCapDeXuatGanNhat.KyDanhGia?.TenKyDanhGia ?? "Kỳ hiện tại")</strong>
+                        &bull; Liên hệ: <strong>@(ncc.NguoiLienHe ?? "N/A")</strong>
+                        &bull; SĐT: <strong>@(ncc.SoDienThoai ?? "N/A")</strong>
+                    </p>
+                }
+                else
+                {
+                    <h5 class="fw-bold mt-2 mb-1" style="color: var(--gray-600);">Chưa có kết quả AHP</h5>
+                    <p style="color: var(--gray-500); font-size: 13px; margin: 0;">
+                        Thực hiện đánh giá ma trận so sánh cặp và chấm điểm NCC để xem kết quả tại đây.
+                    </p>
+                }
+            </div>
+
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                @if (Model.NhaCungCapDeXuatGanNhat != null)
+                {
+                    <div class="ahp-result-card d-inline-block" style="min-width: 140px;">
+                        <div class="result-label">Điểm tổng hợp</div>
+                        <div class="spotlight-score">
+                            @(Model.NhaCungCapDeXuatGanNhat.DiemTong?.ToString("0.00") ?? "N/A")
+                            <span class="spotlight-max">/ 9</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2 Bảng: Phiếu nhập gần nhất & Tồn kho -->
+<div class="row g-4 mb-4">
+    <!-- Phiếu nhập mới nhất -->
+    <div class="col-lg-7">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-clock-history" style="color: var(--primary);"></i> Phiếu nhập gần đây</h5>
+                <span class="status-badge status-badge-secondary">5 phiếu mới nhất</span>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.PhieuNhapMoiNhat.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Nhà cung cấp</th>
+                                    <th>Ngày nhập</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                    <th class="text-center">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pn in Model.PhieuNhapMoiNhat)
+                                {
+                                    var tongTien = (pn.TongTien.HasValue && pn.TongTien.Value > 0)
+                                        ? pn.TongTien.Value
+                                        : (pn.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+                                    <tr>
+                                        <td>
+                                            <span class="code-badge">@(pn.MaPhieuNhapCode ?? $"PN{pn.MaPhieuNhap:D4}")</span>
+                                        </td>
+                                        <td>@(pn.NhaCungCap?.TenNhaCungCap ?? "N/A")</td>
+                                        <td style="color: var(--gray-500); font-size: 13px;">
+                                            @(pn.NgayNhap?.ToString("dd/MM/yyyy") ?? pn.NgayTao?.ToString("dd/MM/yyyy") ?? "N/A")
+                                        </td>
+                                        <td class="text-end fw-semibold">
+                                            @(tongTien.ToString("N0")) đ
+                                        </td>
+                                        <td class="text-center">
+                                            @if (pn.TrangThai == "xacnhan")
+                                            {
+                                                <span class="status-badge status-badge-success">Đã xác nhận</span>
+                                            }
+                                            else if (pn.TrangThai == "huy")
+                                            {
+                                                <span class="status-badge status-badge-danger">Đã hủy</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-badge-warning">Chờ xử lý</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có phiếu nhập hàng nào trong hệ thống.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tình trạng tồn kho -->
+    <div class="col-lg-5">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-boxes" style="color: var(--success);"></i> Theo dõi tồn kho</h5>
+                <span class="status-badge status-badge-secondary">Sắp xếp theo SL</span>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.DanhSachTonKho.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>ĐVT</th>
+                                    <th class="text-end">Tồn kho</th>
+                                    <th class="text-center">Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tk in Model.DanhSachTonKho)
+                                {
+                                    var soLuong = tk.SoLuongTon ?? 0;
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold" style="color: var(--gray-800);">@(tk.SanPham?.TenSanPham ?? "N/A")</div>
+                                            <small style="color: var(--gray-400);">@(tk.SanPham?.DanhMuc?.TenDanhMuc ?? "")</small>
+                                        </td>
+                                        <td>@(tk.SanPham?.DonViTinh?.TenDonVi ?? "-")</td>
+                                        <td class="text-end fw-bold">@soLuong</td>
+                                        <td class="text-center">
+                                            @if (soLuong < 20)
+                                            {
+                                                <span class="status-badge status-badge-danger">Tồn thấp</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-badge-success">Đủ hàng</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có dữ liệu tồn kho.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>

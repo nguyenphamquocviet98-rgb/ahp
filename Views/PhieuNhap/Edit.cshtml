@@ -1,0 +1,63 @@
+@model code.Models.PhieuNhap
+@{
+    ViewData["Title"] = "Chỉnh sửa phiếu nhập - " + Model.MaPhieuNhapCode;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <div class="d-flex align-items-center mb-3">
+                <a asp-action="Details" asp-route-id="@Model.MaPhieuNhap" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h4 class="fw-bold text-dark mb-0">Chỉnh Sửa Phiếu Nhập</h4>
+                    <span class="badge bg-light text-dark font-monospace border mt-1">Mã: @(Model.MaPhieuNhapCode ?? $"PN{Model.MaPhieuNhap:D4}")</span>
+                </div>
+            </div>
+
+            <form asp-action="Edit" asp-route-id="@Model.MaPhieuNhap" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MaPhieuNhap" />
+
+                <div class="mb-3">
+                    <label asp-for="MaPhieuNhapCode" class="form-label fw-semibold">Mã phiếu nhập</label>
+                    <input asp-for="MaPhieuNhapCode" class="form-control rounded-3 font-monospace text-uppercase" maxlength="20" />
+                    <span asp-validation-for="MaPhieuNhapCode" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MaNhaCungCap" class="form-label fw-semibold">Nhà cung cấp đối tác <span class="text-danger">*</span></label>
+                    <select asp-for="MaNhaCungCap" class="form-select rounded-3" asp-items="ViewBag.NhaCungCaps" required>
+                        <option value="">-- Chọn nhà cung cấp --</option>
+                    </select>
+                    <span asp-validation-for="MaNhaCungCap" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="NgayNhap" class="form-label fw-semibold">Ngày nhập hàng</label>
+                        <input asp-for="NgayNhap" type="date" class="form-control rounded-3" value="@(Model.NgayNhap?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" />
+                        <span asp-validation-for="NgayNhap" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="TrangThai" class="form-label fw-semibold">Trạng thái phiếu</label>
+                        <select asp-for="TrangThai" class="form-select rounded-3">
+                            <option value="nhap" selected="@(Model.TrangThai == "nhap")">Chờ xử lý / Nháp</option>
+                            <option value="xacnhan" selected="@(Model.TrangThai == "xacnhan")">Đã xác nhận</option>
+                            <option value="huy" selected="@(Model.TrangThai == "huy")">Đã hủy</option>
+                        </select>
+                        <span asp-validation-for="TrangThai" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.MaPhieuNhap" class="btn btn-light rounded-3 px-4">Hủy</a>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">
+                        <i class="bi bi-check-lg me-1"></i> Cập nhật phiếu nhập
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

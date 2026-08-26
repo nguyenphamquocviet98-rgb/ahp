@@ -1,0 +1,30 @@
+@model code.Models.DonViTinh
+@{
+    ViewData["Title"] = "Chỉnh sửa đơn vị tính";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card-custom">
+            <div class="card-body-custom">
+                <div class="d-flex align-items-center mb-4">
+                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;"><i class="bi bi-arrow-left"></i></a>
+                    <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Chỉnh Sửa Đơn Vị Tính</h4>
+                </div>
+                <form asp-action="Edit" asp-route-id="@Model.MaDonViTinh" method="post" class="form-custom">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="MaDonViTinh" />
+                    <div class="mb-4">
+                        <label asp-for="TenDonVi" class="form-label">Tên đơn vị tính <span style="color: var(--danger);">*</span></label>
+                        <input asp-for="TenDonVi" class="form-control" required maxlength="20" />
+                        <span asp-validation-for="TenDonVi" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary px-4"><i class="bi bi-check-lg me-1"></i> Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

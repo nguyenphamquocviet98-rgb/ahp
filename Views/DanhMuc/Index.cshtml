@@ -1,0 +1,147 @@
+@model IEnumerable<code.Models.DanhMuc>
+@{
+    ViewData["Title"] = "Quản lý Danh mục hàng hóa";
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+    var search = ViewData["Search"] as string;
+}
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h3><i class="bi bi-tags" style="color: var(--primary);"></i> Danh mục sản phẩm</h3>
+        <p>Quản lý phân loại các nhóm hàng hóa trong hệ thống</p>
+    </div>
+    <div>
+        @if (isManagerOrAdmin)
+        {
+            <a asp-action="Create" class="btn btn-custom btn-custom-primary">
+                <i class="bi bi-plus-circle"></i> Thêm danh mục mới
+            </a>
+        }
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+}
+
+<div class="table-wrapper">
+    <div style="padding: 12px 16px; border-bottom: 1px solid var(--gray-200);">
+        <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center" style="max-width: 400px;">
+            <div class="input-group">
+                <span class="input-group-text" style="background: transparent; border-color: var(--gray-300);"><i class="bi bi-search" style="color: var(--gray-400);"></i></span>
+                <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm tên danh mục..." style="border-color: var(--gray-300);" />
+            </div>
+            @if (!string.IsNullOrEmpty(search))
+            {
+                <a asp-action="Index" class="btn btn-custom btn-custom-outline" title="Xóa tìm kiếm"><i class="bi bi-x-lg"></i></a>
+            }
+            <button type="submit" class="btn btn-custom btn-custom-outline">Tìm</button>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 80px;" class="text-center">Mã</th>
+                    <th>Tên danh mục</th>
+                    <th>Mô tả</th>
+                    <th class="text-center" style="width: 130px;">Số sản phẩm</th>
+                    @if (isManagerOrAdmin)
+                    {
+                        <th class="text-end" style="width: 140px;">Thao tác</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center" style="color: var(--gray-500); font-weight: 600;">#@item.MaDanhMuc</td>
+                            <td class="fw-semibold" style="color: var(--gray-800);">@item.TenDanhMuc</td>
+                            <td style="color: var(--gray-500);">@(string.IsNullOrEmpty(item.MoTa) ? "—" : item.MoTa)</td>
+                            <td class="text-center">
+                                <span class="status-badge status-badge-primary">@(item.SanPhams?.Count ?? 0)</span>
+                            </td>
+                            @if (isManagerOrAdmin)
+                            {
+                                <td class="text-end">
+                                    <div class="action-btn-group">
+                                        <a asp-action="Edit" asp-route-id="@item.MaDanhMuc" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa"
+                                                onclick="confirmDelete(@item.MaDanhMuc, '@item.TenDanhMuc', @(item.SanPhams?.Count ?? 0))">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy danh mục nào.</p></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa danh mục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Bạn có chắc chắn muốn xóa danh mục: <strong id="deleteCategoryName"></strong>?</p>
+                <div id="productWarning" class="alert-custom alert-custom-warning d-none">
+                    <i class="bi bi-exclamation-circle-fill"></i> Danh mục này hiện đang có <strong id="productCount"></strong> sản phẩm. Hệ thống sẽ không cho phép xóa!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" asp-action="Delete">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteCategoryId" />
+                    <button type="submit" id="btnConfirmDelete" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name, count) {
+            document.getElementById('deleteCategoryId').value = id;
+            document.getElementById('deleteCategoryName').innerText = name;
+            const warningEl = document.getElementById('productWarning');
+            const btnConfirm = document.getElementById('btnConfirmDelete');
+            if (count > 0) {
+                document.getElementById('productCount').innerText = count;
+                warningEl.classList.remove('d-none');
+                btnConfirm.disabled = true;
+            } else {
+                warningEl.classList.add('d-none');
+                btnConfirm.disabled = false;
+            }
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}
