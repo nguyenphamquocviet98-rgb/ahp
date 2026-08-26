@@ -1,6 +1,6 @@
 @model DashboardViewModel
 @{
-    ViewData["Title"] = "Dashboard Tổng quan";
+    ViewData["Title"] = "Trang chủ - Tổng quan hệ thống";
     var username = User.Identity?.Name ?? "Người dùng";
     var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "nhanvien";
 }
@@ -8,7 +8,7 @@
 <!-- Page Header Toolbar -->
 <div class="page-header">
     <div class="page-header-left">
-        <h3><i class="bi bi-speedometer2 text-primary"></i> Tổng quan điều hành</h3>
+        <h3><i class="bi bi-house-door-fill text-primary"></i> Bảng điều khiển Trang chủ</h3>
         <p>Theo dõi luồng nhập hàng, cảnh báo tồn kho và kết quả lựa chọn nhà cung cấp AHP</p>
     </div>
     <div class="d-flex gap-2">

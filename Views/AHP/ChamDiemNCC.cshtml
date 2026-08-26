@@ -24,26 +24,40 @@
         }
 
         <!-- Header Chấm điểm -->
-        <div class="card-custom mb-4">
-            <div class="card-body-custom">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div class="d-flex align-items-center">
-                        <a asp-action="KetQuaTrongSo" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại trọng số AHP">
-                            <i class="bi bi-arrow-left"></i>
-                        </a>
-                        <div>
-                            <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Chấm Điểm Nhà Cung Cấp Theo Tiêu Chí</h4>
-                            <span style="color: var(--primary); font-weight: 600; font-size: 13px;">Kỳ: @Model.TenKyDanhGia</span>
-                        </div>
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="d-flex align-items-center">
+                    <a asp-action="KetQuaTrongSo" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại trọng số AHP">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h3><i class="bi bi-star-fill text-warning"></i> Bước 2: Chấm Điểm Năng Lực Nhà Cung Cấp</h3>
+                        <p>Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> &bull; Đánh giá từng đối tác theo 4 tiêu chí đã tính trọng số AHP</p>
                     </div>
+                </div>
+            </div>
 
-                    <div class="ahp-steps">
-                        <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="ahp-step">
-                            <i class="bi bi-grid-3x3"></i> Bước 1: Trọng số AHP
-                        </a>
-                        <span class="ahp-step active">
-                            <i class="bi bi-star"></i> Bước 2: Chấm điểm & Xếp hạng
-                        </span>
+            <div class="d-flex gap-2">
+                <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
+                    <i class="bi bi-grid-3x3"></i> Bước 1: Trọng số AHP
+                </a>
+            </div>
+        </div>
+
+        <!-- Hướng dẫn chấm điểm -->
+        <div class="card-custom mb-4" style="background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border-color: #A7F3D0;">
+            <div class="card-body-custom">
+                <div class="d-flex align-items-start gap-3">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #059669; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1" style="color: #065F46; font-size: 14px;">
+                            Nguyên tắc chấm điểm năng lực (Thang điểm 1 đến 9):
+                        </h6>
+                        <p class="small mb-0" style="color: #047857;">
+                            Điểm càng cao thể hiện năng lực càng tốt: <strong>Giá rẻ/tiết kiệm &rarr; Điểm Giá cao</strong>, <strong>Chất lượng đạt chuẩn &rarr; Điểm CL cao</strong>, <strong>Giao hàng đúng hẹn &rarr; Điểm Giao cao</strong>. Cột <em>Điểm dự kiến (WSM)</em> sẽ tự động tính toán trực tiếp thời gian thực!
+                        </p>
                     </div>
                 </div>
             </div>
@@ -57,13 +71,11 @@
             <div class="card-custom mb-4">
                 <div class="card-header-custom">
                     <div>
-                        <h5>
-                            <i class="bi bi-star-half" style="color: var(--warning);"></i> Đánh giá năng lực đối tác cung ứng (Thang điểm 1–9)
-                        </h5>
-                        <small style="color: var(--gray-500);">Quy tắc chuẩn hóa: Điểm càng cao = Càng tốt (Giá tốt &rarr; Điểm cao, Giao hàng nhanh &rarr; Điểm cao)</small>
+                        <h5><i class="bi bi-table text-primary"></i> Bảng Nhập Điểm Đánh Giá Nhà Cung Cấp</h5>
+                        <small style="color: var(--slate-500);">Nhập điểm từ 1.0 đến 9.0 cho từng tiêu chí của đối tác</small>
                     </div>
                     <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillDemoScores()">
-                        <i class="bi bi-lightning-charge me-1"></i> Điền điểm đánh giá mẫu
+                        <i class="bi bi-magic me-1"></i> Điền điểm đánh giá mẫu
                     </button>
                 </div>
 
@@ -72,18 +84,18 @@
                         <table class="table-custom text-center mb-0">
                             <thead>
                                 <tr>
-                                    <th class="text-start" style="width: 250px;">Nhà cung cấp</th>
+                                    <th class="text-start" style="width: 260px;">Nhà cung cấp</th>
                                     @foreach (var tc in tieuChis)
                                     {
                                         decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
                                         <th style="min-width: 170px;">
-                                            <div style="font-weight: 700; color: var(--gray-900);">@tc.TenTieuChi</div>
+                                            <div style="font-weight: 700; color: var(--slate-900);">@tc.TenTieuChi</div>
                                             <span class="status-badge status-badge-primary mt-1" style="font-size: 10px;">
                                                 Trọng số W: @w.ToString("0.000") (@((w * 100).ToString("0.0"))%)
                                             </span>
                                         </th>
                                     }
-                                    <th class="text-center" style="width: 150px; background: var(--primary-light); color: var(--primary-dark);">Điểm dự kiến (WSM)</th>
+                                    <th class="text-center" style="width: 160px; background: var(--primary-light); color: var(--primary-700);">Điểm dự kiến (WSM)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -91,7 +103,7 @@
                                 {
                                     <tr>
                                         <td class="text-start">
-                                            <div class="fw-bold" style="color: var(--gray-900);">@ncc.TenNhaCungCap</div>
+                                            <div class="fw-bold" style="color: var(--slate-900);">@ncc.TenNhaCungCap</div>
                                             <span class="code-badge">@(ncc.MaNhaCungCapCode ?? $"NCC{ncc.MaNhaCungCap:D3}")</span>
                                         </td>
                                         @foreach (var tc in tieuChis)
@@ -108,14 +120,14 @@
                                                        id="score_@(ncc.MaNhaCungCap)_@(tc.MaTieuChi)"
                                                        value="@curScore"
                                                        class="form-control text-center fw-bold score-input"
-                                                       style="max-width: 100px; margin: 0 auto; border-color: var(--gray-300);"
+                                                       style="max-width: 100px; margin: 0 auto; border-color: var(--slate-300);"
                                                        data-weight="@(trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0)"
                                                        data-ncc="@ncc.MaNhaCungCap"
                                                        oninput="calcSupplierWSM(@ncc.MaNhaCungCap)" />
                                             </td>
                                         }
-                                        <td style="background: var(--gray-50);">
-                                            <span class="fw-bold fs-5 font-mono" style="color: var(--primary);" id="wsm_preview_@ncc.MaNhaCungCap">
+                                        <td style="background: var(--slate-50);">
+                                            <span class="fw-bold fs-5 font-mono text-primary" id="wsm_preview_@ncc.MaNhaCungCap">
                                                 0.00
                                             </span>
                                         </td>
@@ -125,12 +137,12 @@
                         </table>
                     </div>
 
-                    <div class="p-3 d-flex justify-content-end gap-2" style="border-top: 1px solid var(--gray-200);">
+                    <div class="p-3 d-flex justify-content-end gap-2" style="border-top: 1px solid var(--border-color);">
                         <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
                         @if (isManagerOrAdmin)
                         {
-                            <button type="submit" class="btn btn-custom btn-custom-primary px-4 py-2">
-                                <i class="bi bi-trophy me-1"></i> Tính Tổng Điểm Weighted Sum & Xếp Hạng
+                            <button type="submit" class="btn btn-custom btn-custom-emerald px-4 py-2">
+                                <i class="bi bi-trophy-fill me-1"></i> Tính Tổng Điểm WSM & Xem Bảng Xếp Hạng
                             </button>
                         }
                     </div>
@@ -141,13 +153,13 @@
         <!-- Thang điểm đánh giá -->
         <div class="card-custom">
             <div class="card-body-custom p-4">
-                <h6 class="fw-bold mb-3" style="color: var(--gray-900);">
-                    <i class="bi bi-info-circle" style="color: var(--primary);"></i> Quy ước thang điểm đánh giá năng lực nhà cung cấp (1–9)
+                <h6 class="fw-bold mb-3" style="color: var(--slate-900);">
+                    <i class="bi bi-info-circle text-primary"></i> Quy ước thang điểm đánh giá năng lực nhà cung cấp (1–9)
                 </h6>
-                <div class="row g-2 small" style="color: var(--gray-600);">
+                <div class="row g-2 small" style="color: var(--slate-600);">
                     <div class="col-md-3"><span class="status-badge status-badge-danger">1 - 2</span> : Rất kém / Không đạt yêu cầu</div>
                     <div class="col-md-3"><span class="status-badge status-badge-warning">3 - 4</span> : Dưới trung bình / Còn hạn chế</div>
-                    <div class="col-md-3"><span class="status-badge status-badge-info">5 - 6</span> : Trung bình / Đạt mức cơ bản</div>
+                    <div class="col-md-3"><span class="status-badge status-badge-primary">5 - 6</span> : Trung bình / Đạt mức cơ bản</div>
                     <div class="col-md-3"><span class="status-badge status-badge-success">7 - 9</span> : Tốt &rarr; Xuất sắc / Vượt trội</div>
                 </div>
             </div>
@@ -179,10 +191,6 @@
         }
 
         function fillDemoScores() {
-            // Mẫu điểm thực tế phân hóa:
-            // NCC 1: CL cao (8.5), Uy tín cao (8.0), Giá khá (6.5), Giao hàng tốt (7.5)
-            // NCC 2: Giá cực rẻ (9.0), CL trung bình (5.5), Giao hàng chậm (4.5), Uy tín (5.0)
-            // NCC 3: CL trung bình khá (7.0), Giao hàng rất nhanh (8.5), Giá cao (5.0), Uy tín (6.5)
             const demo = [
                 { nccIdx: 0, scores: [6.5, 8.5, 7.5, 8.0] },
                 { nccIdx: 1, scores: [9.0, 5.5, 4.5, 5.0] },
