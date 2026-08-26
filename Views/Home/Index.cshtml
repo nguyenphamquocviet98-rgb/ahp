@@ -317,16 +317,19 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // 1. Biểu đồ Donut Danh mục sản phẩm (Restrained Enterprise Colors)
+            // 1. Biểu đồ Donut: Lấy dữ liệu danh mục thực tế 100% từ SQL database
+            const catLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.TenDanhMuc)));
+            const catData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.SoLuongSanPham)));
+
             const ctxCat = document.getElementById('categoryChart');
-            if (ctxCat) {
+            if (ctxCat && catLabels && catLabels.length > 0) {
                 new Chart(ctxCat, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Bánh kẹo & Đồ ngọt', 'Đồ uống & Giải khát', 'Gia vị & Thực phẩm khô', 'Sữa & Chế phẩm'],
+                        labels: catLabels,
                         datasets: [{
-                            data: [2, 1, 1, 1],
-                            backgroundColor: ['#1E293B', '#3B82F6', '#64748B', '#CBD5E1'],
+                            data: catData,
+                            backgroundColor: ['#1E293B', '#2563EB', '#64748B', '#CBD5E1', '#F59E0B', '#10B981'],
                             borderWidth: 2,
                             borderColor: '#FFFFFF'
                         }]
@@ -349,22 +352,22 @@
                 });
             }
 
-            // 2. Biểu đồ Cột So sánh Nhà cung cấp
+            // 2. Biểu đồ Cột: Lấy điểm số tổng hợp AHP thực tế 100% từ SQL database (kỳ gần nhất)
+            const supLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.Select(n => n.TenNhaCungCap)));
+            const supData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.Select(n => n.DiemTong)));
+
             const ctxSup = document.getElementById('supplierChart');
-            if (ctxSup) {
+            if (ctxSup && supLabels && supLabels.length > 0) {
+                const bgColors = supLabels.map((_, index) => index === 0 ? '#2563EB' : (index === 1 ? '#94A3B8' : (index === 2 ? '#CBD5E1' : '#E2E8F0')));
+
                 new Chart(ctxSup, {
                     type: 'bar',
                     data: {
-                        labels: ['Thực phẩm Á Châu', 'Thương mại Tân Phú', 'Nông sản Việt', 'DNTN Hoàng Gia'],
+                        labels: supLabels,
                         datasets: [{
                             label: 'Điểm tổng hợp (WSM)',
-                            data: [8.05, 6.75, 6.45, 6.15],
-                            backgroundColor: [
-                                '#2563EB', // Top 1 Accent
-                                '#94A3B8',
-                                '#CBD5E1',
-                                '#E2E8F0'
-                            ],
+                            data: supData,
+                            backgroundColor: bgColors,
                             borderRadius: 4,
                             barPercentage: 0.6
                         }]

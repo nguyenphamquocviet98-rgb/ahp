@@ -22,6 +22,35 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        // 1. Thống kê danh mục sản phẩm từ SQL
+        var thongKeDanhMuc = await _context.DanhMucs
+            .Select(d => new DanhMucThongKeDto
+            {
+                TenDanhMuc = d.TenDanhMuc ?? "Chưa phân loại",
+                SoLuongSanPham = d.SanPhams.Count
+            })
+            .Where(d => d.SoLuongSanPham > 0)
+            .ToListAsync();
+
+        // 2. Thống kê điểm số AHP các nhà cung cấp từ kỳ đánh giá gần nhất trong SQL
+        var kyAHPGanNhat = await _context.KyDanhGias
+            .Include(k => k.KetQuaXepHangs)
+                .ThenInclude(kq => kq.NhaCungCap)
+            .Where(k => k.KetQuaXepHangs.Any())
+            .OrderByDescending(k => k.MaKyDanhGia)
+            .FirstOrDefaultAsync();
+
+        var thongKeNhaCungCapAHP = kyAHPGanNhat?.KetQuaXepHangs
+            .OrderBy(kq => kq.XepHang)
+            .Select(kq => new NhaCungCapDiemDto
+            {
+                TenNhaCungCap = kq.NhaCungCap != null ? kq.NhaCungCap.TenNhaCungCap : "N/A",
+                DiemTong = kq.DiemTong ?? 0,
+                XepHang = kq.XepHang ?? 99,
+                DeXuat = kq.DeXuat ?? false
+            })
+            .ToList() ?? new List<NhaCungCapDiemDto>();
+
         var viewModel = new DashboardViewModel
         {
             TongSanPham = await _context.SanPhams.CountAsync(),
@@ -54,7 +83,10 @@ public class HomeController : Controller
                 .Include(k => k.KyDanhGia)
                 .Where(k => k.DeXuat == true)
                 .OrderByDescending(k => k.MaKyDanhGia)
-                .FirstOrDefaultAsync()
+                .FirstOrDefaultAsync(),
+
+            ThongKeDanhMuc = thongKeDanhMuc,
+            ThongKeNhaCungCapAHP = thongKeNhaCungCapAHP
         };
 
         return View(viewModel);

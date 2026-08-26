@@ -226,40 +226,44 @@
 </div>
 
 @section Scripts {
+    @{
+        var radarLabels = tieuChis.Select(tc => tc.TenTieuChi).ToList();
+        var colors = new[] { "#2563EB", "#64748B", "#059669", "#D97706", "#94A3B8" };
+        var bgColors = new[] { "rgba(37, 99, 235, 0.12)", "rgba(100, 116, 139, 0.08)", "rgba(5, 150, 105, 0.08)", "rgba(217, 119, 6, 0.08)", "rgba(148, 163, 184, 0.08)" };
+
+        var radarDatasets = Model.BangXepHang.Take(5).Select((item, idx) => {
+            int nccId = item.MaNhaCungCap ?? 0;
+            var scores = tieuChis.Select(tc => {
+                if (Model.DiemMap.ContainsKey(nccId) && Model.DiemMap[nccId].ContainsKey(tc.MaTieuChi))
+                    return (double)Model.DiemMap[nccId][tc.MaTieuChi];
+                return 5.0;
+            }).ToList();
+
+            var c = colors[idx % colors.Length];
+            var bg = bgColors[idx % bgColors.Length];
+
+            return new {
+                label = (item.NhaCungCap?.TenNhaCungCap ?? $"NCC #{nccId}") + $" (#{item.XepHang})",
+                data = scores,
+                borderColor = c,
+                backgroundColor = bg,
+                borderWidth = (item.XepHang == 1) ? 2.5 : 1.5,
+                pointBackgroundColor = c
+            };
+        }).ToList();
+    }
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const radarLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(radarLabels));
+            const radarDatasets = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(radarDatasets));
+
             const ctx = document.getElementById('radarChart');
-            if (ctx) {
+            if (ctx && radarLabels && radarLabels.length > 0) {
                 new Chart(ctx, {
                     type: 'radar',
                     data: {
-                        labels: ['Giá cả', 'Chất lượng', 'Thời gian giao', 'Uy tín & DV'],
-                        datasets: [
-                            {
-                                label: 'Thực phẩm Á Châu (#1)',
-                                data: [6.5, 8.5, 7.5, 8.0],
-                                borderColor: '#2563EB',
-                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: '#2563EB'
-                            },
-                            {
-                                label: 'Nông sản Việt (#2)',
-                                data: [9.0, 5.5, 4.5, 5.0],
-                                borderColor: '#64748B',
-                                backgroundColor: 'rgba(100, 116, 139, 0.05)',
-                                borderWidth: 1.5,
-                                pointBackgroundColor: '#64748B'
-                            },
-                            {
-                                label: 'Thương mại Tân Phú (#3)',
-                                data: [5.0, 7.0, 8.5, 6.5],
-                                borderColor: '#94A3B8',
-                                backgroundColor: 'rgba(148, 163, 184, 0.05)',
-                                borderWidth: 1.5,
-                                pointBackgroundColor: '#94A3B8'
-                            }
-                        ]
+                        labels: radarLabels,
+                        datasets: radarDatasets
                     },
                     options: {
                         responsive: true,
