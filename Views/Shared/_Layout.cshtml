@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ProcureAHP Enterprise</title>
+    <title>@ViewData["Title"] - Quản Lý Nhập Hàng & AHP</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <!-- Chart.js for data visualizations -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -19,18 +19,18 @@
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
-        <!-- Sidebar Overlay (mobile) -->
+        <!-- Sidebar Mobile Overlay -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-        <!-- SIDEBAR (DEEP SLATE ENTERPRISE) -->
+        <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <i class="bi bi-shield-check"></i>
+                    <i class="bi bi-box-seam-fill"></i>
                 </div>
                 <div class="sidebar-brand-text">
                     <div class="sidebar-title">ProcureAHP</div>
-                    <div class="sidebar-subtitle">Quản Lý Nhập Hàng & AHP</div>
+                    <div class="sidebar-subtitle">Quản lý nhập hàng & AHP</div>
                 </div>
             </div>
 
@@ -40,14 +40,14 @@
                     <div class="sidebar-group-label">Tổng quan</div>
                     <a asp-controller="Home" asp-action="Index"
                        class="sidebar-link @(currentController == "Home" ? "active" : "")">
-                        <i class="bi bi-speedometer2"></i>
+                        <i class="bi bi-grid-1x2"></i>
                         <span>Dashboard</span>
                     </a>
                 </div>
 
                 <!-- Danh mục & Hàng hóa -->
                 <div class="sidebar-group">
-                    <div class="sidebar-group-label">Danh mục & Hàng hóa</div>
+                    <div class="sidebar-group-label">Hàng hóa & Đối tác</div>
                     <a asp-controller="SanPham" asp-action="Index"
                        class="sidebar-link @(currentController == "SanPham" ? "active" : "")">
                         <i class="bi bi-box-seam"></i>
@@ -55,7 +55,7 @@
                     </a>
                     <a asp-controller="DanhMuc" asp-action="Index"
                        class="sidebar-link @(currentController == "DanhMuc" ? "active" : "")">
-                        <i class="bi bi-tags"></i>
+                        <i class="bi bi-folder2"></i>
                         <span>Danh mục</span>
                     </a>
                     <a asp-controller="DonViTinh" asp-action="Index"
@@ -65,17 +65,17 @@
                     </a>
                     <a asp-controller="NhaCungCap" asp-action="Index"
                        class="sidebar-link @(currentController == "NhaCungCap" ? "active" : "")">
-                        <i class="bi bi-building"></i>
+                        <i class="bi bi-buildings"></i>
                         <span>Nhà cung cấp</span>
                     </a>
                 </div>
 
                 <!-- Nhập hàng & Kho -->
                 <div class="sidebar-group">
-                    <div class="sidebar-group-label">Nhập hàng & Kho vận</div>
+                    <div class="sidebar-group-label">Kho vận & Nhập hàng</div>
                     <a asp-controller="PhieuNhap" asp-action="Index"
                        class="sidebar-link @(currentController == "PhieuNhap" ? "active" : "")">
-                        <i class="bi bi-receipt"></i>
+                        <i class="bi bi-receipt-cutoff"></i>
                         <span>Phiếu nhập hàng</span>
                     </a>
                     <a asp-controller="TonKho" asp-action="Index"
@@ -94,10 +94,10 @@
                 @if (role == "admin" || role == "quanly")
                 {
                     <div class="sidebar-group">
-                        <div class="sidebar-group-label">Đánh giá AHP</div>
+                        <div class="sidebar-group-label">Đánh giá đa tiêu chí (AHP)</div>
                         <a asp-controller="AHP" asp-action="Index"
                            class="sidebar-link @(currentController == "AHP" && currentAction == "Index" ? "active" : "")">
-                            <i class="bi bi-calendar-event"></i>
+                            <i class="bi bi-calendar3"></i>
                             <span>Kỳ đánh giá</span>
                         </a>
                         <a asp-controller="AHP" asp-action="MaTranSoSanh"
@@ -107,12 +107,12 @@
                         </a>
                         <a asp-controller="AHP" asp-action="ChamDiemNCC"
                            class="sidebar-link @(currentController == "AHP" && currentAction == "ChamDiemNCC" ? "active" : "")">
-                            <i class="bi bi-star"></i>
+                            <i class="bi bi-check2-circle"></i>
                             <span>Chấm điểm NCC</span>
                         </a>
                         <a asp-controller="AHP" asp-action="KetQuaXepHang"
                            class="sidebar-link @(currentController == "AHP" && (currentAction == "KetQuaXepHang" || currentAction == "KetQuaTrongSo") ? "active" : "")">
-                            <i class="bi bi-trophy"></i>
+                            <i class="bi bi-award"></i>
                             <span>Xếp hạng & Đề xuất</span>
                         </a>
                     </div>
@@ -122,17 +122,17 @@
                 @if (role == "admin")
                 {
                     <div class="sidebar-group">
-                        <div class="sidebar-group-label">Quản trị hệ thống</div>
+                        <div class="sidebar-group-label">Hệ thống</div>
                         <a asp-controller="NguoiDung" asp-action="Index"
                            class="sidebar-link @(currentController == "NguoiDung" ? "active" : "")">
                             <i class="bi bi-people"></i>
-                            <span>Quản lý tài khoản</span>
+                            <span>Tài khoản người dùng</span>
                         </a>
                     </div>
                 }
             </nav>
 
-            <!-- Sidebar Footer: User Info -->
+            <!-- Sidebar User -->
             <div class="sidebar-footer">
                 <div class="sidebar-user">
                     <div class="sidebar-user-avatar">
@@ -159,16 +159,14 @@
             </div>
         </aside>
 
-        <!-- TOP HEADER (FROSTED GLASS) -->
+        <!-- TOP HEADER -->
         <header class="top-header">
             <div class="header-left">
                 <button class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Menu">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="header-breadcrumb d-none d-md-flex">
-                    <a asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house me-1"></i> Trang chủ
-                    </a>
+                    <a asp-controller="Home" asp-action="Index">Hệ thống</a>
                     @if (!string.IsNullOrEmpty(ViewData["Title"]?.ToString()) && currentController != "Home")
                     {
                         <span class="separator">/</span>
@@ -179,10 +177,10 @@
 
             <div class="header-right">
                 <div class="header-user-pill">
-                    <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: var(--gray-200); color: var(--gray-700); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px;">
                         @(username.Length > 0 ? username[0].ToString().ToUpper() : "U")
                     </div>
-                    <span style="font-weight: 600; font-size: 13px; color: var(--slate-800);">@username</span>
+                    <span style="font-weight: 500; font-size: 12.5px; color: var(--gray-800);">@username</span>
                     @if (role == "admin")
                     {
                         <span class="user-role-badge badge-admin">Admin</span>
@@ -196,9 +194,9 @@
                         <span class="user-role-badge badge-nhanvien">Nhân viên</span>
                     }
                 </div>
-                <a asp-controller="Account" asp-action="Logout" class="btn-header-logout">
+                <a asp-controller="Account" asp-action="Logout" class="btn-header-logout" title="Đăng xuất">
                     <i class="bi bi-box-arrow-right"></i>
-                    <span class="d-none d-sm-inline">Đăng xuất</span>
+                    <span class="d-none d-sm-inline">Thoát</span>
                 </a>
             </div>
         </header>
@@ -210,7 +208,7 @@
             </main>
 
             <footer class="page-footer">
-                &copy; 2026 <strong>ProcureAHP Enterprise</strong> &bull; Hệ thống Quản lý Nhập hàng & Lựa chọn Nhà cung cấp bằng AHP
+                &copy; 2026 <strong>ProcureAHP Enterprise</strong> &mdash; Hệ thống Quản lý Nhập hàng & Ra quyết định Nhà cung cấp bằng AHP
             </footer>
         </div>
 

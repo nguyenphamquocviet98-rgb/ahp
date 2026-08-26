@@ -1,7 +1,7 @@
 @model LoginViewModel
 @{
     ViewData["Title"] = "Đăng nhập hệ thống";
-    Layout = null; // Trang đăng nhập sử dụng layout riêng độc lập
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -9,274 +9,253 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Quản Lý Nhập Hàng & AHP</title>
+    <title>@ViewData["Title"] - ProcureAHP</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-color: #F8FAFC;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 1.5rem;
+            color: #1E293B;
+            -webkit-font-smoothing: antialiased;
         }
         .login-card {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
-            overflow: hidden;
+            background: #FFFFFF;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
             width: 100%;
-            max-width: 480px;
-            padding: 2.5rem;
+            max-width: 440px;
+            padding: 2.25rem;
         }
         .login-header {
             text-align: center;
-            margin-bottom: 1.8rem;
+            margin-bottom: 1.75rem;
         }
-        .login-header .icon-badge {
-            width: 68px;
-            height: 68px;
-            background: #e8f0fe;
-            color: #1e3c72;
-            border-radius: 50%;
+        .login-header .logo-badge {
+            width: 44px;
+            height: 44px;
+            background: #0F172A;
+            color: #FFFFFF;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 10px rgba(30, 60, 114, 0.15);
+            font-size: 20px;
+            margin-bottom: 0.75rem;
         }
         .login-header h2 {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: #1e293b;
+            color: #0F172A;
+            letter-spacing: -0.02em;
             margin-bottom: 0.25rem;
-            letter-spacing: 0.5px;
         }
         .login-header p {
-            color: #64748b;
-            font-size: 14px;
+            color: #64748B;
+            font-size: 13px;
             margin-bottom: 0;
         }
-        .form-floating > .form-control {
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
+        .form-label {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 4px;
         }
-        .form-floating > .form-control:focus {
-            border-color: #2a5298;
-            box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.2);
+        .form-control {
+            border-radius: 6px;
+            border: 1px solid #CBD5E1;
+            font-size: 13.5px;
+            padding: 8px 12px;
+            color: #0F172A;
+        }
+        .form-control:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 2px #EFF6FF;
+            outline: none;
         }
         .password-toggle-btn {
             position: absolute;
-            right: 12px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #64748b;
-            font-size: 18px;
+            color: #94A3B8;
+            font-size: 16px;
             cursor: pointer;
             z-index: 5;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: color 0.15s ease;
+            padding: 4px 6px;
+            border-radius: 4px;
         }
         .password-toggle-btn:hover {
-            color: #1e3c72;
+            color: #334155;
         }
         .btn-login {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.8rem;
-            font-size: 16px;
+            background: #0F172A;
+            border: 1px solid #0F172A;
+            border-radius: 6px;
+            padding: 9px;
+            font-size: 14px;
             font-weight: 600;
-            color: #fff;
-            transition: all 0.2s ease;
+            color: #FFFFFF;
+            transition: all 150ms ease;
         }
         .btn-login:hover {
-            background: linear-gradient(135deg, #162d55 0%, #204177 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
-            color: #fff;
+            background: #1E293B;
+            border-color: #1E293B;
+            color: #FFFFFF;
         }
         .forgot-link {
-            color: #2a5298;
+            color: #2563EB;
             text-decoration: none;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 500;
-            transition: color 0.15s;
         }
         .forgot-link:hover {
-            color: #1e3c72;
             text-decoration: underline;
         }
         .demo-accounts {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 1.1rem;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 1rem;
             margin-top: 1.5rem;
         }
         .demo-item {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0.5rem 0.75rem;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 7px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 150ms ease;
+            margin-bottom: 6px;
+        }
+        .demo-item:last-child {
+            margin-bottom: 0;
         }
         .demo-item:hover {
-            border-color: #2a5298;
-            background: #f1f5f9;
-            transform: translateX(3px);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-        .fill-toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1050;
+            border-color: #CBD5E1;
+            background: #F1F5F9;
         }
     </style>
 </head>
 <body>
     <div class="login-card">
         <div class="login-header">
-            <div class="icon-badge">
-                <i class="bi bi-box-seam"></i>
+            <div class="logo-badge">
+                <i class="bi bi-box-seam-fill"></i>
             </div>
-            <h2>ĐĂNG NHẬP</h2>
-            <p>Hệ thống Quản lý nhập hàng & AHP</p>
+            <h2>ProcureAHP</h2>
+            <p>Hệ thống Quản lý Nhập hàng & AHP</p>
         </div>
 
         @if (!ViewData.ModelState.IsValid)
         {
-            <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3" role="alert">
-                <div asp-validation-summary="All" class="text-danger small mb-0"></div>
-                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="alert alert-danger py-2 px-3 mb-3 small" role="alert">
+                <div asp-validation-summary="All" class="text-danger mb-0"></div>
             </div>
         }
 
         <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
             <input type="hidden" asp-for="ReturnUrl" />
 
-            <div class="form-floating mb-3">
+            <div class="mb-3">
+                <label class="form-label" asp-for="TenDangNhap">Tên đăng nhập</label>
                 <input asp-for="TenDangNhap" class="form-control" id="txtTenDangNhap" placeholder="admin" required autocomplete="username" />
-                <label asp-for="TenDangNhap"><i class="bi bi-person me-1"></i> Tên đăng nhập</label>
                 <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
             </div>
 
-            <div class="position-relative mb-3">
-                <div class="form-floating">
-                    <input asp-for="MatKhau" type="password" class="form-control pe-5" id="txtMatKhau" placeholder="••••••" required autocomplete="current-password" />
-                    <label asp-for="MatKhau"><i class="bi bi-lock me-1"></i> Mật khẩu</label>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0" asp-for="MatKhau">Mật khẩu</label>
+                    <a href="javascript:void(0)" class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">
+                        Quên mật khẩu?
+                    </a>
                 </div>
-                <button type="button" class="password-toggle-btn" id="btnTogglePassword" title="Ẩn/Hiện mật khẩu" tabindex="-1">
-                    <i class="bi bi-eye-slash" id="eyeIcon"></i>
-                </button>
+                <div class="position-relative">
+                    <input asp-for="MatKhau" type="password" class="form-control pe-5" id="txtMatKhau" placeholder="••••••" required autocomplete="current-password" />
+                    <button type="button" class="password-toggle-btn" id="btnTogglePassword" title="Ẩn/Hiện mật khẩu" tabindex="-1">
+                        <i class="bi bi-eye-slash" id="eyeIcon"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="MatKhau" class="text-danger small"></span>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" asp-for="GhiNhoDangNhap" id="chkGhiNho">
-                    <label class="form-check-label small text-muted" for="chkGhiNho">
-                        Ghi nhớ tài khoản
-                    </label>
-                </div>
-                <a href="javascript:void(0)" class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">
-                    <i class="bi bi-question-circle me-1"></i>Quên mật khẩu?
-                </a>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" asp-for="GhiNhoDangNhap" id="chkGhiNho">
+                <label class="form-check-label small" style="color: #64748B;" for="chkGhiNho">
+                    Ghi nhớ phiên đăng nhập
+                </label>
             </div>
 
-            <button type="submit" class="btn btn-login w-100 mb-3">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+            <button type="submit" class="btn btn-login w-100 mb-2">
+                Đăng nhập
             </button>
         </form>
 
         <div class="demo-accounts">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-secondary small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Tài khoản mẫu (Click để điền ngay):</span>
+            <div class="small fw-semibold text-muted mb-2">Tài khoản demo (Bấm để điền nhanh):</div>
+            <div class="demo-item" onclick="fillAccount('admin', 'Admin@123', 'Admin')" role="button">
+                <div>
+                    <span class="badge" style="background: #0F172A; font-size: 10.5px;">admin</span>
+                    <span class="small ms-1 fw-medium" style="color: #334155;">Quản trị viên</span>
+                </div>
+                <span class="small text-muted font-mono">Admin@123</span>
             </div>
-            <div class="d-flex flex-column gap-2">
-                <div class="demo-item" onclick="fillAccount('admin', 'Admin@123', 'Quản trị viên (admin)')" role="button" title="Bấm để tự điền">
-                    <div>
-                        <span class="badge bg-primary me-2"><i class="bi bi-shield-check me-1"></i>admin</span>
-                        <span class="small text-dark fw-semibold">Quản trị viên</span>
-                    </div>
-                    <span class="small text-muted font-monospace">Admin@123 <i class="bi bi-arrow-right-short text-primary"></i></span>
-                </div>
 
-                <div class="demo-item" onclick="fillAccount('quanly', 'Quanly@123', 'Quản lý (quanly)')" role="button" title="Bấm để tự điền">
-                    <div>
-                        <span class="badge bg-success me-2"><i class="bi bi-person-gear me-1"></i>quanly</span>
-                        <span class="small text-dark fw-semibold">Quản lý</span>
-                    </div>
-                    <span class="small text-muted font-monospace">Quanly@123 <i class="bi bi-arrow-right-short text-success"></i></span>
+            <div class="demo-item" onclick="fillAccount('quanly', 'Quanly@123', 'Quản lý')" role="button">
+                <div>
+                    <span class="badge" style="background: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; font-size: 10.5px;">quanly</span>
+                    <span class="small ms-1 fw-medium" style="color: #334155;">Quản lý</span>
                 </div>
+                <span class="small text-muted font-mono">Quanly@123</span>
+            </div>
 
-                <div class="demo-item" onclick="fillAccount('nhanvien', 'Nhanvien@123', 'Nhân viên (nhanvien)')" role="button" title="Bấm để tự điền">
-                    <div>
-                        <span class="badge bg-secondary me-2"><i class="bi bi-person me-1"></i>nhanvien</span>
-                        <span class="small text-dark fw-semibold">Nhân viên</span>
-                    </div>
-                    <span class="small text-muted font-monospace">Nhanvien@123 <i class="bi bi-arrow-right-short text-secondary"></i></span>
+            <div class="demo-item" onclick="fillAccount('nhanvien', 'Nhanvien@123', 'Nhân viên')" role="button">
+                <div>
+                    <span class="badge" style="background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; font-size: 10.5px;">nhanvien</span>
+                    <span class="small ms-1 fw-medium" style="color: #334155;">Nhân viên</span>
                 </div>
+                <span class="small text-muted font-mono">Nhanvien@123</span>
             </div>
         </div>
     </div>
 
     <!-- Modal Quên mật khẩu -->
-    <div class="modal fade" id="forgotModal" tabindex="-1" aria-labelledby="forgotModalLabel" aria-hidden="true">
+    <div class="modal fade" id="forgotModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-dark" id="forgotModalLabel">
-                        <i class="bi bi-shield-lock text-primary me-2"></i>Khôi phục mật khẩu
-                    </h5>
+            <div class="modal-content" style="border-radius: 10px; border: 1px solid #E2E8F0;">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold" style="color: #0F172A;"><i class="bi bi-info-circle me-1 text-primary"></i> Khôi phục mật khẩu</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body py-4">
-                    <p class="text-muted mb-3">
-                        Để đảm bảo an toàn bảo mật nội bộ, hệ thống không cấp lại mật khẩu qua email tự động.
+                <div class="modal-body py-3">
+                    <p class="small text-muted mb-2">
+                        Để đảm bảo an toàn nội bộ, hệ thống không cấp lại mật khẩu qua email tự động.
                     </p>
-                    <div class="p-3 bg-light rounded-3 border">
-                        <div class="fw-semibold text-dark mb-1"><i class="bi bi-info-circle text-primary me-1"></i> Hướng dẫn xử lý:</div>
-                        <ul class="small text-secondary mb-0 ps-3">
-                            <li>Liên hệ <strong>Quản trị viên (admin)</strong> để được đặt lại mật khẩu.</li>
-                            <li>Nếu đang trong quá trình thử nghiệm/demo, bạn có thể sử dụng các <strong>Tài khoản mẫu</strong> có sẵn ở khung bên dưới.</li>
-                        </ul>
+                    <div class="p-3 bg-light rounded-2 border small text-secondary">
+                        Vui lòng liên hệ <strong>Quản trị viên (admin)</strong> để được hỗ trợ cấp lại mật khẩu mới.
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary px-4 rounded-3" data-bs-dismiss="modal">Đã hiểu</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Đã hiểu</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast thông báo đã tự điền -->
-    <div class="toast-container fill-toast">
-        <div id="fillToast" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body small py-2">
-                    <i class="bi bi-check2-circle text-success me-1"></i> Đã điền tài khoản: <strong id="toastRoleText"></strong>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 1. Toggle ẩn/hiện mật khẩu
         const toggleBtn = document.getElementById('btnTogglePassword');
         const pwdInput = document.getElementById('txtMatKhau');
         const eyeIcon = document.getElementById('eyeIcon');
@@ -293,19 +272,9 @@
             }
         });
 
-        // 2. Click to fill tài khoản mẫu + Toast thông báo
-        let toastInstance = null;
         function fillAccount(username, password, roleName) {
             document.getElementById('txtTenDangNhap').value = username;
             document.getElementById('txtMatKhau').value = password;
-            
-            // Hiển thị toast phản hồi
-            document.getElementById('toastRoleText').innerText = roleName;
-            const toastEl = document.getElementById('fillToast');
-            if (!toastInstance) {
-                toastInstance = new bootstrap.Toast(toastEl, { delay: 2000 });
-            }
-            toastInstance.show();
         }
     </script>
 </body>
