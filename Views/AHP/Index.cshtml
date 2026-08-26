@@ -1,21 +1,19 @@
 @model IEnumerable<code.Models.KyDanhGia>
 @{
-    ViewData["Title"] = "Danh sách Kỳ đánh giá AHP";
+    ViewData["Title"] = "Kỳ đánh giá AHP";
     var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
 }
 
-<div class="row mb-3 align-items-center">
-    <div class="col-md-6">
-        <h3 class="fw-bold text-dark mb-1">
-            <i class="bi bi-diagram-3 text-primary me-2"></i>Kỳ đánh giá Nhà cung cấp (AHP)
-        </h3>
-        <p class="text-muted mb-0 small">Quản lý các đợt đánh giá đa tiêu chí, tính trọng số AHP và xếp hạng nhà cung cấp</p>
+<div class="page-header">
+    <div class="page-header-left">
+        <h3><i class="bi bi-diagram-3" style="color: var(--primary);"></i> Kỳ đánh giá Nhà cung cấp (AHP)</h3>
+        <p>Quản lý các đợt đánh giá đa tiêu chí, tính trọng số AHP và xếp hạng đối tác cung ứng</p>
     </div>
-    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+    <div>
         @if (isManagerOrAdmin)
         {
-            <a asp-action="CreateKy" class="btn btn-primary shadow-sm rounded-3">
-                <i class="bi bi-plus-circle me-1"></i> Tạo kỳ đánh giá mới
+            <a asp-action="CreateKy" class="btn btn-custom btn-custom-primary">
+                <i class="bi bi-plus-circle"></i> Tạo kỳ đánh giá mới
             </a>
         }
     </div>
@@ -23,162 +21,143 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
 }
-
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
 }
 
-<!-- Bảng danh sách kỳ đánh giá -->
-<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-uppercase small text-muted">
-                    <tr>
-                        <th style="width: 80px;" class="text-center">Mã</th>
-                        <th>Tên kỳ đánh giá</th>
-                        <th>Người tạo</th>
-                        <th>Ngày tạo</th>
-                        <th class="text-center" style="width: 150px;">Trọng số tiêu chí</th>
-                        <th class="text-center" style="width: 150px;">Trạng thái</th>
-                        <th>Nhà cung cấp đề xuất</th>
-                        <th class="text-end pe-4" style="width: 220px;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Any())
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 80px;" class="text-center">Mã</th>
+                    <th>Tên kỳ đánh giá</th>
+                    <th>Người tạo</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-center" style="width: 150px;">Trọng số AHP</th>
+                    <th class="text-center" style="width: 140px;">Trạng thái</th>
+                    <th>Nhà cung cấp đề xuất</th>
+                    <th class="text-end" style="width: 240px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
                     {
-                        @foreach (var item in Model)
-                        {
-                            var deXuat = item.KetQuaXepHangs.FirstOrDefault(k => k.DeXuat == true)?.NhaCungCap;
-                            <tr>
-                                <td class="text-center text-muted fw-bold">#@item.MaKyDanhGia</td>
-                                <td>
-                                    <strong class="text-dark fs-6">@item.TenKyDanhGia</strong>
-                                </td>
-                                <td>
-                                    <small class="text-muted"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
-                                </td>
-                                <td class="small text-secondary">
-                                    @(item.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
-                                </td>
-                                <td class="text-center">
+                        var deXuat = item.KetQuaXepHangs.FirstOrDefault(k => k.DeXuat == true)?.NhaCungCap;
+                        <tr>
+                            <td class="text-center" style="color: var(--slate-500); font-weight: 600;">#@item.MaKyDanhGia</td>
+                            <td>
+                                <strong style="color: var(--slate-900);">@item.TenKyDanhGia</strong>
+                            </td>
+                            <td>
+                                <small style="color: var(--slate-500);"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
+                            </td>
+                            <td style="color: var(--slate-500); font-size: 13px;">
+                                @(item.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrongSoTieuChis.Any())
+                                {
+                                    <span class="status-badge status-badge-success">
+                                        <i class="bi bi-check-circle"></i> Đã có trọng số
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-secondary">Chưa tính</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrangThai == "hoanthanh")
+                                {
+                                    <span class="status-badge status-badge-success"><i class="bi bi-trophy"></i> Hoàn thành</span>
+                                }
+                                else if (item.TrangThai == "dat_trong_so")
+                                {
+                                    <span class="status-badge status-badge-info"><i class="bi bi-sliders"></i> Có trọng số</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-warning"><i class="bi bi-hourglass-split"></i> Khởi tạo</span>
+                                }
+                            </td>
+                            <td>
+                                @if (deXuat != null)
+                                {
+                                    <span class="status-badge status-badge-warning fw-bold">
+                                        <i class="bi bi-star-fill text-danger"></i> @deXuat.TenNhaCungCap
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color: var(--slate-400); font-size: 13px;">—</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="action-btn-group">
+                                    <a asp-action="MaTranSoSanh" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-primary" title="Ma trận so sánh">
+                                        <i class="bi bi-grid-3x3"></i>
+                                    </a>
                                     @if (item.TrongSoTieuChis.Any())
                                     {
-                                        <span class="badge bg-success-subtle text-success">
-                                            <i class="bi bi-check-circle me-1"></i>Đã tính AHP
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary-subtle text-secondary">Chưa tính</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    @if (item.TrangThai == "hoanthanh")
-                                    {
-                                        <span class="badge bg-success px-2 py-1">
-                                            <i class="bi bi-trophy me-1"></i>Hoàn thành
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "dat_trong_so")
-                                    {
-                                        <span class="badge bg-info text-dark px-2 py-1">
-                                            <i class="bi bi-sliders me-1"></i>Đã có trọng số
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark px-2 py-1">
-                                            <i class="bi bi-hourglass-split me-1"></i>Khởi tạo
-                                        </span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (deXuat != null)
-                                    {
-                                        <span class="badge bg-warning text-dark fw-bold">
-                                            <i class="bi bi-star-fill text-danger me-1"></i>@deXuat.TenNhaCungCap
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">—</span>
-                                    }
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="MaTranSoSanh" asp-route-id="@item.MaKyDanhGia" class="btn btn-outline-primary" title="Ma trận so sánh">
-                                            <i class="bi bi-grid-3x3"></i> Ma trận
+                                        <a asp-action="ChamDiemNCC" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-success" title="Chấm điểm NCC">
+                                            <i class="bi bi-star"></i>
                                         </a>
-                                        @if (item.TrongSoTieuChis.Any())
-                                        {
-                                            <a asp-action="ChamDiemNCC" asp-route-id="@item.MaKyDanhGia" class="btn btn-outline-success" title="Chấm điểm NCC">
-                                                <i class="bi bi-star"></i> Chấm điểm
-                                            </a>
-                                        }
-                                        @if (item.KetQuaXepHangs.Any())
-                                        {
-                                            <a asp-action="KetQuaXepHang" asp-route-id="@item.MaKyDanhGia" class="btn btn-outline-warning" title="Xem xếp hạng">
-                                                <i class="bi bi-trophy"></i> Xếp hạng
-                                            </a>
-                                        }
-                                        @if (isManagerOrAdmin)
-                                        {
-                                            <button type="button" class="btn btn-outline-danger" title="Xóa kỳ đánh giá"
-                                                    onclick="confirmDeleteKy(@item.MaKyDanhGia, '@item.TenKyDanhGia')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                Chưa có kỳ đánh giá AHP nào trong hệ thống.
+                                    }
+                                    @if (item.KetQuaXepHangs.Any())
+                                    {
+                                        <a asp-action="KetQuaXepHang" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-warning" title="Xem xếp hạng">
+                                            <i class="bi bi-trophy"></i>
+                                        </a>
+                                    }
+                                    @if (isManagerOrAdmin)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa kỳ"
+                                                onclick="confirmDeleteKy(@item.MaKyDanhGia, '@item.TenKyDanhGia')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state"><i class="bi bi-inbox"></i><p>Chưa có kỳ đánh giá AHP nào trong hệ thống.</p></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
 <!-- Modal xác nhận xóa kỳ -->
 <div class="modal fade" id="deleteKyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa kỳ đánh giá
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa kỳ đánh giá</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body py-3">
-                <p class="mb-0">Bạn có chắc chắn muốn xóa kỳ đánh giá: <strong id="deleteKyName" class="text-dark"></strong>?</p>
-                <small class="text-muted">Toàn bộ dữ liệu ma trận, trọng số và kết quả xếp hạng của kỳ này sẽ bị xóa bỏ.</small>
+            <div class="modal-body">
+                <p class="mb-1">Bạn có chắc chắn muốn xóa kỳ đánh giá: <strong id="deleteKyName"></strong>?</p>
+                <small style="color: var(--slate-500);">Toàn bộ dữ liệu ma trận, trọng số và kết quả xếp hạng của kỳ này sẽ bị xóa bỏ.</small>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
                 <form id="deleteKyForm" method="post" asp-action="DeleteKy">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="deleteKyId" />
-                    <button type="submit" class="btn btn-danger rounded-3 px-3">Xác nhận xóa</button>
+                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
                 </form>
             </div>
         </div>
@@ -190,8 +169,7 @@
         function confirmDeleteKy(id, name) {
             document.getElementById('deleteKyId').value = id;
             document.getElementById('deleteKyName').innerText = name;
-            const modal = new bootstrap.Modal(document.getElementById('deleteKyModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('deleteKyModal')).show();
         }
     </script>
 }

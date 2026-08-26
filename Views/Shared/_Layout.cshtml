@@ -4,10 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QL Nhập Hàng & AHP</title>
+    <title>@ViewData["Title"] - ProcureAHP Enterprise</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Chart.js for data visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     @if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -20,15 +22,15 @@
         <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (DEEP SLATE ENTERPRISE) -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <i class="bi bi-box-seam"></i>
+                    <i class="bi bi-shield-check"></i>
                 </div>
-                <div>
-                    <div class="sidebar-title">QL NHẬP HÀNG</div>
-                    <div class="sidebar-subtitle">& Lựa chọn NCC (AHP)</div>
+                <div class="sidebar-brand-text">
+                    <div class="sidebar-title">ProcureAHP</div>
+                    <div class="sidebar-subtitle">Quản Lý Nhập Hàng & AHP</div>
                 </div>
             </div>
 
@@ -70,7 +72,7 @@
 
                 <!-- Nhập hàng & Kho -->
                 <div class="sidebar-group">
-                    <div class="sidebar-group-label">Nhập hàng & Kho</div>
+                    <div class="sidebar-group-label">Nhập hàng & Kho vận</div>
                     <a asp-controller="PhieuNhap" asp-action="Index"
                        class="sidebar-link @(currentController == "PhieuNhap" ? "active" : "")">
                         <i class="bi bi-receipt"></i>
@@ -157,14 +159,16 @@
             </div>
         </aside>
 
-        <!-- TOP HEADER -->
+        <!-- TOP HEADER (FROSTED GLASS) -->
         <header class="top-header">
             <div class="header-left">
                 <button class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Menu">
                     <i class="bi bi-list"></i>
                 </button>
-                <div class="header-breadcrumb d-none d-md-block">
-                    <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <div class="header-breadcrumb d-none d-md-flex">
+                    <a asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house me-1"></i> Trang chủ
+                    </a>
                     @if (!string.IsNullOrEmpty(ViewData["Title"]?.ToString()) && currentController != "Home")
                     {
                         <span class="separator">/</span>
@@ -174,9 +178,11 @@
             </div>
 
             <div class="header-right">
-                <div class="header-user-info">
-                    <i class="bi bi-person-circle" style="color: var(--gray-400);"></i>
-                    <span class="user-name">@username</span>
+                <div class="header-user-pill">
+                    <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px;">
+                        @(username.Length > 0 ? username[0].ToString().ToUpper() : "U")
+                    </div>
+                    <span style="font-weight: 600; font-size: 13px; color: var(--slate-800);">@username</span>
                     @if (role == "admin")
                     {
                         <span class="user-role-badge badge-admin">Admin</span>
@@ -204,7 +210,7 @@
             </main>
 
             <footer class="page-footer">
-                &copy; 2026 - Hệ thống Quản lý Nhập hàng & Lựa chọn NCC bằng AHP | Phiên bản 1.0
+                &copy; 2026 <strong>ProcureAHP Enterprise</strong> &bull; Hệ thống Quản lý Nhập hàng & Lựa chọn Nhà cung cấp bằng AHP
             </footer>
         </div>
 
@@ -217,8 +223,6 @@
                 document.getElementById('sidebarOverlay').classList.toggle('show');
             }
 
-            // Close sidebar on overlay click (already handled by onclick)
-            // Close sidebar when navigating on mobile
             document.querySelectorAll('.sidebar-link').forEach(function(link) {
                 link.addEventListener('click', function() {
                     if (window.innerWidth < 992) {
@@ -232,7 +236,6 @@
     }
     else
     {
-        <!-- Unauthenticated: simple layout (Login page uses Layout = null, but just in case) -->
         <div class="container py-5">
             @RenderBody()
         </div>

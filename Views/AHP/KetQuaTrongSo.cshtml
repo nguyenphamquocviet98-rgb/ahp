@@ -7,37 +7,34 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-lg-10 col-md-12">
+    <div class="col-lg-11 col-md-12">
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
         }
 
         <!-- Header kết quả -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center">
-                    <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại ma trận">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div>
-                        <h4 class="fw-bold text-dark mb-0 d-flex align-items-center">
-                            <i class="bi bi-calculator text-primary me-2"></i>Bảng Giải Trình Thuật Toán AHP
-                        </h4>
-                        <span class="text-primary fw-semibold small">Kỳ: @Model.TenKyDanhGia</span>
+        <div class="card-custom mb-4">
+            <div class="card-body-custom">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center">
+                        <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại ma trận">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                        <div>
+                            <h4 class="fw-bold mb-0" style="color: var(--slate-900);">Bảng Giải Trình Thuật Toán AHP</h4>
+                            <span style="color: var(--primary); font-weight: 600; font-size: 13px;">Kỳ: @Model.TenKyDanhGia</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="d-flex gap-2">
-                    <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-outline-primary btn-sm rounded-3">
-                        <i class="bi bi-arrow-repeat me-1"></i> Điều chỉnh ma trận
-                    </a>
-                    <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-success rounded-3 btn-sm px-3">
-                        <i class="bi bi-star me-1"></i> Tiếp tục: Chấm điểm NCC <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
+                            <i class="bi bi-arrow-repeat me-1"></i> Điều chỉnh ma trận
+                        </a>
+                        <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-primary">
+                            <i class="bi bi-star me-1"></i> Tiếp tục: Chấm điểm NCC <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -47,36 +44,36 @@
             <!-- 4 Thẻ Chỉ số AHP -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-primary border-4 text-center">
-                        <div class="text-muted small fw-semibold text-uppercase">Lambda Max (&lambda;<sub>max</sub>)</div>
-                        <h4 class="fw-bold text-primary mb-0">@res.LambdaMax.ToString("0.0000")</h4>
+                    <div class="card-custom p-3 text-center border-start border-primary border-4">
+                        <div style="color: var(--slate-500); font-size: 11px; font-weight: 700; text-transform: uppercase;">Lambda Max (&lambda;<sub>max</sub>)</div>
+                        <h4 class="fw-bold mb-0 font-mono mt-1" style="color: var(--primary);">@res.LambdaMax.ToString("0.0000")</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-info border-4 text-center">
-                        <div class="text-muted small fw-semibold text-uppercase">Chỉ số CI (Consistency Index)</div>
-                        <h4 class="fw-bold text-info mb-0">@res.CI.ToString("0.0000")</h4>
+                    <div class="card-custom p-3 text-center border-start border-info border-4">
+                        <div style="color: var(--slate-500); font-size: 11px; font-weight: 700; text-transform: uppercase;">Chỉ số CI (Consistency Index)</div>
+                        <h4 class="fw-bold mb-0 font-mono mt-1" style="color: var(--info);">@res.CI.ToString("0.0000")</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start @(res.IsConsistent ? "border-success" : "border-danger") border-4 text-center">
-                        <div class="text-muted small fw-semibold text-uppercase">Tỷ số CR (Consistency Ratio)</div>
-                        <h4 class="fw-bold @(res.IsConsistent ? "text-success" : "text-danger") mb-0">@res.CR.ToString("0.0000")</h4>
+                    <div class="card-custom p-3 text-center border-start @(res.IsConsistent ? "border-success" : "border-danger") border-4">
+                        <div style="color: var(--slate-500); font-size: 11px; font-weight: 700; text-transform: uppercase;">Tỷ số CR (Consistency Ratio)</div>
+                        <h4 class="fw-bold mb-0 font-mono mt-1 @(res.IsConsistent ? "text-success" : "text-danger")">@res.CR.ToString("0.0000")</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start @(res.IsConsistent ? "border-success" : "border-danger") border-4 text-center">
-                        <div class="text-muted small fw-semibold text-uppercase">Đánh giá nhất quán</div>
+                    <div class="card-custom p-3 text-center border-start @(res.IsConsistent ? "border-success" : "border-danger") border-4">
+                        <div style="color: var(--slate-500); font-size: 11px; font-weight: 700; text-transform: uppercase;">Đánh giá nhất quán</div>
                         <div class="mt-1">
                             @if (res.IsConsistent)
                             {
-                                <span class="badge bg-success fs-6 px-3 py-1">
-                                    <i class="bi bi-check-circle me-1"></i> ĐẠT (CR &le; 0.1)
+                                <span class="status-badge status-badge-success fs-6 px-3 py-1">
+                                    <i class="bi bi-check-circle me-1"></i> ĐẠT (CR &le; 0.10)
                                 </span>
                             }
                             else
                             {
-                                <span class="badge bg-danger fs-6 px-3 py-1">
+                                <span class="status-badge status-badge-danger fs-6 px-3 py-1">
                                     <i class="bi bi-x-circle me-1"></i> KHÔNG ĐẠT
                                 </span>
                             }
@@ -86,128 +83,134 @@
             </div>
 
             <!-- Bảng 1: Ma trận chuẩn hóa và Trọng số W_i -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-1-circle text-primary me-2"></i>Bảng Ma Trận Chuẩn Hóa & Vector Trọng Số (W<sub>i</sub>)
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle text-center mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-start" style="width: 200px;">Tiêu chí</th>
-                                @for (int j = 0; j < n; j++)
-                                {
-                                    <th>@tieuChis[j].TenTieuChi</th>
-                                }
-                                <th class="bg-primary-subtle text-primary fw-bold" style="width: 160px;">Trọng số (W<sub>i</sub>)</th>
-                                <th class="bg-light text-secondary" style="width: 120px;">Tỷ lệ (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < n; i++)
-                            {
-                                var w = res.TrongSo[i];
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-1-circle" style="color: var(--primary);"></i> Bảng Ma Trận Chuẩn Hóa & Vector Trọng Số (W<sub>i</sub>)</h5>
+                </div>
+                <div class="card-body-custom p-0">
+                    <div class="table-responsive">
+                        <table class="table-custom text-center mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="text-start fw-bold">@tieuChis[i].TenTieuChi</td>
+                                    <th class="text-start" style="width: 220px;">Tiêu chí</th>
                                     @for (int j = 0; j < n; j++)
                                     {
-                                        <td class="font-monospace small">
-                                            @res.MaTranChuanHoa[i, j].ToString("0.000")
-                                        </td>
+                                        <th>@tieuChis[j].TenTieuChi</th>
                                     }
-                                    <td class="bg-primary-subtle fw-bold text-primary fs-6 font-monospace">
-                                        @w.ToString("0.000")
-                                    </td>
-                                    <td class="fw-bold text-dark">
-                                        @((w * 100).ToString("0.0"))%
-                                    </td>
+                                    <th style="width: 160px; background: var(--primary-light); color: var(--primary-dark);">Trọng số (W<sub>i</sub>)</th>
+                                    <th style="width: 120px;">Tỷ lệ (%)</th>
                                 </tr>
-                            }
-                        </tbody>
-                        <tfoot class="table-light fw-bold">
-                            <tr>
-                                <td class="text-start">Tổng cộng:</td>
-                                @for (int j = 0; j < n; j++)
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < n; i++)
                                 {
-                                    <td class="text-muted">1.000</td>
+                                    var w = res.TrongSo[i];
+                                    <tr>
+                                        <td class="text-start fw-bold" style="color: var(--slate-900);">@tieuChis[i].TenTieuChi</td>
+                                        @for (int j = 0; j < n; j++)
+                                        {
+                                            <td class="font-mono small" style="color: var(--slate-600);">
+                                                @res.MaTranChuanHoa[i, j].ToString("0.000")
+                                            </td>
+                                        }
+                                        <td class="font-mono fw-bold fs-6" style="background: var(--primary-light); color: var(--primary);">
+                                            @w.ToString("0.000")
+                                        </td>
+                                        <td class="fw-bold" style="color: var(--slate-900);">
+                                            @((w * 100).ToString("0.0"))%
+                                        </td>
+                                    </tr>
                                 }
-                                <td class="text-primary fs-6">
-                                    @(res.TrongSo.Sum().ToString("0.000"))
-                                </td>
-                                <td>100%</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tbody>
+                            <tfoot style="background: var(--slate-50); font-weight: 700;">
+                                <tr>
+                                    <td class="text-start">Tổng cộng:</td>
+                                    @for (int j = 0; j < n; j++)
+                                    {
+                                        <td style="color: var(--slate-400);">1.000</td>
+                                    }
+                                    <td class="font-mono fs-6" style="color: var(--primary);">
+                                        @(res.TrongSo.Sum().ToString("0.000"))
+                                    </td>
+                                    <td style="color: var(--slate-900);">100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Bảng 2: Ma trận so sánh gốc & Tổng từng cột -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-2-circle text-secondary me-2"></i>Ma Trận So Sánh Cặp Ban Đầu & Tổng Cột
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle text-center mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-start" style="width: 200px;">Tiêu chí</th>
-                                @for (int j = 0; j < n; j++)
-                                {
-                                    <th>@tieuChis[j].TenTieuChi</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < n; i++)
-                            {
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-2-circle" style="color: var(--slate-500);"></i> Ma Trận So Sánh Cặp Ban Đầu & Tổng Cột</h5>
+                </div>
+                <div class="card-body-custom p-0">
+                    <div class="table-responsive">
+                        <table class="table-custom text-center mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="text-start fw-semibold bg-light">@tieuChis[i].TenTieuChi</td>
+                                    <th class="text-start" style="width: 220px;">Tiêu chí</th>
                                     @for (int j = 0; j < n; j++)
                                     {
-                                        <td class="font-monospace">
-                                            @Model.MaTran[i][j].ToString("0.000")
+                                        <th>@tieuChis[j].TenTieuChi</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < n; i++)
+                                {
+                                    <tr>
+                                        <td class="text-start fw-semibold" style="background: var(--slate-50); color: var(--slate-800);">@tieuChis[i].TenTieuChi</td>
+                                        @for (int j = 0; j < n; j++)
+                                        {
+                                            <td class="font-mono">
+                                                @Model.MaTran[i][j].ToString("0.000")
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot style="background: var(--slate-100); font-weight: 700;">
+                                <tr>
+                                    <td class="text-start">Tổng từng cột:</td>
+                                    @for (int j = 0; j < n; j++)
+                                    {
+                                        <td class="font-mono fs-6" style="color: var(--primary);">
+                                            @res.TongCot[j].ToString("0.000")
                                         </td>
                                     }
                                 </tr>
-                            }
-                        </tbody>
-                        <tfoot class="table-secondary fw-bold">
-                            <tr>
-                                <td class="text-start">Tổng từng cột:</td>
-                                @for (int j = 0; j < n; j++)
-                                {
-                                    <td class="text-primary font-monospace fs-6">
-                                        @res.TongCot[j].ToString("0.000")
-                                    </td>
-                                }
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- Công thức toán học minh chứng cho hội đồng bảo vệ -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-journal-text text-primary me-2"></i>Giải trình công thức kiểm tra tính nhất quán (Consistency Test)
-                </h6>
-                <div class="row g-3 small text-secondary">
-                    <div class="col-md-6">
-                        <div class="p-3 bg-light rounded-3 border h-100">
-                            <strong>1. Chỉ số nhất quán CI (Consistency Index):</strong>
-                            <div class="my-2 font-monospace text-dark">
-                                CI = (&lambda;<sub>max</sub> - n) / (n - 1) = (@res.LambdaMax.ToString("0.0000") - 4) / 3 = <strong>@res.CI.ToString("0.0000")</strong>
+            <!-- Công thức toán học giải trình -->
+            <div class="card-custom">
+                <div class="card-body-custom p-4">
+                    <h6 class="fw-bold mb-3" style="color: var(--slate-900);">
+                        <i class="bi bi-journal-text" style="color: var(--primary);"></i> Giải trình công thức kiểm tra tính nhất quán (Consistency Test)
+                    </h6>
+                    <div class="row g-3 small" style="color: var(--slate-600);">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 border h-100" style="background: var(--slate-50); border-color: var(--border-color) !important;">
+                                <strong>1. Chỉ số nhất quán CI (Consistency Index):</strong>
+                                <div class="my-2 font-mono" style="color: var(--slate-900);">
+                                    CI = (&lambda;<sub>max</sub> - n) / (n - 1) = (@res.LambdaMax.ToString("0.0000") - 4) / 3 = <strong>@res.CI.ToString("0.0000")</strong>
+                                </div>
+                                <small style="color: var(--slate-400);">(Trong đó n = 4 là số lượng tiêu chí đánh giá)</small>
                             </div>
-                            <small class="text-muted">(Trong đó n = 4 là số lượng tiêu chí đánh giá)</small>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 bg-light rounded-3 border h-100">
-                            <strong>2. Tỷ số nhất quán CR (Consistency Ratio):</strong>
-                            <div class="my-2 font-monospace text-dark">
-                                CR = CI / RI = @res.CI.ToString("0.0000") / 0.90 = <strong>@res.CR.ToString("0.0000")</strong>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 border h-100" style="background: var(--slate-50); border-color: var(--border-color) !important;">
+                                <strong>2. Tỷ số nhất quán CR (Consistency Ratio):</strong>
+                                <div class="my-2 font-mono" style="color: var(--slate-900);">
+                                    CR = CI / RI = @res.CI.ToString("0.0000") / 0.90 = <strong>@res.CR.ToString("0.0000")</strong>
+                                </div>
+                                <small style="color: var(--slate-400);">(Với n = 4, chỉ số ngẫu nhiên Saaty RI = 0.90. Điều kiện đạt: CR &le; 0.10)</small>
                             </div>
-                            <small class="text-muted">(Với n = 4, chỉ số ngẫu nhiên Saaty RI = 0.90. Điều kiện đạt: CR &le; 0.10)</small>
                         </div>
                     </div>
                 </div>

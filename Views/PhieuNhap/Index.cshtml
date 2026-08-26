@@ -6,192 +6,160 @@
     var selectedTrangThai = ViewData["SelectedTrangThai"] as string;
 }
 
-<div class="row mb-3 align-items-center">
-    <div class="col-md-6">
-        <h3 class="fw-bold text-dark mb-1">
-            <i class="bi bi-receipt text-primary me-2"></i>Danh sách Phiếu nhập hàng
-        </h3>
-        <p class="text-muted mb-0 small">Quản lý các đợt nhập hàng từ nhà cung cấp, kiểm tra thành tiền và cập nhật kho</p>
+<div class="page-header">
+    <div class="page-header-left">
+        <h3><i class="bi bi-receipt" style="color: var(--primary);"></i> Danh sách Phiếu nhập hàng</h3>
+        <p>Quản lý các đợt nhập hàng từ nhà cung cấp, kiểm tra thành tiền và cập nhật kho</p>
     </div>
-    <div class="col-md-6 text-md-end mt-3 mt-md-0">
-        <a asp-action="Create" class="btn btn-primary shadow-sm rounded-3">
-            <i class="bi bi-plus-circle me-1"></i> Tạo phiếu nhập mới
+    <div>
+        <a asp-action="Create" class="btn btn-custom btn-custom-primary">
+            <i class="bi bi-plus-circle"></i> Lập phiếu nhập mới
         </a>
     </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
 }
-
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
 }
 
 <!-- Bộ lọc & Tìm kiếm -->
-<div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
-    <div class="card-body p-3">
-        <form method="get" asp-action="Index" class="row g-2 align-items-center">
-            <div class="col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" name="search" value="@search" class="form-control bg-light border-start-0" placeholder="Tìm theo mã phiếu hoặc tên nhà cung cấp..." />
-                </div>
-            </div>
-            <div class="col-md-4">
-                <select name="trangThai" class="form-select bg-light">
-                    <option value="">-- Tất cả trạng thái --</option>
-                    <option value="nhap" selected="@(selectedTrangThai == "nhap")">Chờ xử lý / Nháp</option>
-                    <option value="xacnhan" selected="@(selectedTrangThai == "xacnhan")">Đã xác nhận</option>
-                    <option value="huy" selected="@(selectedTrangThai == "huy")">Đã hủy</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-secondary px-3">
-                    <i class="bi bi-funnel me-1"></i> Lọc
-                </button>
-                @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedTrangThai))
-                {
-                    <a asp-action="Index" class="btn btn-outline-secondary" title="Đặt lại">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </a>
-                }
-            </div>
-        </form>
-    </div>
+<div class="search-bar mb-4">
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center flex-wrap w-100">
+        <div class="input-group" style="flex: 1; min-width: 240px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm theo mã phiếu hoặc tên nhà cung cấp..." />
+        </div>
+        <select name="trangThai" class="form-select" style="max-width: 220px;">
+            <option value="">-- Tất cả trạng thái --</option>
+            <option value="nhap" selected="@(selectedTrangThai == "nhap")">Chờ xử lý / Nháp</option>
+            <option value="xacnhan" selected="@(selectedTrangThai == "xacnhan")">Đã xác nhận</option>
+            <option value="huy" selected="@(selectedTrangThai == "huy")">Đã hủy</option>
+        </select>
+        <button type="submit" class="btn btn-custom btn-custom-outline"><i class="bi bi-funnel"></i> Lọc</button>
+        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedTrangThai))
+        {
+            <a asp-action="Index" class="btn btn-custom btn-custom-outline"><i class="bi bi-arrow-counterclockwise"></i></a>
+        }
+    </form>
 </div>
 
 <!-- Bảng danh sách phiếu nhập -->
-<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-uppercase small text-muted">
-                    <tr>
-                        <th style="width: 120px;">Mã phiếu</th>
-                        <th>Nhà cung cấp</th>
-                        <th>Người tạo</th>
-                        <th>Ngày nhập</th>
-                        <th class="text-center" style="width: 120px;">Mặt hàng</th>
-                        <th class="text-end">Tổng tiền</th>
-                        <th class="text-center" style="width: 140px;">Trạng thái</th>
-                        <th class="text-end pe-4" style="width: 160px;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Any())
+<div class="table-wrapper">
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">Mã phiếu</th>
+                    <th>Nhà cung cấp</th>
+                    <th>Người tạo</th>
+                    <th>Ngày nhập</th>
+                    <th class="text-center" style="width: 120px;">Mặt hàng</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th class="text-center" style="width: 140px;">Trạng thái</th>
+                    <th class="text-end" style="width: 160px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
                     {
-                        @foreach (var item in Model)
-                        {
-                            var tongTien = (item.TongTien.HasValue && item.TongTien.Value > 0)
-                                ? item.TongTien.Value
-                                : (item.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
-                            <tr>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="fw-bold font-monospace text-primary text-decoration-none">
-                                        @(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")
-                                    </a>
-                                </td>
-                                <td>
-                                    <span class="fw-semibold text-dark">@(item.NhaCungCap?.TenNhaCungCap ?? "N/A")</span>
-                                </td>
-                                <td>
-                                    <small class="text-muted"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
-                                </td>
-                                <td class="small text-secondary">
-                                    @(item.NgayNhap?.ToString("dd/MM/yyyy") ?? item.NgayTao?.ToString("dd/MM/yyyy") ?? "—")
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-light text-dark border">
-                                        @(item.ChiTietPhieuNhaps?.Count ?? 0) sản phẩm
-                                    </span>
-                                </td>
-                                <td class="text-end fw-bold text-dark fs-6">
-                                    @(tongTien.ToString("N0")) đ
-                                </td>
-                                <td class="text-center">
-                                    @if (item.TrangThai == "xacnhan")
-                                    {
-                                        <span class="badge bg-success-subtle text-success px-2 py-1">
-                                            <i class="bi bi-check-circle me-1"></i>Đã xác nhận
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "huy")
-                                    {
-                                        <span class="badge bg-danger-subtle text-danger px-2 py-1">
-                                            <i class="bi bi-x-circle me-1"></i>Đã hủy
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning-subtle text-warning px-2 py-1">
-                                            <i class="bi bi-clock me-1"></i>Chờ xử lý
-                                        </span>
-                                    }
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group btn-group-sm">
-                                        <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="btn btn-outline-info" title="Xem chi tiết & Quản lý mặt hàng">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        @if (isManagerOrAdmin)
-                                        {
-                                            <a asp-action="Edit" asp-route-id="@item.MaPhieuNhap" class="btn btn-outline-primary" title="Sửa thông tin">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-outline-danger" title="Xóa phiếu"
-                                                    onclick="confirmDelete(@item.MaPhieuNhap, '@(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
+                        var tongTien = (item.TongTien.HasValue && item.TongTien.Value > 0)
+                            ? item.TongTien.Value
+                            : (item.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                Không tìm thấy phiếu nhập nào.
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="code-badge text-decoration-none">
+                                    @(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")
+                                </a>
+                            </td>
+                            <td>
+                                <strong style="color: var(--slate-900);">@(item.NhaCungCap?.TenNhaCungCap ?? "N/A")</strong>
+                            </td>
+                            <td>
+                                <small style="color: var(--slate-500);"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
+                            </td>
+                            <td style="color: var(--slate-500); font-size: 13px;">
+                                @(item.NgayNhap?.ToString("dd/MM/yyyy") ?? item.NgayTao?.ToString("dd/MM/yyyy") ?? "—")
+                            </td>
+                            <td class="text-center">
+                                <span class="status-badge status-badge-secondary">
+                                    @(item.ChiTietPhieuNhaps?.Count ?? 0) sản phẩm
+                                </span>
+                            </td>
+                            <td class="text-end font-mono fw-bold fs-6" style="color: var(--slate-900);">
+                                @(tongTien.ToString("N0")) đ
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrangThai == "xacnhan")
+                                {
+                                    <span class="status-badge status-badge-success"><i class="bi bi-check-circle"></i> Đã xác nhận</span>
+                                }
+                                else if (item.TrangThai == "huy")
+                                {
+                                    <span class="status-badge status-badge-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-warning"><i class="bi bi-clock"></i> Chờ xử lý</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="action-btn-group">
+                                    <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-info" title="Xem chi tiết & Quản lý mặt hàng">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (isManagerOrAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-primary" title="Sửa thông tin">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa phiếu"
+                                                onclick="confirmDelete(@item.MaPhieuNhap, '@(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy phiếu nhập nào.</p></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
 <!-- Modal xác nhận xóa -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa phiếu nhập
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa phiếu nhập</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body py-3">
-                <p class="mb-0">Bạn có chắc chắn muốn xóa phiếu nhập: <strong id="deleteReceiptCode" class="text-dark"></strong>?</p>
-                <small class="text-muted">Lưu ý: Toàn bộ chi tiết mặt hàng trong phiếu này cũng sẽ bị xóa bỏ.</small>
+            <div class="modal-body">
+                <p class="mb-1">Bạn có chắc chắn muốn xóa phiếu nhập: <strong id="deleteReceiptCode"></strong>?</p>
+                <small style="color: var(--slate-500);">Lưu ý: Toàn bộ chi tiết mặt hàng trong phiếu này cũng sẽ bị xóa bỏ.</small>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
                 <form id="deleteForm" method="post" asp-action="Delete">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="deleteReceiptId" />
-                    <button type="submit" class="btn btn-danger rounded-3 px-3">Xác nhận xóa</button>
+                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
                 </form>
             </div>
         </div>
@@ -203,8 +171,7 @@
         function confirmDelete(id, code) {
             document.getElementById('deleteReceiptId').value = id;
             document.getElementById('deleteReceiptCode').innerText = code;
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
         }
     </script>
 }
