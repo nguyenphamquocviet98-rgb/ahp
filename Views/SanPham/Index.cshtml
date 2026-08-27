@@ -64,6 +64,7 @@
         <table class="table-custom">
             <thead>
                 <tr>
+                    <th style="width: 80px;" class="text-center">Ảnh</th>
                     <th style="width: 100px;">Mã SP</th>
                     <th>Tên sản phẩm</th>
                     <th>Danh mục</th>
@@ -81,6 +82,18 @@
                     {
                         var ton = item.TonKho?.SoLuongTon ?? 0;
                         <tr>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.AnhSanPham))
+                                {
+                                    <img src="@item.AnhSanPham" alt="@item.TenSanPham" class="table-product-thumb" onerror="this.onerror=null; this.src='/favicon.ico';" />
+                                }
+                                else
+                                {
+                                    <div class="table-product-placeholder mx-auto">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                }
+                            </td>
                             <td>
                                 <span class="code-badge">@(item.MaSanPhamCode ?? $"SP{item.MaSanPham:D3}")</span>
                             </td>
@@ -141,7 +154,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">
                                 <i class="bi bi-inbox"></i>
                                 <p>Không tìm thấy sản phẩm nào.</p>

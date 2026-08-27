@@ -213,11 +213,11 @@
     <div class="col-lg-6">
         <div class="card-custom h-100">
             <div class="card-header-custom">
-                <h5><i class="bi bi-bar-chart-fill text-primary"></i> So sánh năng lực Nhà cung cấp (AHP)</h5>
-                <span class="status-badge status-badge-success">Điểm WSM thực tế</span>
+                <h5><i class="bi bi-trophy-fill text-warning"></i> Top 3 Nhà cung cấp Xuất sắc (AHP)</h5>
+                <span class="status-badge status-badge-success">Điểm WSM tối ưu</span>
             </div>
-            <div class="card-body-custom d-flex align-items-center justify-content-center" style="min-height: 250px;">
-                <canvas id="supplierChart" style="max-height: 220px;"></canvas>
+            <div class="card-body-custom d-flex align-items-center justify-content-center p-3" style="min-height: 250px;">
+                <canvas id="supplierChart" style="max-height: 220px; width: 100%;"></canvas>
             </div>
         </div>
     </div>
@@ -400,15 +400,28 @@
                 });
             }
 
-            // 2. Biểu đồ Cột: Lấy điểm số tổng hợp AHP thực tế 100% từ SQL database (kỳ gần nhất)
-            const supLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.Select(n => n.TenNhaCungCap)));
-            const supData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.Select(n => n.DiemTong)));
+            // 2. Biểu đồ Cột Ngang: Top 3 Nhà cung cấp xuất sắc nhất từ AHP
+            const allSuppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.OrderBy(n => n.XepHang)));
+            
+            // Hàm rút gọn tiền tố doanh nghiệp để nhãn biểu đồ hiển thị cực kỳ đẹp và thoáng
+            function cleanSupplierName(name) {
+                if (!name) return '';
+                return name
+                    .replace(/^(Công ty TNHH Thực phẩm|Công ty TNHH Quốc tế|Công ty TNHH Dầu thực vật|Công ty TNHH Phân phối|Công ty TNHH Vận tải|Công ty TNHH|Công ty Cổ phần|Công ty CP Tập đoàn|Công ty CP Thương mại|Công ty CP Chế biến|Công ty CP|Doanh nghiệp Tư nhân|Tập đoàn Nước giải khát|Tập đoàn)\s+/i, '')
+                    .trim();
+            }
+
+            const top3Suppliers = allSuppliers.slice(0, 3);
+            const supLabels = top3Suppliers.map((s, idx) => {
+                const medals = ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'];
+                const prefix = medals[idx] || `Top ${idx + 1}`;
+                return `${prefix}: ${cleanSupplierName(s.TenNhaCungCap)}`;
+            });
+            const supData = top3Suppliers.map(s => s.DiemTong);
+            const bgColors = ['#2563EB', '#6366F1', '#F59E0B']; // Hạng 1: Blue, Hạng 2: Indigo, Hạng 3: Amber
 
             const ctxSup = document.getElementById('supplierChart');
-            if (ctxSup && supLabels && supLabels.length > 0) {
-                // Top 1 dùng màu gradient blue/emerald, các top sau dùng màu slate sang trọng
-                const bgColors = supLabels.map((_, index) => index === 0 ? '#2563EB' : (index === 1 ? '#4F46E5' : (index === 2 ? '#64748B' : '#94A3B8')));
-
+            if (ctxSup && top3Suppliers && top3Suppliers.length > 0) {
                 new Chart(ctxSup, {
                     type: 'bar',
                     data: {
@@ -417,27 +430,47 @@
                             label: 'Điểm tổng hợp (WSM)',
                             data: supData,
                             backgroundColor: bgColors,
-                            borderRadius: 6,
+                            borderRadius: 8,
                             borderSkipped: false,
-                            barPercentage: 0.55
+                            barThickness: 24,
+                            maxBarThickness: 28
                         }]
                     },
                     options: {
+                        indexAxis: 'y', // Biểu đồ dạng thanh ngang
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(items) {
+                                        const idx = items[0].dataIndex;
+                                        return top3Suppliers[idx].TenNhaCungCap;
+                                    },
+                                    label: function(item) {
+                                        return ` Điểm đánh giá WSM: ${Number(item.raw).toFixed(2)} / 9.00 điểm`;
+                                    }
+                                }
+                            }
                         },
                         scales: {
-                            y: {
+                            x: {
                                 beginAtZero: true,
                                 max: 9,
                                 grid: { color: '#F1F5F9' },
-                                ticks: { font: { family: 'JetBrains Mono', size: 11 }, stepSize: 3 }
+                                ticks: { 
+                                    font: { family: 'JetBrains Mono', size: 11 }, 
+                                    stepSize: 3,
+                                    callback: function(v) { return v + ' đ'; }
+                                }
                             },
-                            x: {
+                            y: {
                                 grid: { display: false },
-                                ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+                                ticks: { 
+                                    font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+                                    color: '#1E293B'
+                                }
                             }
                         }
                     }

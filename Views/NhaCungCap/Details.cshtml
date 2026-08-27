@@ -13,6 +13,17 @@
                     <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
                         <i class="bi bi-arrow-left"></i>
                     </a>
+                    @if (!string.IsNullOrEmpty(Model.HinhAnh))
+                    {
+                        <img src="@Model.HinhAnh" alt="@Model.TenNhaCungCap" class="supplier-detail-media me-3" onerror="this.onerror=null; this.src='/favicon.ico';" />
+                    }
+                    else
+                    {
+                        var initial = !string.IsNullOrWhiteSpace(Model.TenNhaCungCap) ? Model.TenNhaCungCap.Trim().Substring(0, 1).ToUpper() : "N";
+                        <div class="supplier-detail-media me-3 d-flex align-items-center justify-content-center bg-primary-subtle text-primary fs-2 fw-bold">
+                            @initial
+                        </div>
+                    }
                     <div>
                         <h4 class="fw-bold text-dark mb-0">@Model.TenNhaCungCap</h4>
                         <span class="badge bg-light text-dark font-monospace border mt-1">

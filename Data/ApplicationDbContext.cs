@@ -53,6 +53,16 @@ namespace code.Data
             modelBuilder.Entity<ChiTietPhieuNhap>()
                 .Property(c => c.ThanhTien)
                 .ValueGeneratedOnAddOrUpdate();
+
+            // Cấu hình tương thích cho các bảng có Database Triggers (vô hiệu hóa OUTPUT clause của EF Core)
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var tableName = entityType.GetTableName();
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    modelBuilder.Entity(entityType.ClrType).ToTable(tb => tb.UseSqlOutputClause(false));
+                }
+            }
         }
     }
 }

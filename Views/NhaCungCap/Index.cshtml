@@ -64,6 +64,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light text-uppercase small text-muted">
                     <tr>
+                        <th style="width: 70px;" class="text-center">Logo</th>
                         <th style="width: 100px;">Mã NCC</th>
                         <th>Tên nhà cung cấp</th>
                         <th>Người liên hệ</th>
@@ -79,7 +80,20 @@
                     {
                         @foreach (var item in Model)
                         {
+                            var initial = !string.IsNullOrWhiteSpace(item.TenNhaCungCap) ? item.TenNhaCungCap.Trim().Substring(0, 1).ToUpper() : "N";
                             <tr>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(item.HinhAnh))
+                                    {
+                                        <img src="@item.HinhAnh" alt="@item.TenNhaCungCap" class="table-supplier-logo" onerror="this.onerror=null; this.src='/favicon.ico';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="table-supplier-avatar-placeholder mx-auto">
+                                            @initial
+                                        </div>
+                                    }
+                                </td>
                                 <td>
                                     <span class="badge bg-light text-dark font-monospace border">
                                         @(item.MaNhaCungCapCode ?? $"NCC{item.MaNhaCungCap:D3}")
@@ -153,7 +167,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                 Không tìm thấy nhà cung cấp nào.
                             </td>

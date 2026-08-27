@@ -101,21 +101,38 @@
     </form>
 </div>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <!-- Bảng Tồn kho -->
 <div class="table-wrapper">
     <div class="table-responsive">
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th style="width: 100px;">Mã SP</th>
+                    <th style="width: 90px;">Mã SP</th>
                     <th>Tên sản phẩm</th>
                     <th>Danh mục</th>
                     <th>ĐVT</th>
                     <th class="text-end">Đơn giá định mức</th>
-                    <th class="text-center" style="width: 130px;">Số lượng tồn</th>
+                    <th class="text-center" style="width: 120px;">Số lượng tồn</th>
                     <th class="text-end">Giá trị tồn tạm tính</th>
-                    <th class="text-center" style="width: 140px;">Tình trạng</th>
-                    <th style="width: 150px;">Cập nhật gần nhất</th>
+                    <th class="text-center" style="width: 120px;">Tình trạng</th>
+                    <th style="width: 140px;">Cập nhật gần nhất</th>
+                    <th class="text-center" style="width: 130px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,16 +144,20 @@
                         var soLuong = item.SoLuongTon ?? 0;
                         var gia = sp?.GiaMacDinh ?? 0;
                         var giaTriTon = soLuong * gia;
+                        var spMa = sp?.MaSanPham ?? 0;
+                        var spTen = sp?.TenSanPham ?? "N/A";
+                        var spCode = sp?.MaSanPhamCode ?? $"SP{sp?.MaSanPham:D3}";
+                        var spDvt = sp?.DonViTinh?.TenDonVi ?? "đơn vị";
 
                         <tr>
                             <td>
                                 <span class="code-badge">
-                                    @(sp?.MaSanPhamCode ?? $"SP{sp?.MaSanPham:D3}")
+                                    @spCode
                                 </span>
                             </td>
                             <td>
                                 <a asp-controller="SanPham" asp-action="Details" asp-route-id="@sp?.MaSanPham" class="fw-bold text-decoration-none" style="color: var(--slate-900);">
-                                    @(sp?.TenSanPham ?? "N/A")
+                                    @spTen
                                 </a>
                             </td>
                             <td>
@@ -144,10 +165,10 @@
                                     @(sp?.DanhMuc?.TenDanhMuc ?? "Chưa phân loại")
                                 </span>
                             </td>
-                            <td>@(sp?.DonViTinh?.TenDonVi ?? "-")</td>
+                            <td>@spDvt</td>
                             <td class="text-end font-mono">@(gia.ToString("N0")) đ</td>
                             <td class="text-center">
-                                <span class="fw-bold font-mono fs-6 @(soLuong < 20 ? "text-danger" : "text-dark")">
+                                <span class="fw-bold font-mono fs-6 @(soLuong < 20 ? "text-danger" : "text-dark")" id="stock-display-@spMa">
                                     @soLuong
                                 </span>
                             </td>
@@ -171,13 +192,24 @@
                             <td style="color: var(--slate-500); font-size: 13px;">
                                 @(item.NgayCapNhat?.ToString("dd/MM/yyyy HH:mm") ?? "—")
                             </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold"
+                                        data-id="@spMa"
+                                        data-name="@spTen"
+                                        data-code="@spCode"
+                                        data-stock="@soLuong"
+                                        data-unit="@spDvt"
+                                        onclick="openDieuChinhModalFromButton(this)">
+                                    <i class="bi bi-sliders me-1"></i> Điều chỉnh
+                                </button>
+                            </td>
                         </tr>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="9">
+                        <td colspan="10">
                             <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy dữ liệu tồn kho nào phù hợp.</p></div>
                         </td>
                     </tr>
@@ -186,3 +218,181 @@
         </table>
     </div>
 </div>
+
+<!-- Modal Điều chỉnh Tồn kho (Tăng / Giảm kho) -->
+<div class="modal fade" id="dieuChinhKhoModal" tabindex="-1" aria-labelledby="dieuChinhKhoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center" id="dieuChinhKhoModalLabel">
+                    <i class="bi bi-sliders text-primary me-2"></i> Điều chỉnh Tồn kho
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-controller="TonKho" asp-action="DieuChinhKho" method="post" id="formDieuChinhKho">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maSanPham" id="modalMaSanPham" />
+
+                <div class="modal-body p-4">
+                    <!-- Thông tin sản phẩm -->
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-secondary-subtle text-secondary small font-monospace text-uppercase" id="modalSpCode">SP001</span>
+                                <h6 class="fw-bold text-dark mt-1 mb-0" id="modalSpTen">Tên sản phẩm</h6>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">Tồn kho hiện có</small>
+                                <span class="fw-bold fs-5 text-primary" id="modalSpTonHienCo">0</span>
+                                <span class="small text-muted" id="modalSpDvt">đơn vị</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chọn Loại điều chỉnh (Giảm kho / Tăng kho) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Hành động điều chỉnh <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-2">
+                            <input type="radio" class="btn-check" name="loaiDieuChinh" id="optGiam" value="giam" checked onchange="updateCalculations()">
+                            <label class="btn btn-outline-danger flex-fill rounded-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1" for="optGiam">
+                                <i class="bi bi-dash-circle-fill"></i> Giảm kho (Xuất / Hỏng)
+                            </label>
+
+                            <input type="radio" class="btn-check" name="loaiDieuChinh" id="optTang" value="tang" onchange="updateCalculations()">
+                            <label class="btn btn-outline-success flex-fill rounded-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1" for="optTang">
+                                <i class="bi bi-plus-circle-fill"></i> Tăng kho (Kiểm kê dôi)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Số lượng thay đổi -->
+                    <div class="mb-3">
+                        <label for="modalSoLuong" class="form-label fw-semibold">Số lượng thay đổi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary" id="modalIconAction"><i class="bi bi-dash-lg"></i></span>
+                            <input type="number" name="soLuongThayDoi" id="modalSoLuong" class="form-control rounded-end-3 fs-5 fw-bold"
+                                   min="1" value="1" required oninput="updateCalculations()" />
+                        </div>
+                        <div class="form-text small text-danger" id="modalStockAlert" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Số lượng giảm không thể lớn hơn số tồn hiện có.
+                        </div>
+                    </div>
+
+                    <!-- Lý do điều chỉnh -->
+                    <div class="mb-3">
+                        <label for="modalLyDo" class="form-label fw-semibold">Lý do điều chỉnh</label>
+                        <select class="form-select rounded-3 mb-2" id="modalLyDoPreset" onchange="onSelectReasonPreset(this)">
+                            <option value="Xuất bán lẻ / Khách mua">Xuất bán lẻ / Khách mua</option>
+                            <option value="Xuất luân chuyển chi nhánh">Xuất luân chuyển chi nhánh</option>
+                            <option value="Hàng rách bao bì / Hư hỏng">Hàng rách bao bì / Hư hỏng</option>
+                            <option value="Hàng hết hạn sử dụng (Hủy hàng)">Hàng hết hạn sử dụng (Hủy hàng)</option>
+                            <option value="Kiểm kê điều chỉnh cân bằng kho">Kiểm kê điều chỉnh cân bằng kho</option>
+                            <option value="other">Lý do khác (tự nhập)...</option>
+                        </select>
+                        <input type="text" name="lyDo" id="modalLyDo" class="form-control rounded-3" value="Xuất bán lẻ / Khách mua" placeholder="Nhập lý do chi tiết..." />
+                    </div>
+
+                    <!-- Preview Kết quả sau điều chỉnh -->
+                    <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center" style="background-color: #f8fafc;">
+                        <span class="text-secondary small fw-medium">Tồn kho sau điều chỉnh:</span>
+                        <div class="text-end">
+                            <span class="fs-5 fw-bold font-mono" id="modalTonSauDieuChinh">0</span>
+                            <span class="small text-muted" id="modalPreviewDvt">đơn vị</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSubmitDieuChinh">
+                        <i class="bi bi-check-lg me-1"></i> Lưu điều chỉnh
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentStock = 0;
+        let currentUnit = 'đơn vị';
+
+        function openDieuChinhModalFromButton(btn) {
+            const maSp = btn.getAttribute('data-id');
+            const tenSp = btn.getAttribute('data-name');
+            const code = btn.getAttribute('data-code');
+            const ton = parseInt(btn.getAttribute('data-stock')) || 0;
+            const dvt = btn.getAttribute('data-unit') || 'đơn vị';
+
+            currentStock = ton;
+            currentUnit = dvt;
+
+            document.getElementById('modalMaSanPham').value = maSp;
+            document.getElementById('modalSpTen').textContent = tenSp;
+            document.getElementById('modalSpCode').textContent = code;
+            document.getElementById('modalSpTonHienCo').textContent = ton;
+            document.getElementById('modalSpDvt').textContent = currentUnit;
+            document.getElementById('modalPreviewDvt').textContent = currentUnit;
+            document.getElementById('modalSoLuong').value = 1;
+
+            // Mặc định chọn Giảm kho
+            document.getElementById('optGiam').checked = true;
+            document.getElementById('modalLyDoPreset').value = "Xuất bán lẻ / Khách mua";
+            document.getElementById('modalLyDo').value = "Xuất bán lẻ / Khách mua";
+
+            updateCalculations();
+
+            const modal = new bootstrap.Modal(document.getElementById('dieuChinhKhoModal'));
+            modal.show();
+        }
+
+        function onSelectReasonPreset(selectEl) {
+            const inputLyDo = document.getElementById('modalLyDo');
+            if (selectEl.value === 'other') {
+                inputLyDo.value = '';
+                inputLyDo.focus();
+            } else {
+                inputLyDo.value = selectEl.value;
+            }
+        }
+
+        function updateCalculations() {
+            const isGiam = document.getElementById('optGiam').checked;
+            const inputSoLuong = document.getElementById('modalSoLuong');
+            const alertEl = document.getElementById('modalStockAlert');
+            const btnSubmit = document.getElementById('btnSubmitDieuChinh');
+            const iconAction = document.getElementById('modalIconAction');
+            const previewEl = document.getElementById('modalTonSauDieuChinh');
+
+            let qty = parseInt(inputSoLuong.value) || 0;
+            if (qty < 1) {
+                qty = 1;
+                inputSoLuong.value = 1;
+            }
+
+            if (isGiam) {
+                iconAction.innerHTML = '<i class="bi bi-dash-lg text-danger"></i>';
+                const newStock = currentStock - qty;
+                previewEl.textContent = newStock;
+                previewEl.className = 'fs-5 fw-bold font-mono ' + (newStock < 0 ? 'text-danger' : (newStock < 20 ? 'text-warning' : 'text-success'));
+
+                if (qty > currentStock) {
+                    alertEl.style.display = 'block';
+                    btnSubmit.disabled = true;
+                } else {
+                    alertEl.style.display = 'none';
+                    btnSubmit.disabled = false;
+                }
+            } else {
+                iconAction.innerHTML = '<i class="bi bi-plus-lg text-success"></i>';
+                const newStock = currentStock + qty;
+                previewEl.textContent = newStock;
+                previewEl.className = 'fs-5 fw-bold font-mono text-success';
+                alertEl.style.display = 'none';
+                btnSubmit.disabled = false;
+            }
+        }
+    </script>
+}

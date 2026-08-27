@@ -29,6 +29,9 @@ namespace code.Models
         [MaxLength(150)]
         public string? DiaChi { get; set; }
 
+        [MaxLength(255)]
+        public string? HinhAnh { get; set; }
+
         public bool? TrangThai { get; set; }
 
         // Navigation properties

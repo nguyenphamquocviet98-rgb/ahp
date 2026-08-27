@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using code.Data;
+using code.Models;
 
 namespace code.Controllers
 {
@@ -67,6 +68,66 @@ namespace code.Controllers
                 .SumAsync(t => (decimal)(t.SoLuongTon ?? 0) * (t.SanPham != null ? (t.SanPham.GiaMacDinh ?? 0) : 0));
 
             return View(list);
+        }
+
+        // POST: TonKho/DieuChinhKho
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,quanly")]
+        public async Task<IActionResult> DieuChinhKho(int maSanPham, string loaiDieuChinh, int soLuongThayDoi, string? lyDo)
+        {
+            if (soLuongThayDoi <= 0)
+            {
+                TempData["ErrorMessage"] = "Số lượng thay đổi phải lớn hơn 0.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var tonKho = await _context.TonKhos
+                .Include(t => t.SanPham)
+                .FirstOrDefaultAsync(t => t.MaSanPham == maSanPham);
+
+            if (tonKho == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy dữ liệu tồn kho của sản phẩm này.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            int delta = 0;
+            string tenSp = tonKho.SanPham?.TenSanPham ?? "Sản phẩm";
+
+            if (loaiDieuChinh == "giam")
+            {
+                if ((tonKho.SoLuongTon ?? 0) < soLuongThayDoi)
+                {
+                    TempData["ErrorMessage"] = $"Số lượng giảm ({soLuongThayDoi}) không thể lớn hơn số lượng tồn hiện có ({tonKho.SoLuongTon ?? 0}).";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                delta = -soLuongThayDoi;
+                tonKho.SoLuongTon = (tonKho.SoLuongTon ?? 0) - soLuongThayDoi;
+            }
+            else
+            {
+                delta = soLuongThayDoi;
+                tonKho.SoLuongTon = (tonKho.SoLuongTon ?? 0) + soLuongThayDoi;
+            }
+
+            tonKho.NgayCapNhat = DateTime.Now;
+
+            // Ghi nhận vào Lịch sử biến động kho
+            var lichSu = new LichSuNhapHang
+            {
+                MaSanPham = maSanPham,
+                SoLuongThayDoi = delta,
+                LoaiThayDoi = delta < 0 ? "dieuchinh_giam" : "dieuchinh_tang",
+                NgayTao = DateTime.Now
+            };
+
+            _context.LichSuNhapHangs.Add(lichSu);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đã {(delta < 0 ? "giảm (xuất)" : "tăng")} {Math.Abs(delta)} đơn vị cho [{tenSp}] thành công! Lý do: {(string.IsNullOrWhiteSpace(lyDo) ? "Điều chỉnh kho" : lyDo)}.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

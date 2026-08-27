@@ -257,16 +257,34 @@
 
                 <div class="modal-body py-3">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Chọn sản phẩm <span class="text-danger">*</span></label>
-                        <select name="maSanPham" id="cboSanPham" class="form-select rounded-3" required onchange="onSanPhamSelected()">
-                            <option value="">-- Chọn sản phẩm --</option>
+                        <label class="form-label fw-semibold">Tìm kiếm & Chọn sản phẩm <span class="text-danger">*</span></label>
+                        
+                        <!-- Ô tìm kiếm trực tiếp trong modal -->
+                        <div class="input-group mb-2 shadow-sm">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="modalSearchProduct" class="form-control border-start-0 ps-0" 
+                                   placeholder="Gõ tên hoặc mã sản phẩm để lọc nhanh..." 
+                                   oninput="filterModalProducts()" />
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearModalSearch()" title="Xóa tìm kiếm">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+
+                        <select name="maSanPham" id="cboSanPham" class="form-select rounded-3 shadow-sm py-2" required onchange="onSanPhamSelected()">
+                            <option value="">-- Chọn sản phẩm (@(sanPhams.Count) sản phẩm có sẵn) --</option>
                             @foreach (var sp in sanPhams)
                             {
-                                <option value="@sp.MaSanPham" data-price="@(sp.GiaMacDinh ?? 0)" data-unit="@(sp.DonViTinh?.TenDonVi ?? "")">
-                                    @(sp.MaSanPhamCode ?? $"SP{sp.MaSanPham:D3}") - @sp.TenSanPham (@(sp.DonViTinh?.TenDonVi ?? "Cái"))
+                                <option value="@sp.MaSanPham" 
+                                        data-search="@($"{sp.MaSanPhamCode} {sp.TenSanPham} {sp.DonViTinh?.TenDonVi}".ToLower())"
+                                        data-price="@(sp.GiaMacDinh ?? 0)" 
+                                        data-unit="@(sp.DonViTinh?.TenDonVi ?? "")">
+                                    @(sp.MaSanPhamCode ?? $"SP{sp.MaSanPham:D3}") - @sp.TenSanPham (@(sp.DonViTinh?.TenDonVi ?? "Cái")) - @((sp.GiaMacDinh ?? 0).ToString("N0")) đ
                                 </option>
                             }
                         </select>
+                        <div id="searchMatchCount" class="form-text text-muted small mt-1"></div>
                     </div>
 
                     <div class="row g-3 mb-3">
@@ -280,7 +298,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3 bg-light rounded-3 text-end">
+                    <div class="p-3 bg-light rounded-3 text-end border">
                         <span class="text-muted small">Thành tiền tạm tính:</span>
                         <h5 class="fw-bold text-primary mb-0" id="lblThanhTienPreview">0 đ</h5>
                     </div>
@@ -347,6 +365,51 @@
 
 @section Scripts {
     <script>
+        function filterModalProducts() {
+            const keyword = document.getElementById('modalSearchProduct').value.trim().toLowerCase();
+            const select = document.getElementById('cboSanPham');
+            const options = select.options;
+            let matchCount = 0;
+            let firstMatchIndex = -1;
+
+            for (let i = 1; i < options.length; i++) {
+                const searchData = options[i].getAttribute('data-search') || options[i].text.toLowerCase();
+                if (!keyword || searchData.includes(keyword)) {
+                    options[i].style.display = '';
+                    options[i].disabled = false;
+                    matchCount++;
+                    if (firstMatchIndex === -1) firstMatchIndex = i;
+                } else {
+                    options[i].style.display = 'none';
+                    options[i].disabled = true;
+                }
+            }
+
+            const countEl = document.getElementById('searchMatchCount');
+            if (keyword) {
+                countEl.innerHTML = `<i class="bi bi-funnel"></i> Tìm thấy <strong>${matchCount}</strong> sản phẩm phù hợp.`;
+                if (firstMatchIndex !== -1 && matchCount === 1) {
+                    select.selectedIndex = firstMatchIndex;
+                    onSanPhamSelected();
+                }
+            } else {
+                countEl.innerText = '';
+            }
+        }
+
+        function clearModalSearch() {
+            document.getElementById('modalSearchProduct').value = '';
+            filterModalProducts();
+        }
+
+        // Tự động focus vào ô tìm kiếm khi mở Modal
+        const themModalEl = document.getElementById('themSanPhamModal');
+        if (themModalEl) {
+            themModalEl.addEventListener('shown.bs.modal', function () {
+                document.getElementById('modalSearchProduct').focus();
+            });
+        }
+
         function onSanPhamSelected() {
             const select = document.getElementById('cboSanPham');
             const selectedOption = select.options[select.selectedIndex];

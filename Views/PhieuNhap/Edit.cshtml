@@ -21,8 +21,11 @@
                 <input type="hidden" asp-for="MaPhieuNhap" />
 
                 <div class="mb-3">
-                    <label asp-for="MaPhieuNhapCode" class="form-label fw-semibold">Mã phiếu nhập</label>
-                    <input asp-for="MaPhieuNhapCode" class="form-control rounded-3 font-monospace text-uppercase" maxlength="20" />
+                    <label asp-for="MaPhieuNhapCode" class="form-label fw-semibold d-flex justify-content-between align-items-center">
+                        <span>Mã phiếu nhập</span>
+                        <span class="badge bg-secondary-subtle text-secondary small fw-normal"><i class="bi bi-lock-fill me-1"></i>Khóa mã</span>
+                    </label>
+                    <input asp-for="MaPhieuNhapCode" class="form-control rounded-3 font-monospace text-uppercase" readonly style="background-color: #f1f5f9; cursor: not-allowed;" />
                     <span asp-validation-for="MaPhieuNhapCode" class="text-danger small"></span>
                 </div>
 

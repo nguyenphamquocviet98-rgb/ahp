@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using code.Data;
 using code.Models;
+using System.IO;
 
 namespace code.Controllers
 {
@@ -10,10 +13,12 @@ namespace code.Controllers
     public class NhaCungCapController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public NhaCungCapController(ApplicationDbContext context)
+        public NhaCungCapController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: NhaCungCap
@@ -64,9 +69,14 @@ namespace code.Controllers
 
         // GET: NhaCungCap/Create
         [Authorize(Roles = "admin,quanly")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var model = new NhaCungCap { TrangThai = true };
+            var maxId = await _context.NhaCungCaps.MaxAsync(n => (int?)n.MaNhaCungCap) ?? 0;
+            var model = new NhaCungCap 
+            { 
+                MaNhaCungCapCode = $"NCC{(maxId + 1):D3}",
+                TrangThai = true 
+            };
             return View(model);
         }
 
@@ -74,21 +84,45 @@ namespace code.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,quanly")]
-        public async Task<IActionResult> Create(NhaCungCap model)
+        public async Task<IActionResult> Create(NhaCungCap model, IFormFile? hinhAnhUpload)
         {
             if (string.IsNullOrWhiteSpace(model.TenNhaCungCap))
             {
                 ModelState.AddModelError("TenNhaCungCap", "Tên nhà cung cấp không được để trống.");
             }
 
+            if (hinhAnhUpload != null && hinhAnhUpload.Length > 0)
+            {
+                var uploadResult = await ProcessImageUploadAsync(hinhAnhUpload, "suppliers");
+                if (uploadResult.Success)
+                {
+                    model.HinhAnh = uploadResult.FilePath;
+                }
+                else
+                {
+                    ModelState.AddModelError("HinhAnh", uploadResult.ErrorMessage ?? "File ảnh không hợp lệ.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
-                model.MaNhaCungCapCode = model.MaNhaCungCapCode?.Trim().ToUpper();
+                // Tự động sinh mã nếu để trống
+                if (string.IsNullOrWhiteSpace(model.MaNhaCungCapCode))
+                {
+                    var maxId = await _context.NhaCungCaps.MaxAsync(n => (int?)n.MaNhaCungCap) ?? 0;
+                    model.MaNhaCungCapCode = $"NCC{(maxId + 1):D3}";
+                }
+                else
+                {
+                    model.MaNhaCungCapCode = model.MaNhaCungCapCode.Trim().ToUpper();
+                }
+
                 model.TenNhaCungCap = model.TenNhaCungCap?.Trim();
                 model.NguoiLienHe = model.NguoiLienHe?.Trim();
                 model.SoDienThoai = model.SoDienThoai?.Trim();
                 model.Email = model.Email?.Trim();
                 model.DiaChi = model.DiaChi?.Trim();
+                model.HinhAnh = model.HinhAnh?.Trim();
 
                 _context.NhaCungCaps.Add(model);
                 await _context.SaveChangesAsync();
@@ -122,7 +156,7 @@ namespace code.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,quanly")]
-        public async Task<IActionResult> Edit(int id, NhaCungCap model)
+        public async Task<IActionResult> Edit(int id, NhaCungCap model, IFormFile? hinhAnhUpload, bool xoaAnh = false)
         {
             if (id != model.MaNhaCungCap)
             {
@@ -132,6 +166,20 @@ namespace code.Controllers
             if (string.IsNullOrWhiteSpace(model.TenNhaCungCap))
             {
                 ModelState.AddModelError("TenNhaCungCap", "Tên nhà cung cấp không được để trống.");
+            }
+
+            string? newImagePath = null;
+            if (hinhAnhUpload != null && hinhAnhUpload.Length > 0)
+            {
+                var uploadResult = await ProcessImageUploadAsync(hinhAnhUpload, "suppliers");
+                if (uploadResult.Success)
+                {
+                    newImagePath = uploadResult.FilePath;
+                }
+                else
+                {
+                    ModelState.AddModelError("HinhAnh", uploadResult.ErrorMessage ?? "File ảnh không hợp lệ.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -151,6 +199,21 @@ namespace code.Controllers
                     existing.Email = model.Email?.Trim();
                     existing.DiaChi = model.DiaChi?.Trim();
                     existing.TrangThai = model.TrangThai;
+
+                    if (xoaAnh)
+                    {
+                        DeleteOldImage(existing.HinhAnh);
+                        existing.HinhAnh = null;
+                    }
+                    else if (newImagePath != null)
+                    {
+                        DeleteOldImage(existing.HinhAnh);
+                        existing.HinhAnh = newImagePath;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(model.HinhAnh))
+                    {
+                        existing.HinhAnh = model.HinhAnh.Trim();
+                    }
 
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"Cập nhật nhà cung cấp '{model.TenNhaCungCap}' thành công!";
@@ -187,24 +250,76 @@ namespace code.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Kiểm tra ràng buộc an toàn
-            if (ncc.PhieuNhaps.Any())
+            // Kiểm tra ràng buộc: Nếu có dữ liệu liên kết thì chặn xóa
+            if (ncc.PhieuNhaps.Any() || ncc.DiemDanhGiaNCCs.Any() || ncc.KetQuaXepHangs.Any())
             {
-                TempData["ErrorMessage"] = $"Không thể xóa nhà cung cấp '{ncc.TenNhaCungCap}' vì đã có {ncc.PhieuNhaps.Count} phiếu nhập hàng liên kết.";
+                TempData["ErrorMessage"] = $"Không thể xóa nhà cung cấp '{ncc.TenNhaCungCap}' vì đã có dữ liệu phiếu nhập hoặc điểm đánh giá liên kết.";
                 return RedirectToAction(nameof(Index));
             }
 
-            if (ncc.DiemDanhGiaNCCs.Any() || ncc.KetQuaXepHangs.Any())
-            {
-                TempData["ErrorMessage"] = $"Không thể xóa nhà cung cấp '{ncc.TenNhaCungCap}' vì đang có dữ liệu trong các kỳ đánh giá AHP.";
-                return RedirectToAction(nameof(Index));
-            }
+            // Xóa file ảnh đại diện nếu có
+            DeleteOldImage(ncc.HinhAnh);
 
             _context.NhaCungCaps.Remove(ncc);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Đã xóa nhà cung cấp '{ncc.TenNhaCungCap}' thành công!";
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<(bool Success, string? FilePath, string? ErrorMessage)> ProcessImageUploadAsync(IFormFile file, string folder)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return (false, null, "Chỉ chấp nhận các định dạng ảnh: .jpg, .jpeg, .png, .webp, .gif");
+            }
+
+            // Giới hạn 5MB
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return (false, null, "Dung lượng ảnh không được vượt quá 5MB.");
+            }
+
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", folder);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return (true, $"/uploads/{folder}/{uniqueFileName}", null);
+        }
+
+        private void DeleteOldImage(string? imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath) || !imagePath.StartsWith("/uploads/"))
+            {
+                return;
+            }
+
+            try
+            {
+                var relativePath = imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath);
+                if (System.IO.File.Exists(fullPath))
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+            }
+            catch
+            {
+                // Bỏ qua lỗi xóa file nếu bị lock
+            }
         }
     }
 }

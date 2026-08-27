@@ -13,13 +13,16 @@
                 <h4 class="fw-bold text-dark mb-0">Thêm Nhà Cung Cấp Mới</h4>
             </div>
 
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label asp-for="MaNhaCungCapCode" class="form-label fw-semibold">Mã NCC (Code)</label>
-                        <input asp-for="MaNhaCungCapCode" class="form-control rounded-3 font-monospace text-uppercase" placeholder="Ví dụ: NCC004" maxlength="20" />
+                        <label asp-for="MaNhaCungCapCode" class="form-label fw-semibold d-flex justify-content-between align-items-center">
+                            <span>Mã NCC</span>
+                            <span class="badge bg-secondary-subtle text-secondary small fw-normal"><i class="bi bi-lock-fill me-1"></i>Tự động tăng</span>
+                        </label>
+                        <input asp-for="MaNhaCungCapCode" class="form-control rounded-3 font-monospace text-uppercase" readonly style="background-color: #f1f5f9; cursor: not-allowed;" title="Mã nhà cung cấp được hệ thống sinh tự động" />
                         <span asp-validation-for="MaNhaCungCapCode" class="text-danger small"></span>
                     </div>
                     <div class="col-md-8">
@@ -53,12 +56,49 @@
                     <span asp-validation-for="DiaChi" class="text-danger small"></span>
                 </div>
 
+                <!-- Khu vực Upload Logo / Ảnh Nhà Cung Cấp -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Logo / Ảnh đại diện đối tác</label>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-7">
+                            <div class="image-upload-wrapper" id="dropZoneNCC" onclick="document.getElementById('fileInputNCC').click()">
+                                <input type="file" id="fileInputNCC" name="hinhAnhUpload" accept="image/*" class="d-none" onchange="previewSupplierImage(this)" />
+                                <div class="image-upload-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div class="fw-semibold text-dark mb-1">Kéo thả logo vào đây hoặc nhấp để chọn</div>
+                                <div class="text-muted small">Hỗ trợ JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-link-45deg"></i> Link logo</span>
+                                    <input asp-for="HinhAnh" id="urlInputNCC" class="form-control" placeholder="Hoặc dán URL logo nhà cung cấp..." oninput="previewSupplierUrl(this.value)" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-center">
+                            <div id="previewContainerNCC" class="d-none">
+                                <div class="image-preview-card" style="max-width: 160px;">
+                                    <img id="imgPreviewNCC" src="" alt="Xem trước logo" style="height: 140px; object-fit: contain; padding: 8px;" />
+                                    <button type="button" class="btn-remove-preview" title="Xóa logo này" onclick="clearSupplierPreview()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted d-block mt-1">Logo xem trước</small>
+                            </div>
+                            <div id="emptyPreviewNCC" class="table-product-placeholder mx-auto" style="width: 110px; height: 110px; border-radius: 50%; font-size: 28px;">
+                                <i class="bi bi-building"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label class="form-label fw-semibold d-block">Trạng thái hợp tác</label>
-                        <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
-                            <label class="form-check-label" for="chkTrangThai">Đang hợp tác</label>
-                        </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
+                        <label class="form-check-label" for="chkTrangThai">Đang hợp tác</label>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
@@ -71,3 +111,65 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function previewSupplierImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('imgPreviewNCC').src = e.target.result;
+                    document.getElementById('previewContainerNCC').classList.remove('d-none');
+                    document.getElementById('emptyPreviewNCC').classList.add('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewSupplierUrl(url) {
+            if (url && url.trim().length > 0) {
+                document.getElementById('imgPreviewNCC').src = url.trim();
+                document.getElementById('previewContainerNCC').classList.remove('d-none');
+                document.getElementById('emptyPreviewNCC').classList.add('d-none');
+            } else if (!document.getElementById('fileInputNCC').files.length) {
+                clearSupplierPreview();
+            }
+        }
+
+        function clearSupplierPreview() {
+            document.getElementById('fileInputNCC').value = '';
+            document.getElementById('urlInputNCC').value = '';
+            document.getElementById('imgPreviewNCC').src = '';
+            document.getElementById('previewContainerNCC').classList.add('d-none');
+            document.getElementById('emptyPreviewNCC').classList.remove('d-none');
+        }
+
+        const dropZoneNCC = document.getElementById('dropZoneNCC');
+        if (dropZoneNCC) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZoneNCC.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZoneNCC.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZoneNCC.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZoneNCC.classList.remove('dragover');
+                }, false);
+            });
+
+            dropZoneNCC.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    document.getElementById('fileInputNCC').files = files;
+                    previewSupplierImage(document.getElementById('fileInputNCC'));
+                }
+            }, false);
+        }
+    </script>
+}

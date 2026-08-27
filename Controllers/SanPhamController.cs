@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using code.Data;
 using code.Models;
+using System.IO;
 
 namespace code.Controllers
 {
@@ -11,10 +14,12 @@ namespace code.Controllers
     public class SanPhamController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public SanPhamController(ApplicationDbContext context)
+        public SanPhamController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: SanPham
@@ -76,7 +81,12 @@ namespace code.Controllers
         public async Task<IActionResult> Create()
         {
             await PopulateDropdownsAsync();
-            var model = new SanPham { TrangThai = true };
+            var maxId = await _context.SanPhams.MaxAsync(s => (int?)s.MaSanPham) ?? 0;
+            var model = new SanPham 
+            { 
+                MaSanPhamCode = $"SP{(maxId + 1):D3}",
+                TrangThai = true 
+            };
             return View(model);
         }
 
@@ -84,16 +94,39 @@ namespace code.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,quanly")]
-        public async Task<IActionResult> Create(SanPham model)
+        public async Task<IActionResult> Create(SanPham model, IFormFile? hinhAnhUpload)
         {
             if (string.IsNullOrWhiteSpace(model.TenSanPham))
             {
                 ModelState.AddModelError("TenSanPham", "Tên sản phẩm không được để trống.");
             }
 
+            if (hinhAnhUpload != null && hinhAnhUpload.Length > 0)
+            {
+                var uploadResult = await ProcessImageUploadAsync(hinhAnhUpload, "products");
+                if (uploadResult.Success)
+                {
+                    model.AnhSanPham = uploadResult.FilePath;
+                }
+                else
+                {
+                    ModelState.AddModelError("AnhSanPham", uploadResult.ErrorMessage ?? "File ảnh không hợp lệ.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
-                model.MaSanPhamCode = model.MaSanPhamCode?.Trim().ToUpper();
+                // Tự động sinh mã nếu để trống
+                if (string.IsNullOrWhiteSpace(model.MaSanPhamCode))
+                {
+                    var maxId = await _context.SanPhams.MaxAsync(s => (int?)s.MaSanPham) ?? 0;
+                    model.MaSanPhamCode = $"SP{(maxId + 1):D3}";
+                }
+                else
+                {
+                    model.MaSanPhamCode = model.MaSanPhamCode.Trim().ToUpper();
+                }
+
                 model.TenSanPham = model.TenSanPham?.Trim();
                 model.AnhSanPham = model.AnhSanPham?.Trim();
 
@@ -141,7 +174,7 @@ namespace code.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,quanly")]
-        public async Task<IActionResult> Edit(int id, SanPham model)
+        public async Task<IActionResult> Edit(int id, SanPham model, IFormFile? hinhAnhUpload, bool xoaAnh = false)
         {
             if (id != model.MaSanPham)
             {
@@ -151,6 +184,20 @@ namespace code.Controllers
             if (string.IsNullOrWhiteSpace(model.TenSanPham))
             {
                 ModelState.AddModelError("TenSanPham", "Tên sản phẩm không được để trống.");
+            }
+
+            string? newImagePath = null;
+            if (hinhAnhUpload != null && hinhAnhUpload.Length > 0)
+            {
+                var uploadResult = await ProcessImageUploadAsync(hinhAnhUpload, "products");
+                if (uploadResult.Success)
+                {
+                    newImagePath = uploadResult.FilePath;
+                }
+                else
+                {
+                    ModelState.AddModelError("AnhSanPham", uploadResult.ErrorMessage ?? "File ảnh không hợp lệ.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -168,8 +215,22 @@ namespace code.Controllers
                     existing.MaDanhMuc = model.MaDanhMuc;
                     existing.MaDonViTinh = model.MaDonViTinh;
                     existing.GiaMacDinh = model.GiaMacDinh;
-                    existing.AnhSanPham = model.AnhSanPham?.Trim();
                     existing.TrangThai = model.TrangThai;
+
+                    if (xoaAnh)
+                    {
+                        DeleteOldImage(existing.AnhSanPham);
+                        existing.AnhSanPham = null;
+                    }
+                    else if (newImagePath != null)
+                    {
+                        DeleteOldImage(existing.AnhSanPham);
+                        existing.AnhSanPham = newImagePath;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(model.AnhSanPham))
+                    {
+                        existing.AnhSanPham = model.AnhSanPham.Trim();
+                    }
 
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"Cập nhật sản phẩm '{model.TenSanPham}' thành công!";
@@ -214,6 +275,9 @@ namespace code.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Xóa file ảnh vật lý nếu có
+            DeleteOldImage(sanPham.AnhSanPham);
+
             // Xóa bản ghi TonKho liên kết trước nếu có
             if (sanPham.TonKho != null)
             {
@@ -241,5 +305,61 @@ namespace code.Controllers
                 "TenDonVi",
                 selectedDonViTinh);
         }
+
+        private async Task<(bool Success, string? FilePath, string? ErrorMessage)> ProcessImageUploadAsync(IFormFile file, string folder)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return (false, null, "Chỉ chấp nhận các định dạng ảnh: .jpg, .jpeg, .png, .webp, .gif");
+            }
+
+            // Giới hạn 5MB
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return (false, null, "Dung lượng ảnh không được vượt quá 5MB.");
+            }
+
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", folder);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return (true, $"/uploads/{folder}/{uniqueFileName}", null);
+        }
+
+        private void DeleteOldImage(string? imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath) || !imagePath.StartsWith("/uploads/"))
+            {
+                return;
+            }
+
+            try
+            {
+                var relativePath = imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath);
+                if (System.IO.File.Exists(fullPath))
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+            }
+            catch
+            {
+                // Bỏ qua lỗi xóa file nếu bị lock
+            }
+        }
     }
 }
+

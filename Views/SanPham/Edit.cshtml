@@ -14,14 +14,18 @@
                     <h4 class="fw-bold mb-0" style="color: var(--gray-900);">Chỉnh Sửa Sản Phẩm</h4>
                 </div>
 
-                <form asp-action="Edit" asp-route-id="@Model.MaSanPham" method="post" class="form-custom">
+                <form asp-action="Edit" asp-route-id="@Model.MaSanPham" method="post" enctype="multipart/form-data" class="form-custom">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="MaSanPham" />
+                    <input type="hidden" name="xoaAnh" id="xoaAnhInput" value="false" />
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label asp-for="MaSanPhamCode" class="form-label">Mã sản phẩm (Code)</label>
-                            <input asp-for="MaSanPhamCode" class="form-control font-mono text-uppercase" maxlength="20" />
+                            <label asp-for="MaSanPhamCode" class="form-label d-flex justify-content-between align-items-center">
+                                <span>Mã sản phẩm</span>
+                                <span class="badge bg-secondary-subtle text-secondary small fw-normal"><i class="bi bi-lock-fill me-1"></i>Khóa mã</span>
+                            </label>
+                            <input asp-for="MaSanPhamCode" class="form-control font-mono text-uppercase" readonly style="background-color: #f1f5f9; cursor: not-allowed;" />
                             <span asp-validation-for="MaSanPhamCode" class="text-danger"></span>
                         </div>
                         <div class="col-md-8">
@@ -48,7 +52,7 @@
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label asp-for="GiaMacDinh" class="form-label">Giá mặc định (VNĐ)</label>
                             <div class="input-group">
@@ -66,6 +70,47 @@
                         </div>
                     </div>
 
+                    <!-- Khu vực Upload & Xem trước Ảnh sản phẩm -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Hình ảnh sản phẩm</label>
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-7">
+                                <div class="image-upload-wrapper" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                                    <input type="file" id="fileInput" name="hinhAnhUpload" accept="image/*" class="d-none" onchange="previewImage(this)" />
+                                    <div class="image-upload-icon">
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                    </div>
+                                    <div class="fw-semibold text-dark mb-1">Kéo thả ảnh mới vào đây hoặc nhấp để đổi</div>
+                                    <div class="text-muted small">Hỗ trợ JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white"><i class="bi bi-link-45deg"></i> Link ảnh</span>
+                                        <input asp-for="AnhSanPham" id="urlInput" class="form-control" placeholder="Hoặc sửa URL ảnh tại đây..." oninput="previewUrl(this.value)" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 text-center">
+                                @{
+                                    var hasImage = !string.IsNullOrEmpty(Model.AnhSanPham);
+                                }
+                                <div id="previewContainer" class="@(hasImage ? "" : "d-none")">
+                                    <div class="image-preview-card">
+                                        <img id="imgPreview" src="@(hasImage ? Model.AnhSanPham : "")" alt="Ảnh sản phẩm" />
+                                        <button type="button" class="btn-remove-preview" title="Gỡ ảnh này" onclick="clearPreview()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Ảnh hiện tại / Xem trước</small>
+                                </div>
+                                <div id="emptyPreview" class="table-product-placeholder mx-auto @(hasImage ? "d-none" : "")" style="width: 140px; height: 140px; border-radius: 12px; font-size: 32px;">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <span asp-validation-for="AnhSanPham" class="text-danger small"></span>
+                    </div>
+
                     <div class="d-flex justify-content-end gap-2">
                         <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
                         <button type="submit" class="btn btn-custom btn-custom-primary px-4">
@@ -77,3 +122,69 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('imgPreview').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('d-none');
+                    document.getElementById('emptyPreview').classList.add('d-none');
+                    document.getElementById('xoaAnhInput').value = 'false';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewUrl(url) {
+            if (url && url.trim().length > 0) {
+                document.getElementById('imgPreview').src = url.trim();
+                document.getElementById('previewContainer').classList.remove('d-none');
+                document.getElementById('emptyPreview').classList.add('d-none');
+                document.getElementById('xoaAnhInput').value = 'false';
+            } else if (!document.getElementById('fileInput').files.length) {
+                clearPreview();
+            }
+        }
+
+        function clearPreview() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('urlInput').value = '';
+            document.getElementById('imgPreview').src = '';
+            document.getElementById('previewContainer').classList.add('d-none');
+            document.getElementById('emptyPreview').classList.remove('d-none');
+            document.getElementById('xoaAnhInput').value = 'true';
+        }
+
+        // Drag and drop event listeners
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    document.getElementById('fileInput').files = files;
+                    previewImage(document.getElementById('fileInput'));
+                }
+            }, false);
+        }
+    </script>
+}

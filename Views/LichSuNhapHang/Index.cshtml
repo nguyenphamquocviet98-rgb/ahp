@@ -22,7 +22,8 @@
         <select name="loaiThayDoi" class="form-select" style="max-width: 220px;">
             <option value="">-- Tất cả loại biến động --</option>
             <option value="nhap" selected="@(selectedLoai == "nhap")">Nhập hàng mới</option>
-            <option value="dieuchinh" selected="@(selectedLoai == "dieuchinh")">Điều chỉnh kho</option>
+            <option value="dieuchinh_giam" selected="@(selectedLoai == "dieuchinh_giam")">Giảm kho (Xuất / Hỏng)</option>
+            <option value="dieuchinh_tang" selected="@(selectedLoai == "dieuchinh_tang")">Tăng kho (Cân bằng)</option>
         </select>
         <button type="submit" class="btn btn-custom btn-custom-outline"><i class="bi bi-funnel"></i> Lọc</button>
         @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedLoai))
@@ -100,16 +101,22 @@
                                 }
                             </td>
                             <td class="text-center">
-                                @if (item.LoaiThayDoi == "nhap")
+                                @if (item.LoaiThayDoi == "nhap" || item.LoaiThayDoi == "nhap_kho")
                                 {
                                     <span class="status-badge status-badge-primary">
                                         <i class="bi bi-box-arrow-in-down"></i> Nhập hàng
                                     </span>
                                 }
+                                else if (item.LoaiThayDoi == "dieuchinh_giam" || sl < 0)
+                                {
+                                    <span class="status-badge status-badge-danger">
+                                        <i class="bi bi-dash-circle"></i> Giảm kho
+                                    </span>
+                                }
                                 else
                                 {
                                     <span class="status-badge status-badge-warning">
-                                        <i class="bi bi-sliders"></i> Điều chỉnh
+                                        <i class="bi bi-sliders"></i> Tăng kho
                                     </span>
                                 }
                             </td>

@@ -31,7 +31,25 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-md-6">
+                    <!-- Ảnh sản phẩm -->
+                    <div class="col-md-4">
+                        <div class="product-detail-media h-100">
+                            @if (!string.IsNullOrEmpty(Model.AnhSanPham))
+                            {
+                                <img src="@Model.AnhSanPham" alt="@Model.TenSanPham" class="img-fluid" onerror="this.onerror=null; this.src='/favicon.ico';" />
+                            }
+                            else
+                            {
+                                <div class="empty-state p-3">
+                                    <i class="bi bi-image fs-1 text-muted"></i>
+                                    <p class="small text-muted mt-2">Chưa có ảnh sản phẩm</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Thông tin chi tiết -->
+                    <div class="col-md-5">
                         <div style="padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); height: 100%;">
                             <h6 class="fw-bold text-uppercase small mb-3" style="color: var(--gray-500);">Thông tin hàng hóa</h6>
                             <div class="mb-3">
@@ -60,19 +78,20 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <!-- Tồn kho -->
+                    <div class="col-md-3">
                         <div style="padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center;">
                             <h6 class="fw-bold text-uppercase small mb-2" style="color: var(--gray-500);">Tồn kho hiện tại</h6>
-                            <div style="font-size: 48px; font-weight: 700; color: @(ton < 20 ? "var(--danger)" : "var(--success)"); line-height: 1.1;">
+                            <div style="font-size: 44px; font-weight: 700; color: @(ton < 20 ? "var(--danger)" : "var(--success)"); line-height: 1.1;">
                                 @ton
                             </div>
                             <div style="color: var(--gray-500); font-size: 12px; margin-top: 4px;">
-                                Cập nhật gần nhất: @(Model.TonKho?.NgayCapNhat?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa có")
+                                @(Model.DonViTinh?.TenDonVi ?? "Đơn vị")
                             </div>
-                            <div class="mt-2">
+                            <div class="mt-3">
                                 @if (ton < 20)
                                 {
-                                    <span class="status-badge status-badge-danger">Cảnh báo: Tồn kho thấp</span>
+                                    <span class="status-badge status-badge-danger">Tồn kho thấp</span>
                                 }
                                 else
                                 {

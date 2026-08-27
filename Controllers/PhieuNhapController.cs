@@ -92,8 +92,10 @@ namespace code.Controllers
             int? selectedNCC = maNhaCungCap ?? latestDeXuat?.MaNhaCungCap;
             await PopulateDropdownsAsync(selectedNCC);
 
+            var maxId = await _context.PhieuNhaps.MaxAsync(p => (int?)p.MaPhieuNhap) ?? 0;
             var model = new PhieuNhap
             {
+                MaPhieuNhapCode = $"PN{(maxId + 1):D4}",
                 MaNhaCungCap = selectedNCC,
                 NgayNhap = DateTime.Today,
                 TrangThai = "nhap"

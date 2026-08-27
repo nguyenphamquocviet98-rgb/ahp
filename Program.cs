@@ -49,6 +49,13 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Tự động nạp dữ liệu mẫu nếu chưa có
-await DataSeeder.SeedDataAsync(app.Services);
+try
+{
+    await DataSeeder.SeedDataAsync(app.Services);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[DataSeeder Warning] Không thể nạp dữ liệu mẫu tự động: {ex.Message}");
+}
 
 app.Run();

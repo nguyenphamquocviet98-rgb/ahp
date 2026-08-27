@@ -1,78 +1,95 @@
 @model code.Models.PhieuNhap
 @{
-    ViewData["Title"] = "Tạo phiếu nhập mới";
+    ViewData["Title"] = "Lập phiếu nhập hàng mới";
     var ahpDeXuat = ViewBag.NhaCungCapAHPDeXuat as code.Models.KetQuaXepHang;
 }
 
 <div class="row justify-content-center">
-    <div class="col-lg-7 col-md-9">
+    <div class="col-lg-8 col-md-10">
+        <!-- Gợi ý từ mô hình AHP -->
         @if (ahpDeXuat != null && ahpDeXuat.NhaCungCap != null)
         {
-            <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-3 d-flex align-items-center justify-content-between p-3">
-                <div class="d-flex align-items-center">
-                    <div class="fs-2 text-warning me-3">
-                        <i class="bi bi-trophy-fill"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold text-dark">
-                            Gợi ý từ AHP: @ahpDeXuat.NhaCungCap.TenNhaCungCap
+            <div class="card-custom mb-3" style="background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%); border-color: #FDE68A;">
+                <div class="card-body-custom p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35); flex-shrink: 0;">
+                            <i class="bi bi-trophy-fill"></i>
                         </div>
-                        <small class="text-secondary">
-                            Đạt <strong>@ahpDeXuat.DiemTong?.ToString("0.00") điểm</strong> trong @(ahpDeXuat.KyDanhGia?.TenKyDanhGia ?? "kỳ đánh giá gần nhất").
-                        </small>
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size: 14px;">
+                                Gợi ý tối ưu từ AHP: @ahpDeXuat.NhaCungCap.TenNhaCungCap
+                            </div>
+                            <div class="small" style="color: #92400E;">
+                                Đạt <strong class="font-mono">@ahpDeXuat.DiemTong?.ToString("0.00") điểm</strong> WSM trong @(ahpDeXuat.KyDanhGia?.TenKyDanhGia ?? "kỳ đánh giá gần nhất").
+                            </div>
+                        </div>
                     </div>
+                    <button type="button" class="btn btn-custom btn-custom-accent py-1 px-3" style="font-size: 12px;" onclick="selectAhpSupplier(@ahpDeXuat.MaNhaCungCap)">
+                        <i class="bi bi-check2-circle me-1"></i> Chọn đối tác này
+                    </button>
                 </div>
-                <button type="button" class="btn btn-sm btn-dark rounded-3" onclick="selectAhpSupplier(@ahpDeXuat.MaNhaCungCap)">
-                    <i class="bi bi-check2"></i> Chọn đối tác này
-                </button>
             </div>
         }
 
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-            <div class="d-flex align-items-center mb-3">
-                <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div>
-                    <h4 class="fw-bold text-dark mb-0">Tạo Phiếu Nhập Hàng Mới</h4>
-                    <small class="text-muted">Bước 1: Điền thông tin đối tác và ngày nhập</small>
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <div class="d-flex align-items-center gap-2">
+                    <a asp-action="Index" class="btn btn-custom btn-custom-outline py-1 px-2" title="Quay lại">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h5 class="mb-0"><i class="bi bi-receipt-cutoff text-primary"></i> Lập Phiếu Nhập Hàng Mới</h5>
+                        <small class="text-muted">Bước 1: Chọn đối tác cung ứng và thiết lập ngày lập phiếu</small>
+                    </div>
                 </div>
             </div>
 
-            <form asp-action="Create" method="post">
-                @Html.AntiForgeryToken()
+            <div class="card-body-custom form-custom">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
 
-                <div class="mb-3">
-                    <label asp-for="MaNhaCungCap" class="form-label fw-semibold">Nhà cung cấp đối tác <span class="text-danger">*</span></label>
-                    <select asp-for="MaNhaCungCap" id="cboNhaCungCap" class="form-select rounded-3" asp-items="ViewBag.NhaCungCaps" required>
-                        <option value="">-- Chọn nhà cung cấp --</option>
-                    </select>
-                    <span asp-validation-for="MaNhaCungCap" class="text-danger small"></span>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label asp-for="NgayNhap" class="form-label fw-semibold">Ngày nhập hàng</label>
-                        <input asp-for="NgayNhap" type="date" class="form-control rounded-3" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                        <span asp-validation-for="NgayNhap" class="text-danger small"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label asp-for="MaPhieuNhapCode" class="form-label d-flex justify-content-between align-items-center">
+                                <span>Mã phiếu nhập</span>
+                                <span class="badge bg-secondary-subtle text-secondary small fw-normal"><i class="bi bi-lock-fill me-1"></i>Tự động sinh</span>
+                            </label>
+                            <input asp-for="MaPhieuNhapCode" class="form-control font-mono text-uppercase" readonly style="background-color: var(--slate-100); cursor: not-allowed;" title="Mã phiếu nhập được hệ thống sinh tự động" />
+                            <span asp-validation-for="MaPhieuNhapCode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-7">
+                            <label asp-for="MaNhaCungCap" class="form-label">Nhà cung cấp đối tác <span class="text-danger">*</span></label>
+                            <select asp-for="MaNhaCungCap" id="cboNhaCungCap" class="form-select" asp-items="ViewBag.NhaCungCaps" required>
+                                <option value="">-- Chọn nhà cung cấp --</option>
+                            </select>
+                            <span asp-validation-for="MaNhaCungCap" class="text-danger small"></span>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label asp-for="TrangThai" class="form-label fw-semibold">Trạng thái khởi tạo</label>
-                        <select asp-for="TrangThai" class="form-select rounded-3">
-                            <option value="nhap">Chờ xử lý / Nháp</option>
-                            <option value="xacnhan">Đã xác nhận</option>
-                        </select>
-                        <span asp-validation-for="TrangThai" class="text-danger small"></span>
-                    </div>
-                </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a asp-action="Index" class="btn btn-light rounded-3 px-4">Hủy</a>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">
-                        <i class="bi bi-arrow-right-circle me-1"></i> Tạo phiếu & Thêm mặt hàng
-                    </button>
-                </div>
-            </form>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="NgayNhap" class="form-label">Ngày nhập hàng</label>
+                            <input asp-for="NgayNhap" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="NgayNhap" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TrangThai" class="form-label">Trạng thái ban đầu</label>
+                            <select asp-for="TrangThai" class="form-select">
+                                <option value="nhap">Chờ xử lý / Nháp</option>
+                                <option value="xacnhan">Đã xác nhận</option>
+                            </select>
+                            <span asp-validation-for="TrangThai" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-accent px-4">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Tạo phiếu & Thêm sản phẩm
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
