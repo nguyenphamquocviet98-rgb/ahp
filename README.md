@@ -1,10 +1,37 @@
+# HỆ THỐNG QUẢN LÝ NHẬP HÀNG VÀ LỰA CHỌN NHÀ CUNG CẤP BẰNG AHP
+
+![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4?style=flat-square)
+![Entity Framework Core](https://img.shields.io/badge/EF_Core-8.0-512BD4?style=flat-square)
+![SQL Server](https://img.shields.io/badge/Database-SQL_Server-CC292B?style=flat-square&logo=microsoftsqlserver)
+![AHP](https://img.shields.io/badge/Algorithm-AHP_Saaty-2ea44f?style=flat-square)
+
+> **Dự án:** Quản lý nhập hàng và lựa chọn nhà cung cấp bằng phương pháp phân tích thứ bậc AHP (Analytic Hierarchy Process) kết hợp mô hình điểm có trọng số (WSM).
+
+### 📚 Tài liệu dự án nhanh:
+* 📄 **[Đề xuất nâng cấp đề tài (Bản chuẩn 07/10/2026)](DE_XUAT_NANG_CAP_DE_TAI_AHP.md)**
+* 📐 **[Đặc tả kỹ thuật & Thuật toán AHP](PHAM_VI_VA_KIEM_THU.md)**
+* 🎤 **[Kịch bản demo bảo vệ & Câu hỏi phản biện Hội đồng](KICH_BAN_BAO_VE.md)**
+* 🤖 **[Chỉ dẫn kỹ thuật AI Agent](AGENT.md)**
+
+### 🚀 Hướng dẫn khởi chạy nhanh:
+```powershell
+# Chạy ứng dụng web
+dotnet run --project code.csproj
+
+# Chạy kiểm thử tự động
+dotnet run --project ../tests/Regression/Regression.csproj --no-launch-profile
+```
+
+---
+
 # ĐỀ XUẤT NÂNG CẤP ĐỀ TÀI
 
 ## Xây dựng hệ thống quản lý nhập hàng và lựa chọn nhà cung cấp bằng AHP
 
 **Phiên bản:** 1.1 — ngày 07/10/2026  
-**Mục đích:** Làm kế hoạch thiết kế, triển khai, kiểm chứng và chuẩn bị bảo vệ đề tài do người thực hiện phối hợp với GPT/Codex thực hiện.  
-**Trạng thái:** Đề xuất thiết kế; chức năng và kết quả minh họa chưa phải kết quả đã triển khai. Tiến độ được cập nhật theo mã nguồn hiện có và thời hạn nộp thực tế.
+**Mục đích:** Làm kế hoạch thiết kế, triển khai, kiểm chứng và chuẩn bị bảo vệ đề tài.  
+**Trạng thái:** Kế hoạch nâng cấp và chuẩn hóa toàn diện quy trình mua hàng & quyết định AHP.
 
 ### Cách tổ chức thực hiện
 
