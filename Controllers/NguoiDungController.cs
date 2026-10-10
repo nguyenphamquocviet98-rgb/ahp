@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
+using code.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,20 +9,22 @@ using code.Models;
 
 namespace code.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,admin_san")]
     public class NguoiDungController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly PasswordService _passwords;
 
-        public NguoiDungController(ApplicationDbContext context)
+        public NguoiDungController(ApplicationDbContext context, PasswordService passwords)
         {
             _context = context;
+            _passwords = passwords;
         }
 
         // GET: NguoiDung
         public async Task<IActionResult> Index(string? search, string? role)
         {
-            var query = _context.NguoiDungs.AsQueryable();
+            var query = _context.NguoiDungs.Include(u => u.DoanhNghiep).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -31,7 +35,22 @@ namespace code.Controllers
 
             if (!string.IsNullOrWhiteSpace(role))
             {
-                query = query.Where(u => u.VaiTro == role);
+                if (role == "admin" || role == "admin_san")
+                {
+                    query = query.Where(u => u.VaiTro == "admin" || u.VaiTro == "admin_san");
+                }
+                else if (role == "quanly" || role == "chu_npp")
+                {
+                    query = query.Where(u => u.VaiTro == "quanly" || u.VaiTro == "chu_npp");
+                }
+                else if (role == "nhanvien" || role == "nhanvien_npp")
+                {
+                    query = query.Where(u => u.VaiTro == "nhanvien" || u.VaiTro == "nhanvien_npp");
+                }
+                else
+                {
+                    query = query.Where(u => u.VaiTro == role);
+                }
                 ViewData["SelectedRole"] = role;
             }
 
@@ -40,7 +59,7 @@ namespace code.Controllers
         }
 
         // GET: NguoiDung/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             var model = new NguoiDung
             {
@@ -48,13 +67,14 @@ namespace code.Controllers
                 TrangThai = true,
                 NgayTao = DateTime.Now
             };
+            await PopulateCompanies();
             return View(model);
         }
 
         // POST: NguoiDung/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(NguoiDung model)
+        public async Task<IActionResult> Create([Bind("TenDangNhap,MatKhau,VaiTro,MaDoanhNghiep")] NguoiDung model)
         {
             if (string.IsNullOrWhiteSpace(model.TenDangNhap))
             {
@@ -70,11 +90,14 @@ namespace code.Controllers
                 ModelState.AddModelError("MatKhau", "Mật khẩu không được để trống.");
             }
 
+            await ValidateRole(model.VaiTro, model.MaDoanhNghiep);
             if (ModelState.IsValid)
             {
-                model.TenDangNhap = model.TenDangNhap.Trim();
+                model.TrangThai = true;
+                model.TenDangNhap = model.TenDangNhap?.Trim() ?? string.Empty;
                 model.NgayTao = DateTime.Now;
 
+                model.MatKhau = _passwords.Hash(model, model.MatKhau!);
                 _context.NguoiDungs.Add(model);
                 await _context.SaveChangesAsync();
 
@@ -82,6 +105,7 @@ namespace code.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            await PopulateCompanies();
             return View(model);
         }
 
@@ -99,6 +123,8 @@ namespace code.Controllers
                 return NotFound();
             }
 
+            await PopulateCompanies();
+            user.MatKhau = null;
             return View(user);
         }
 
@@ -118,6 +144,7 @@ namespace code.Controllers
                 return NotFound();
             }
 
+            await ValidateRole(model.VaiTro, existingUser.MaDoanhNghiep);
             if (ModelState.IsValid)
             {
                 existingUser.VaiTro = model.VaiTro;
@@ -126,7 +153,7 @@ namespace code.Controllers
                 // Nếu có nhập mật khẩu mới thì cập nhật
                 if (!string.IsNullOrWhiteSpace(newPassword))
                 {
-                    existingUser.MatKhau = newPassword.Trim();
+                    existingUser.MatKhau = _passwords.Hash(existingUser, newPassword);
                 }
 
                 await _context.SaveChangesAsync();
@@ -134,7 +161,21 @@ namespace code.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            await PopulateCompanies();
             return View(model);
+        }
+
+        private async Task PopulateCompanies() => ViewBag.Companies = new SelectList(await _context.DoanhNghieps.Where(d => d.TrangThai).ToListAsync(), "MaDoanhNghiep", "TenDoanhNghiep");
+        private async Task ValidateRole(string? role, int? companyId)
+        {
+            if (role is not ("admin" or "admin_san" or "quanly" or "chu_npp" or "nhanvien" or "nhanvien_npp"))
+                ModelState.AddModelError("VaiTro", "Vai trò không hợp lệ.");
+            if (role is "admin" or "admin_san")
+            {
+                if (companyId != null) ModelState.AddModelError("MaDoanhNghiep", "Quản trị hệ thống không thuộc doanh nghiệp.");
+            }
+            else if (companyId == null || !await _context.DoanhNghieps.AnyAsync(d => d.MaDoanhNghiep == companyId && d.TrangThai))
+                ModelState.AddModelError("MaDoanhNghiep", "Chọn doanh nghiệp đang hoạt động.");
         }
 
         // POST: NguoiDung/ToggleTrangThai

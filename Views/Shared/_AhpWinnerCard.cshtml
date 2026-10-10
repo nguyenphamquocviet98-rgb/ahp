@@ -1,0 +1,49 @@
+@* Thẻ "Nhà cung cấp đề xuất #1 (AHP)" dùng chung.
+   @model: code.Models.KetQuaXepHang (bản ghi hạng 1 của kỳ đánh giá) *@
+@model code.Models.KetQuaXepHang
+@{
+    var winnerNcc = Model.NhaCungCap;
+}
+@if (winnerNcc != null)
+{
+    <div class="ahp-winner-card">
+        <div style="flex: 1 1 380px; min-width: 0;">
+            <span class="ahp-winner-rank"><i class="bi bi-award"></i> Đề xuất nhập hàng #1 (AHP)</span>
+            <div class="ahp-supplier-title">@winnerNcc.TenNhaCungCap</div>
+            <div class="ahp-info-chips">
+                <span class="ahp-info-chip">
+                    <span class="code-badge">@(winnerNcc.MaNhaCungCapCode ?? $"NCC{winnerNcc.MaNhaCungCap:D3}")</span>
+                </span>
+                <span class="ahp-info-chip">
+                    <i class="bi bi-person"></i> @(winnerNcc.NguoiLienHe ?? "—")
+                </span>
+                <span class="ahp-info-chip">
+                    <i class="bi bi-telephone"></i> @(winnerNcc.SoDienThoai ?? "—")
+                </span>
+                @if (Model.KyDanhGia != null)
+                {
+                    <span class="ahp-info-chip">
+                        <i class="bi bi-calendar3"></i> @Model.KyDanhGia.TenKyDanhGia
+                    </span>
+                }
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-primary">
+                    <i class="bi bi-cart-plus me-1"></i> Lập phiếu nhập cho đối tác này
+                </a>
+                <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@winnerNcc.MaNhaCungCap" class="btn btn-custom btn-custom-outline">
+                    Xem hồ sơ đối tác
+                </a>
+            </div>
+        </div>
+
+        <div class="ahp-score-display">
+            <div class="kpi-title">Điểm WSM</div>
+            <div class="ahp-score-big mt-1">
+                @(Model.DiemTong?.ToString("0.00") ?? "N/A")
+                <span style="font-size: 14px; color: var(--slate-400); font-weight: 500;">/ 9.00</span>
+            </div>
+            <div class="ahp-score-sub">Mô hình phân tích thứ bậc</div>
+        </div>
+    </div>
+}

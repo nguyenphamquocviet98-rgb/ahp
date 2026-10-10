@@ -1,3 +1,18 @@
+# Cập nhật phạm vi và tiến độ — 28/09/2026
+
+Người dùng đã yêu cầu sửa theo các mục tiêu đã thống nhất, giữ tên **Quản lý nhập hàng và lựa chọn nhà cung cấp bằng AHP**. Tham chiếu hiện hành: [PHAM_VI_VA_KIEM_THU.md](PHAM_VI_VA_KIEM_THU.md). Các phần 15 bảng, không B2B và tiến độ “100%” bên dưới là lịch sử phiên bản đầu, không mô tả đúng bản hiện tại.
+
+- [x] Sửa đăng nhập, băm mật khẩu, giới hạn demo Development, kiểm tra CSRF.
+- [x] Phân quyền bên mua/bán, lọc dữ liệu phiếu và kỳ đánh giá theo doanh nghiệp.
+- [x] AHP lọc đủ hàng, chỉnh 6 cặp tiêu chí, kiểm tra CR, lưu đầu vào lịch sử; WSM xếp hạng.
+- [x] Phiếu mới chỉ tăng kho khi xác nhận; chặn xử lý lặp/xung đột; ghi lịch sử xử lý đơn.
+- [x] Migration có backup; giữ nguyên 6 phiếu cũ để đối soát.
+- [x] Kiểm thử SQL Server riêng và HTTP Production cho luồng chính.
+- [ ] Đối soát tồn kho lịch sử với chứng từ thực tế (không tự suy đoán số dư).
+- [ ] Cập nhật báo cáo Word, bổ sung nguồn/chứng cứ cho dữ liệu đánh giá và kiểm thử trình duyệt đầy đủ.
+
+---
+
 # AGENT.md
 
 # ĐỒ ÁN: QUẢN LÝ NHẬP HÀNG VÀ LỰA CHỌN NHÀ CUNG CẤP BẰNG AHP

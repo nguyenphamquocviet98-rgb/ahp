@@ -25,7 +25,15 @@ namespace code.Models
 
         public DateTime? NgayTao { get; set; }
 
+        /// <summary>
+        /// Liên kết tới Doanh nghiệp/NPP. NULL nếu là Admin Sàn.
+        /// </summary>
+        public int? MaDoanhNghiep { get; set; }
+
         // Navigation properties
+        [ForeignKey("MaDoanhNghiep")]
+        public virtual DoanhNghiep? DoanhNghiep { get; set; }
+
         public virtual ICollection<PhieuNhap> PhieuNhaps { get; set; } = new List<PhieuNhap>();
         public virtual ICollection<KyDanhGia> KyDanhGias { get; set; } = new List<KyDanhGia>();
     }

@@ -10,7 +10,9 @@ CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options => options.Filters.Add<code.Services.DatabaseConflictFilter>());
+builder.Services.AddScoped<code.Services.PasswordService>();
+builder.Services.AddHttpContextAccessor();
 
 // Register DbContext with SQL Server connection string
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -18,6 +20,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register AHP Service
 builder.Services.AddScoped<code.Services.AHPService>();
+builder.Services.AddScoped<code.Services.AHPB2BService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<code.Services.AiAdvisorService>();
 
 // Register Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -28,6 +33,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+            int.TryParse(context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id);
+            var user = await db.NguoiDungs.AsNoTracking().Include(u => u.DoanhNghiep).FirstOrDefaultAsync(u => u.MaNguoiDung == id);
+            if (user?.TrangThai != true || (user.MaDoanhNghiep.HasValue && user.DoanhNghiep?.TrangThai != true) ||
+                context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value != user.VaiTro ||
+                context.Principal?.FindFirst("MaDoanhNghiep")?.Value != (user.MaDoanhNghiep ?? 0).ToString())
+                context.RejectPrincipal();
+        };
     });
 
 var app = builder.Build();
@@ -51,7 +66,8 @@ app.MapControllerRoute(
 // Tự động nạp dữ liệu mẫu nếu chưa có
 try
 {
-    await DataSeeder.SeedDataAsync(app.Services);
+    if (app.Environment.IsDevelopment())
+        await DataSeeder.SeedDataAsync(app.Services);
 }
 catch (Exception ex)
 {

@@ -1,0 +1,91 @@
+@model code.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký Nhà phân phối";
+}
+
+<div class="row justify-content-center" style="min-height: 100vh; align-items: center;">
+    <div class="col-lg-7 col-md-9">
+        <div class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 24px;">
+                        <i class="bi bi-building-add"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">Đăng ký Nhà phân phối</h4>
+                    <p class="text-muted small">Tham gia Sàn B2B để kết nối và giao dịch với các đối tác</p>
+                </div>
+
+                <form asp-action="Register" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+
+                    <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-person-badge me-1"></i> Thông tin tài khoản</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label asp-for="TenDangNhap" class="form-label fw-medium"></label>
+                            <input asp-for="TenDangNhap" class="form-control" placeholder="vd: npp_abc" />
+                            <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MatKhau" class="form-label fw-medium"></label>
+                            <input asp-for="MatKhau" class="form-control" placeholder="Tối thiểu 6 ký tự" />
+                            <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="XacNhanMatKhau" class="form-label fw-medium"></label>
+                            <input asp-for="XacNhanMatKhau" class="form-control" placeholder="Nhập lại mật khẩu" />
+                            <span asp-validation-for="XacNhanMatKhau" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-building me-1"></i> Thông tin doanh nghiệp</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="TenDoanhNghiep" class="form-label fw-medium"></label>
+                            <input asp-for="TenDoanhNghiep" class="form-control" placeholder="vd: Công ty TNHH ABC" />
+                            <span asp-validation-for="TenDoanhNghiep" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MaSoThue" class="form-label fw-medium"></label>
+                            <input asp-for="MaSoThue" class="form-control" placeholder="vd: 0301234567" />
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="SoDienThoaiDN" class="form-label fw-medium"></label>
+                            <input asp-for="SoDienThoaiDN" class="form-control" placeholder="vd: 0901234567" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EmailDN" class="form-label fw-medium"></label>
+                            <input asp-for="EmailDN" class="form-control" placeholder="vd: info@company.com" />
+                            <span asp-validation-for="EmailDN" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="DiaChi" class="form-label fw-medium"></label>
+                        <input asp-for="DiaChi" class="form-control" placeholder="vd: Quận 1, TP.HCM" />
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="MoTa" class="form-label fw-medium"></label>
+                        <textarea asp-for="MoTa" class="form-control" rows="3" placeholder="Mô tả ngắn gọn về hoạt động kinh doanh..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 10px;">
+                        <i class="bi bi-building-add me-1"></i> Đăng ký tham gia Sàn B2B
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <span class="text-muted small">Đã có tài khoản?</span>
+                    <a asp-action="Login" class="fw-semibold small text-decoration-none">Đăng nhập ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

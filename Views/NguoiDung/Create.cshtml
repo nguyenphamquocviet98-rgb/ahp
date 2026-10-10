@@ -40,6 +40,11 @@
                         <span asp-validation-for="VaiTro" class="text-danger"></span>
                     </div>
 
+                    <div class="mb-3">
+                        <label asp-for="MaDoanhNghiep">Doanh nghiệp (bắt buộc với quản lý/nhân viên)</label>
+                        <select asp-for="MaDoanhNghiep" asp-items="ViewBag.Companies" class="form-select"><option value="">Quản trị hệ thống</option></select>
+                        <span asp-validation-for="MaDoanhNghiep" class="text-danger"></span>
+                    </div>
                     <div class="d-flex justify-content-end gap-2">
                         <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
                         <button type="submit" class="btn btn-custom btn-custom-primary px-4">

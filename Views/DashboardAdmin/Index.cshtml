@@ -1,0 +1,243 @@
+@model IEnumerable<code.Models.DoanhThuSan>
+
+@{
+    ViewData["Title"] = "Bảng điều khiển Quản trị Sàn B2B";
+    decimal tongDoanhThu = ViewBag.TongDoanhThu ?? 0m;
+    decimal doanhThuMall = ViewBag.DoanhThuMall ?? 0m;
+    decimal doanhThuQC = ViewBag.DoanhThuQuangCao ?? 0m;
+    decimal tongGMV = ViewBag.TongGMV ?? 0m;
+    int tongDonHoanThanh = ViewBag.TongDonHoanThanh ?? 0;
+    int tongNPP = ViewBag.TongNPP ?? 0;
+    int tongMall = ViewBag.TongMall ?? 0;
+    int tongBanner = ViewBag.TongBannerHoatDong ?? 0;
+
+    double phanTramMall = tongDoanhThu > 0 ? (double)(doanhThuMall / tongDoanhThu) * 100 : 0;
+    double phanTramQC = tongDoanhThu > 0 ? (double)(doanhThuQC / tongDoanhThu) * 100 : 0;
+}
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small text-muted">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Hệ thống</a></li>
+                <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">Bảng điều khiển Sàn B2B</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+            <span>Trung Tâm Điều Hành Sàn B2B</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fs-6">
+                <i class="bi bi-shield-check me-1"></i> ADMIN PLATFORM
+            </span>
+        </h3>
+        <p class="text-muted mb-0 small">Theo dõi doanh thu phí sàn, quy mô giao dịch GMV và mạng lưới Nhà phân phối thời gian thực.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="QuangCao" asp-action="Index" class="btn btn-outline-primary">
+            <i class="bi bi-badge-ad me-1"></i> Quản lý Banner
+        </a>
+        <a asp-controller="DoanhNghiep" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-building-gear me-1"></i> Quản lý NPP & Mall
+        </a>
+    </div>
+</div>
+
+<!-- 4 Thẻ KPI Doanh Thu & Quy Mô Sàn (Tone Xanh Trắng Thanh Lịch) -->
+<div class="row g-3 mb-4">
+    <!-- Thẻ 1: Tổng Doanh Thu Sàn Thu Về -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted text-uppercase tracking-wider" style="font-size: 11.5px;">Tổng Doanh Thu Sàn</span>
+                <div class="p-2 rounded-3" style="background-color: #EFF6FF; color: #1E60D5;">
+                    <i class="bi bi-wallet2 fs-5"></i>
+                </div>
+            </div>
+            <div class="fs-4 fw-bold text-dark font-mono text-nowrap my-1">
+                @tongDoanhThu.ToString("N0") <span class="fs-6 fw-normal text-muted">đ</span>
+            </div>
+            <div class="small mt-auto text-success fw-medium">
+                <i class="bi bi-arrow-up-right me-1"></i>Từ Phí Mall & Quảng cáo
+            </div>
+        </div>
+    </div>
+
+    <!-- Thẻ 2: Doanh Thu Từ Phí Gian Hàng Mall -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted text-uppercase tracking-wider" style="font-size: 11.5px;">Phí Gian Hàng Mall</span>
+                <div class="p-2 rounded-3" style="background-color: #FFF1F2; color: #E11D48;">
+                    <i class="bi bi-patch-check-fill fs-5"></i>
+                </div>
+            </div>
+            <div class="fs-4 fw-bold text-dark font-mono text-nowrap my-1">
+                @doanhThuMall.ToString("N0") <span class="fs-6 fw-normal text-muted">đ</span>
+            </div>
+            <div class="small mt-auto text-muted">
+                <span class="badge bg-danger-subtle text-danger px-2 py-0">@tongMall Mall</span> chính hãng trên sàn
+            </div>
+        </div>
+    </div>
+
+    <!-- Thẻ 3: Doanh Thu Từ Quảng Cáo Banner -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted text-uppercase tracking-wider" style="font-size: 11.5px;">Phí Quảng Cáo Banner</span>
+                <div class="p-2 rounded-3" style="background-color: #FFFBEB; color: #D97706;">
+                    <i class="bi bi-megaphone-fill fs-5"></i>
+                </div>
+            </div>
+            <div class="fs-4 fw-bold text-dark font-mono text-nowrap my-1">
+                @doanhThuQC.ToString("N0") <span class="fs-6 fw-normal text-muted">đ</span>
+            </div>
+            <div class="small mt-auto text-muted">
+                <span class="badge bg-warning-subtle text-dark px-2 py-0">@tongBanner Banner</span> đang chạy trang nhất
+            </div>
+        </div>
+    </div>
+
+    <!-- Thẻ 4: Tổng Giá Trị Giao Dịch Hàng Hóa GMV -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted text-uppercase tracking-wider" style="font-size: 11.5px;">Tổng GMV Giao Dịch</span>
+                <div class="p-2 rounded-3" style="background-color: #EEF2FF; color: #4F46E5;">
+                    <i class="bi bi-graph-up-arrow fs-5"></i>
+                </div>
+            </div>
+            <div class="fs-4 fw-bold text-primary font-mono text-nowrap my-1">
+                @tongGMV.ToString("N0") <span class="fs-6 fw-normal text-muted">đ</span>
+            </div>
+            <div class="small mt-auto text-muted">
+                <strong>@tongDonHoanThanh</strong> đơn hàng sỉ thành công
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Cột trái: Cơ cấu doanh thu Sàn -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-white">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                    <i class="bi bi-pie-chart-fill"></i>
+                    <span>Cơ Cấu Doanh Thu Sàn</span>
+                </h6>
+                <span class="badge bg-primary-subtle text-primary">Tỷ trọng</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold text-danger small"><i class="bi bi-patch-check-fill me-1"></i> Phí Gian Hàng Mall (12tr/năm)</span>
+                        <span class="fw-bold text-dark font-mono">@phanTramMall.ToString("F1")%</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 10px; background-color: #F1F5F9;">
+                        <div class="progress-bar bg-danger rounded-pill" role="progressbar" style="width: @phanTramMall%" aria-valuenow="@phanTramMall" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mt-1 font-mono">
+                        <span>Đã thu về:</span>
+                        <span class="fw-semibold text-dark">@doanhThuMall.ToString("N0") đ</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold text-warning small"><i class="bi bi-megaphone-fill me-1"></i> Phí Quảng Cáo Banner Trang Nhất</span>
+                        <span class="fw-bold text-dark font-mono">@phanTramQC.ToString("F1")%</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 10px; background-color: #F1F5F9;">
+                        <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: @phanTramQC%" aria-valuenow="@phanTramQC" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mt-1 font-mono">
+                        <span>Đã thu về:</span>
+                        <span class="fw-semibold text-dark">@doanhThuQC.ToString("N0") đ</span>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3" style="background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+                    <h6 class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1">
+                        <i class="bi bi-lightbulb-fill text-warning"></i>
+                        <span>Chiến lược tăng trưởng nền tảng:</span>
+                    </h6>
+                    <ul class="small text-muted mb-0 ps-3" style="line-height: 1.6;">
+                        <li>Khuyến khích các NPP có uy tín cao &ge; 8.0 nâng cấp lên <strong>Gian hàng Mall</strong> để tăng độ tin cậy và hưởng trọng số ưu tiên AHP.</li>
+                        <li>Đẩy mạnh các gói <strong>Banner quảng cáo 1 tháng</strong> giúp NPP mở rộng đầu ra tiêu thụ hàng sỉ nhanh chóng.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Sổ cái lịch sử thu tiền của Sàn -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-white">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-check"></i>
+                    <span>Sổ Cái Thu Phí Dịch Vụ Sàn</span>
+                </h6>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Lịch sử thu phí</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">NPP Nộp Phí</th>
+                            <th>Khoản thu</th>
+                            <th class="text-end">Số tiền</th>
+                            <th class="text-center">Ngày nộp</th>
+                            <th class="text-center pe-3">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var gd in Model)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold text-dark">@gd.DoanhNghiep?.TenDoanhNghiep</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 260px;" title="@gd.MoTa">
+                                            @gd.MoTa
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (gd.LoaiThu == "phi_mall")
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger"><i class="bi bi-patch-check-fill me-1"></i>Phí Mall</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-dark"><i class="bi bi-megaphone-fill me-1"></i>Banner QC</span>
+                                        }
+                                    </td>
+                                    <td class="text-end fw-bold text-primary font-mono text-nowrap">
+                                        @gd.SoTien.ToString("N0") <span class="small fw-normal text-muted">đ</span>
+                                    </td>
+                                    <td class="text-center small text-muted text-nowrap font-mono">
+                                        @gd.NgayGiaoDich?.ToString("dd/MM/yyyy")
+                                    </td>
+                                    <td class="text-center pe-3">
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="bi bi-check2-circle me-1"></i>Đã thu
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Chưa có giao dịch thu phí nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

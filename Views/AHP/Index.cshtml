@@ -6,7 +6,7 @@
 
 <div class="page-header">
     <div class="page-header-left">
-        <h3><i class="bi bi-diagram-3" style="color: var(--primary);"></i> Kỳ đánh giá Nhà cung cấp (AHP)</h3>
+        <h3>Kỳ đánh giá Nhà cung cấp (AHP)</h3>
         <p>Quản lý các đợt đánh giá đa tiêu chí, tính trọng số AHP và xếp hạng đối tác cung ứng</p>
     </div>
     <div>
@@ -21,11 +21,11 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]</div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]</div>
 }
 
 <div class="table-wrapper">
@@ -33,14 +33,10 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th style="width: 80px;" class="text-center">Mã</th>
-                    <th>Tên kỳ đánh giá</th>
-                    <th>Người tạo</th>
-                    <th>Ngày tạo</th>
-                    <th class="text-center" style="width: 150px;">Trọng số AHP</th>
-                    <th class="text-center" style="width: 140px;">Trạng thái</th>
+                    <th>Kỳ đánh giá</th>
+                    <th class="text-center" style="width: 150px;">Trạng thái</th>
                     <th>Nhà cung cấp đề xuất</th>
-                    <th class="text-end" style="width: 240px;">Thao tác</th>
+                    <th class="text-end" style="width: 190px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -50,75 +46,57 @@
                     {
                         var deXuat = item.KetQuaXepHangs.FirstOrDefault(k => k.DeXuat == true)?.NhaCungCap;
                         <tr>
-                            <td class="text-center" style="color: var(--slate-500); font-weight: 600;">#@item.MaKyDanhGia</td>
                             <td>
-                                <strong style="color: var(--slate-900);">@item.TenKyDanhGia</strong>
-                            </td>
-                            <td>
-                                <small style="color: var(--slate-500);"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
-                            </td>
-                            <td style="color: var(--slate-500); font-size: 13px;">
-                                @(item.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
-                            </td>
-                            <td class="text-center">
-                                @if (item.TrongSoTieuChis.Any())
-                                {
-                                    <span class="status-badge status-badge-success">
-                                        <i class="bi bi-check-circle"></i> Đã có trọng số
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge status-badge-secondary">Chưa tính</span>
-                                }
+                                <strong style="color: var(--slate-800);">@item.TenKyDanhGia</strong>
+                                <div style="color: var(--slate-400); font-size: 12.5px; margin-top: 2px;">
+                                    Kỳ #@item.MaKyDanhGia · @(item.NguoiDung?.TenDangNhap ?? "Hệ thống") · @(item.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                                </div>
                             </td>
                             <td class="text-center">
                                 @if (item.TrangThai == "hoanthanh")
                                 {
-                                    <span class="status-badge status-badge-success"><i class="bi bi-trophy"></i> Hoàn thành</span>
+                                    <span class="status-badge status-badge-success">Hoàn thành</span>
                                 }
-                                else if (item.TrangThai == "dat_trong_so")
+                                else if (item.TrangThai == "dat_trong_so" || item.TrongSoTieuChis.Any())
                                 {
-                                    <span class="status-badge status-badge-info"><i class="bi bi-sliders"></i> Có trọng số</span>
+                                    <span class="status-badge status-badge-primary">Có trọng số</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge-warning"><i class="bi bi-hourglass-split"></i> Khởi tạo</span>
+                                    <span class="status-badge status-badge-warning">Khởi tạo</span>
                                 }
                             </td>
                             <td>
                                 @if (deXuat != null)
                                 {
-                                    <span class="status-badge status-badge-warning fw-bold">
-                                        <i class="bi bi-star-fill text-danger"></i> @deXuat.TenNhaCungCap
-                                    </span>
+                                    <span style="color: var(--slate-800); font-weight: 600;">@deXuat.TenNhaCungCap</span>
                                 }
                                 else
                                 {
-                                    <span style="color: var(--slate-400); font-size: 13px;">—</span>
+                                    <span style="color: var(--slate-400);">—</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <div class="action-btn-group">
-                                    <a asp-action="MaTranSoSanh" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-primary" title="Ma trận so sánh">
+                                    <a asp-action="MaTranSoSanh" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-primary" title="Ma trận so sánh (Bước 1)">
                                         <i class="bi bi-grid-3x3"></i>
                                     </a>
                                     @if (item.TrongSoTieuChis.Any())
                                     {
-                                        <a asp-action="ChamDiemNCC" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-success" title="Chấm điểm NCC">
+                                        <a asp-action="ChamDiemNCC" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-secondary" title="Chấm điểm NCC (Bước 2)">
                                             <i class="bi bi-star"></i>
                                         </a>
                                     }
                                     @if (item.KetQuaXepHangs.Any())
                                     {
-                                        <a asp-action="KetQuaXepHang" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-warning" title="Xem xếp hạng">
+                                        <a asp-action="KetQuaXepHang" asp-route-id="@item.MaKyDanhGia" class="btn btn-sm btn-outline-secondary" title="Xem xếp hạng (Bước 3)">
                                             <i class="bi bi-trophy"></i>
                                         </a>
                                     }
                                     @if (isManagerOrAdmin)
                                     {
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa kỳ"
-                                                onclick="confirmDeleteKy(@item.MaKyDanhGia, '@item.TenKyDanhGia')">
+                                                onclick="confirmDelete(@item.MaKyDanhGia, '@item.TenKyDanhGia')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     }
@@ -130,7 +108,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8">
+                        <td colspan="4">
                             <div class="empty-state"><i class="bi bi-inbox"></i><p>Chưa có kỳ đánh giá AHP nào trong hệ thống.</p></div>
                         </td>
                     </tr>
@@ -140,36 +118,4 @@
     </div>
 </div>
 
-<!-- Modal xác nhận xóa kỳ -->
-<div class="modal fade" id="deleteKyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" style="color: var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa kỳ đánh giá</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-1">Bạn có chắc chắn muốn xóa kỳ đánh giá: <strong id="deleteKyName"></strong>?</p>
-                <small style="color: var(--slate-500);">Toàn bộ dữ liệu ma trận, trọng số và kết quả xếp hạng của kỳ này sẽ bị xóa bỏ.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteKyForm" method="post" asp-action="DeleteKy">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" id="deleteKyId" />
-                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        function confirmDeleteKy(id, name) {
-            document.getElementById('deleteKyId').value = id;
-            document.getElementById('deleteKyName').innerText = name;
-            new bootstrap.Modal(document.getElementById('deleteKyModal')).show();
-        }
-    </script>
-}
+<partial name="_DeleteModal" view-data='new ViewDataDictionary(ViewData) { ["DeleteAction"] = "DeleteKy", ["DeleteNote"] = "Toàn bộ dữ liệu ma trận, trọng số và kết quả xếp hạng của kỳ này sẽ bị xóa bỏ." }' />

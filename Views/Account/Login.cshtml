@@ -1,6 +1,7 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @model LoginViewModel
 @{
-    ViewData["Title"] = "Đăng nhập hệ thống - ProcureAHP Enterprise";
+    ViewData["Title"] = "Đăng nhập hệ thống — Quản lý Nhập Hàng AHP";
     Layout = null;
 }
 
@@ -10,277 +11,187 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         :root {
-            --primary: #2563EB;
-            --primary-glow: rgba(37, 99, 235, 0.25);
-            --slate-950: #080C14;
-            --slate-900: #0F172A;
-            --slate-800: #1E293B;
-            --slate-700: #334155;
-            --slate-600: #475569;
-            --slate-400: #94A3B8;
-            --slate-200: #E2E8F0;
-            --slate-100: #F1F5F9;
-            --slate-50:  #F8FAFC;
-            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --font-main: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --primary: #1E60D5;
+            --primary-hover: #174EAE;
+            --primary-light: #EFF6FF;
+            --border-color: #E2E8F0;
+            --bg-page: #F8FAFC;
         }
 
         body {
-            background: #080C14;
+            font-family: var(--font-main);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: var(--font-main);
             padding: 1.5rem;
-            color: #1E293B;
+            background-color: var(--bg-page);
+            background-image: radial-gradient(at 50% 0%, #EFF6FF 0px, transparent 60%),
+                              radial-gradient(at 100% 100%, #F1F5F9 0px, transparent 50%);
+            margin: 0;
             -webkit-font-smoothing: antialiased;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.2) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.18) 0px, transparent 50%);
         }
 
-        .login-wrapper {
+        .login-card {
             width: 100%;
-            max-width: 980px;
+            max-width: 440px;
             background: #FFFFFF;
-            border-radius: 22px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
-            display: flex;
-            flex-direction: row;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem 2.25rem;
+            box-shadow: 0 10px 30px -5px rgba(30, 96, 213, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .login-brand-panel {
-            flex: 1 1 45%;
-            background: linear-gradient(145deg, #090D16 0%, #0F172A 50%, #1E3A8A 100%);
-            padding: 3.5rem 2.5rem;
-            color: #FFFFFF;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .login-brand-panel::before {
-            content: '';
-            position: absolute;
-            top: -40px;
-            right: -40px;
-            width: 260px;
-            height: 260px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .brand-logo-badge {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #8B5CF6 100%);
+        .login-brand-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 16px;
+            background: #EFF6FF;
+            border: 1px solid #DBEAFE;
             border-radius: 14px;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            color: #FFF;
-            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.45);
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-        }
-
-        .brand-title {
+            color: var(--primary);
             font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.2;
-            margin-bottom: 0.75rem;
         }
 
-        .brand-desc {
-            font-size: 13.5px;
-            color: #94A3B8;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .brand-features {
-            display: flex;
-            flex-direction: column;
-            gap: 1.1rem;
-        }
-
-        .brand-feature-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13px;
-            color: #E2E8F0;
-        }
-
-        .brand-feature-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 9px;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #60A5FA;
-            flex-shrink: 0;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .login-form-panel {
-            flex: 1 1 55%;
-            padding: 3.5rem 3rem;
-            background: #FFFFFF;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .login-header-text {
-            margin-bottom: 1.75rem;
-        }
-
-        .login-header-text h3 {
+        .login-title {
             font-size: 22px;
             font-weight: 800;
             color: #0F172A;
-            letter-spacing: -0.025em;
+            text-align: center;
             margin-bottom: 4px;
+            letter-spacing: -0.02em;
         }
 
-        .login-header-text p {
+        .login-subtitle {
+            font-size: 13.5px;
             color: #64748B;
-            font-size: 13px;
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.4;
         }
 
         .form-label {
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 600;
             color: #334155;
             margin-bottom: 6px;
         }
 
         .form-control {
-            border-radius: 10px;
-            border: 1px solid #CBD5E1;
-            font-size: 13.5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
             padding: 10px 14px;
             color: #0F172A;
-            transition: all 160ms ease;
+            background: #FFFFFF;
+            transition: all 0.15s ease;
         }
 
         .form-control:focus {
-            border-color: #2563EB;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 96, 213, 0.12);
             outline: none;
         }
 
-        .password-container {
-            position: relative;
+        .input-group .btn {
+            border-radius: 0 12px 12px 0 !important;
+            border: 1px solid var(--border-color);
+            border-left: none;
+            background: #FFFFFF;
+            color: #64748B;
         }
 
-        .password-toggle-btn {
-            background: none;
-            border: none;
-            color: #94A3B8;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 4px 8px;
-            transition: color 150ms ease;
-        }
-
-        .password-toggle-btn:hover {
-            color: #334155;
+        .input-group .form-control {
+            border-radius: 12px 0 0 12px !important;
         }
 
         .btn-login-submit {
-            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            background: var(--primary);
             border: none;
-            border-radius: 10px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 700;
+            border-radius: 12px;
+            padding: 11px;
+            font-size: 14.5px;
+            font-weight: 600;
             color: #FFFFFF;
-            transition: all 180ms ease;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
             width: 100%;
             cursor: pointer;
-        }
-
-        .btn-login-submit:hover {
-            background: #2563EB;
-            transform: translateY(-1.5px);
-            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
-            color: #FFFFFF;
-        }
-
-        .demo-roles-container {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px dashed #E2E8F0;
-        }
-
-        .demo-roles-title {
-            font-size: 11.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748B;
-            margin-bottom: 12px;
-            text-align: center;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 6px rgba(30, 96, 213, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
         }
 
+        .btn-login-submit:hover {
+            background: var(--primary-hover);
+            color: #FFFFFF;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 96, 213, 0.35);
+        }
+
+        .demo-roles-container {
+            margin-top: 1.75rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .demo-roles-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94A3B8;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
         .demo-btn-group {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         .demo-role-btn {
-            border: 1px solid #E2E8F0;
-            background: #F8FAFC;
-            border-radius: 10px;
-            padding: 10px 8px;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 10px 6px;
             text-align: center;
             cursor: pointer;
-            transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 3px;
             width: 100%;
             outline: none;
+            transition: all 0.15s ease;
         }
 
         .demo-role-btn:hover {
             background: #EFF6FF;
-            border-color: #93C5FD;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
-        }
-
-        .demo-role-btn:active {
-            transform: translateY(0);
+            border-color: #BFDBFE;
+            transform: translateY(-1px);
         }
 
         .demo-role-btn .role-badge {
@@ -288,143 +199,95 @@
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            color: #1E293B;
         }
 
         .demo-role-btn .role-acc {
             font-size: 11px;
             color: #64748B;
-            font-family: var(--font-mono);
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        @@media (max-width: 860px) {
-            .login-wrapper {
-                flex-direction: column;
-                max-width: 480px;
-            }
-            .login-brand-panel {
-                padding: 2.5rem 2rem 2rem;
-            }
-            .login-form-panel {
-                padding: 2.5rem 2rem;
-            }
-            .brand-features {
-                display: none;
-            }
+        .public-portal-link {
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
-        <!-- BRAND SHOWCASE PANEL -->
-        <div class="login-brand-panel">
-            <div>
-                <div class="brand-logo-badge">
-                    <i class="bi bi-stack"></i>
-                </div>
-                <div class="brand-title">
-                    Procure<span style="color: #60A5FA;">AHP</span> Enterprise
-                </div>
-                <p class="brand-desc">
-                    Hệ thống Quản lý Nhập hàng & Ra quyết định Đa tiêu chí Lựa chọn Nhà cung cấp bằng phương pháp AHP (Analytic Hierarchy Process).
-                </p>
+    <div class="login-card">
+        <div class="login-brand-icon">
+            <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <div class="login-title">Hệ Thống Nhập Hàng AHP</div>
+        <div class="login-subtitle">Lựa chọn nhà cung cấp đa tiêu chí & Quản trị kho sỉ B2B</div>
 
-                <div class="brand-features">
-                    <div class="brand-feature-item">
-                        <div class="brand-feature-icon"><i class="bi bi-diagram-3-fill"></i></div>
-                        <span>Đánh giá AHP & kiểm tra tỷ số nhất quán CR chuẩn Saaty</span>
-                    </div>
-                    <div class="brand-feature-item">
-                        <div class="brand-feature-icon"><i class="bi bi-truck"></i></div>
-                        <span>Quản lý luồng nhập hàng, nhà cung cấp & đối tác thông minh</span>
-                    </div>
-                    <div class="brand-feature-item">
-                        <div class="brand-feature-icon"><i class="bi bi-boxes"></i></div>
-                        <span>Theo dõi biến động tồn kho và phân loại ABC trực quan</span>
-                    </div>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger border-0 d-flex align-items-center mb-3 py-2 px-3 small" style="border-radius: 12px;" role="alert">
+                <i class="bi bi-exclamation-circle-fill fs-5 me-2 text-danger flex-shrink-0"></i>
+                <div class="flex-grow-1">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger d-inline list-unstyled mb-0" })
                 </div>
             </div>
+        }
 
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 2rem;">
-                &copy; 2026 ProcureAHP &bull; Phiên bản Enterprise 2.5
+        <form asp-action="Login" method="post" id="loginForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+            <div class="mb-3">
+                <label asp-for="TenDangNhap" class="form-label">Tên tài khoản</label>
+                <input asp-for="TenDangNhap" id="txtUsername" class="form-control" placeholder="admin / quanly / nhanvien" required autocomplete="username" />
+                <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label asp-for="MatKhau" class="form-label mb-0">Mật khẩu</label>
+                </div>
+                <div class="input-group">
+                    <input asp-for="MatKhau" id="txtPassword" type="password" class="form-control" placeholder="••••••••" required autocomplete="current-password" />
+                    <button type="button" class="btn btn-outline-secondary" id="togglePasswordBtn" title="Hiện/Ẩn mật khẩu" onclick="togglePasswordVisibility()">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="MatKhau" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" id="btnLoginSubmit" class="btn btn-login-submit">
+                <i class="bi bi-box-arrow-in-right"></i> Đăng nhập hệ thống
+            </button>
+        </form>
+
+        @if (HostEnvironment.IsDevelopment())
+        {
+        <!-- Đăng nhập nhanh Demo -->
+        <div class="demo-roles-container">
+            <div class="demo-roles-title">Đăng nhập tài khoản mẫu (1 click)</div>
+            <div class="demo-btn-group">
+                <button type="button" class="demo-role-btn" onclick="quickFill('admin', '123456')" title="Quản trị viên Sàn B2B">
+                    <span class="role-badge"><i class="bi bi-shield-lock-fill text-primary"></i> Admin</span>
+                    <span class="role-acc">admin</span>
+                </button>
+                <button type="button" class="demo-role-btn" onclick="quickFill('quanly', '123456')" title="Chủ Nhà Phân Phối / Quản lý">
+                    <span class="role-badge"><i class="bi bi-briefcase-fill text-success"></i> Chủ NPP</span>
+                    <span class="role-acc">quanly</span>
+                </button>
+                <button type="button" class="demo-role-btn" onclick="quickFill('nhanvien', '123456')" title="Nhân viên Nghiệp vụ kho">
+                    <span class="role-badge"><i class="bi bi-person-fill text-secondary"></i> Nhân viên</span>
+                    <span class="role-acc">nhanvien</span>
+                </button>
             </div>
         </div>
+        }
 
-        <!-- LOGIN FORM PANEL -->
-        <div class="login-form-panel">
-            <div class="login-header-text">
-                <h3>Đăng nhập hệ thống</h3>
-                <p>Nhập thông tin tài khoản để truy cập bảng điều khiển</p>
-            </div>
-
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger py-2 px-3 mb-3 rounded-3" style="font-size: 12.5px;">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i>
-                    @Html.ValidationSummary(true, "", new { @class = "text-danger d-inline" })
-                </div>
-            }
-
-            <form asp-action="Login" method="post" id="loginForm">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-                <div class="mb-3">
-                    <label asp-for="TenDangNhap" class="form-label">Tên đăng nhập</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #CBD5E1; color: #64748B;">
-                            <i class="bi bi-person"></i>
-                        </span>
-                        <input asp-for="TenDangNhap" id="txtUsername" class="form-control border-start-0 ps-0" placeholder="admin / quanly / nhanvien" style="border-radius: 0 10px 10px 0;" required autocomplete="username" />
-                    </div>
-                    <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label asp-for="MatKhau" class="form-label mb-0">Mật khẩu</label>
-                    </div>
-                    <div class="password-container">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #CBD5E1; color: #64748B;">
-                                <i class="bi bi-shield-lock"></i>
-                            </span>
-                            <input asp-for="MatKhau" id="txtPassword" type="password" class="form-control border-start-0 border-end-0 ps-0" placeholder="••••••••" required autocomplete="current-password" />
-                            <span class="input-group-text bg-white" style="border-radius: 0 10px 10px 0; border-color: #CBD5E1;">
-                                <button type="button" class="password-toggle-btn" id="togglePasswordBtn" title="Hiện/Ẩn mật khẩu" onclick="togglePasswordVisibility()">
-                                    <i class="bi bi-eye" id="toggleIcon"></i>
-                                </button>
-                            </span>
-                        </div>
-                    </div>
-                    <span asp-validation-for="MatKhau" class="text-danger small"></span>
-                </div>
-
-                <button type="submit" id="btnLoginSubmit" class="btn btn-login-submit">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Đăng nhập hệ thống
-                </button>
-            </form>
-
-            <!-- 1-CLICK QUICK DEMO LOGIN -->
-            <div class="demo-roles-container">
-                <div class="demo-roles-title">
-                    <i class="bi bi-lightning-charge-fill text-warning"></i> Đăng nhập nhanh Demo (1-Click)
-                </div>
-                <div class="demo-btn-group">
-                    <button type="button" class="demo-role-btn" onclick="quickFill('admin', 'Admin@123')" title="Đăng nhập với quyền Quản trị viên">
-                        <span class="role-badge text-primary"><i class="bi bi-shield-lock-fill"></i> Admin</span>
-                        <span class="role-acc">admin</span>
-                    </button>
-                    <button type="button" class="demo-role-btn" onclick="quickFill('quanly', 'Quanly@123')" title="Đăng nhập với quyền Quản lý">
-                        <span class="role-badge text-success"><i class="bi bi-briefcase-fill"></i> Quản lý</span>
-                        <span class="role-acc">quanly</span>
-                    </button>
-                    <button type="button" class="demo-role-btn" onclick="quickFill('nhanvien', 'Nhanvien@123')" title="Đăng nhập với quyền Nhân viên">
-                        <span class="role-badge text-secondary"><i class="bi bi-person-fill"></i> Nhân viên</span>
-                        <span class="role-acc">nhanvien</span>
-                    </button>
-                </div>
-            </div>
+        <div class="public-portal-link">
+            <a asp-controller="Home" asp-action="Landing" class="text-muted text-decoration-none">
+                <i class="bi bi-globe me-1"></i> Xem Cổng Chợ Sỉ B2B Công Khai &rarr;
+            </a>
         </div>
     </div>
 
@@ -434,12 +297,10 @@
             const icon = document.getElementById('toggleIcon');
             if (pwd.type === 'password') {
                 pwd.type = 'text';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
             } else {
                 pwd.type = 'password';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
 

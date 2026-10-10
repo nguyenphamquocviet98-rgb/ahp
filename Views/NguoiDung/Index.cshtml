@@ -1,64 +1,100 @@
 @model IEnumerable<code.Models.NguoiDung>
 @{
-    ViewData["Title"] = "Quản lý Người dùng & Phân quyền";
+    ViewData["Title"] = "Quản trị Tài khoản & Phân quyền";
     var search = ViewData["Search"] as string;
     var selectedRole = ViewData["SelectedRole"] as string;
     var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("MaNguoiDung")?.Value;
     int.TryParse(currentUserIdStr, out int currentUserId);
 }
 
-<div class="page-header">
-    <div class="page-header-left">
-        <h3><i class="bi bi-people" style="color: var(--primary);"></i> Quản trị Người dùng & Phân quyền</h3>
-        <p>Quản lý danh sách tài khoản, phân bổ vai trò (Admin, Quản lý, Nhân viên) và trạng thái</p>
+<!-- Tiêu đề trang -->
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1" style="color: var(--slate-900);">
+            <i class="bi bi-person-badge-fill me-2" style="color: var(--primary);"></i>Quản trị Tài khoản & Phân quyền
+        </h3>
+        <p class="text-muted mb-0" style="font-size: 13.5px;">
+            Quản lý tài khoản Admin Sàn, Chủ Doanh nghiệp và Nhân viên phụ trách nhập hàng
+        </p>
     </div>
     <div>
-        <a asp-action="Create" class="btn btn-custom btn-custom-primary"><i class="bi bi-person-plus"></i> Thêm tài khoản mới</a>
+        <a asp-action="Create" class="btn btn-primary shadow-sm px-3">
+            <i class="bi bi-person-plus-fill me-1"></i> Thêm tài khoản mới
+        </a>
     </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-4" style="border-radius: var(--radius-md);" role="alert">
+        <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+        <div class="flex-grow-1">@TempData["SuccessMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-4" style="border-radius: var(--radius-md);" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
+        <div class="flex-grow-1">@TempData["ErrorMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
-<!-- Bộ lọc -->
-<div class="search-bar mb-4">
-    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center flex-wrap w-100">
-        <div class="input-group" style="flex: 1; min-width: 200px;">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm theo tên đăng nhập..." />
-        </div>
-        <select name="role" class="form-select" style="max-width: 220px;">
-            <option value="">-- Tất cả vai trò --</option>
-            <option value="admin" selected="@(selectedRole == "admin")">Quản trị viên (Admin)</option>
-            <option value="quanly" selected="@(selectedRole == "quanly")">Quản lý (quanly)</option>
-            <option value="nhanvien" selected="@(selectedRole == "nhanvien")">Nhân viên (nhanvien)</option>
-        </select>
-        <button type="submit" class="btn btn-custom btn-custom-outline"><i class="bi bi-funnel"></i> Lọc</button>
-        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedRole))
-        {
-            <a asp-action="Index" class="btn btn-custom btn-custom-outline"><i class="bi bi-arrow-counterclockwise"></i></a>
-        }
-    </form>
+<!-- Khối lọc & Tìm kiếm -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius-lg);">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-5 col-sm-12">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" value="@search" class="form-control border-start-0" 
+                           placeholder="Tìm theo tên tài khoản..." style="border-radius: 0 var(--radius-md) var(--radius-md) 0;" />
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <select name="role" class="form-select">
+                    <option value="">-- Tất cả vai trò hệ thống --</option>
+                    <option value="admin" selected="@(selectedRole == "admin" || selectedRole == "admin_san")">Quản trị Sàn B2B (Admin)</option>
+                    <option value="quanly" selected="@(selectedRole == "quanly" || selectedRole == "chu_npp")">Chủ Nhà Phân Phối (Chủ NPP)</option>
+                    <option value="nhanvien" selected="@(selectedRole == "nhanvien" || selectedRole == "nhanvien_npp")">Nhân viên Nghiệp vụ</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-3 flex-grow-1">
+                    <i class="bi bi-funnel-fill me-1"></i> Lọc
+                </button>
+                @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(selectedRole))
+                {
+                    <a asp-action="Index" class="btn btn-light border px-3" title="Đặt lại bộ lọc">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- Bảng danh sách -->
-<div class="table-wrapper">
+<!-- Bảng danh sách người dùng -->
+<div class="card border-0 shadow-sm" style="border-radius: var(--radius-lg); overflow: hidden;">
+    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-dark fs-6">
+            <i class="bi bi-people-fill text-primary me-2"></i>Danh sách người dùng (@Model.Count())
+        </span>
+    </div>
     <div class="table-responsive">
-        <table class="table-custom">
-            <thead>
+        <table class="table table-hover align-middle mb-0">
+            <thead style="background-color: #F8FAFC; border-bottom: 1px solid var(--border-color);">
                 <tr>
-                    <th style="width: 80px;" class="text-center">ID</th>
-                    <th>Tài khoản</th>
-                    <th class="text-center" style="width: 160px;">Vai trò</th>
-                    <th class="text-center" style="width: 120px;">Trạng thái</th>
-                    <th style="width: 150px;">Ngày tạo</th>
-                    <th class="text-end" style="width: 140px;">Thao tác</th>
+                    <th style="width: 70px;" class="text-center py-3">ID</th>
+                    <th class="py-3">Tài khoản</th>
+                    <th class="py-3">Đơn vị / Doanh nghiệp</th>
+                    <th class="text-center py-3" style="width: 170px;">Vai trò</th>
+                    <th class="text-center py-3" style="width: 130px;">Trạng thái</th>
+                    <th class="py-3" style="width: 160px;">Ngày tạo</th>
+                    <th class="text-end py-3 px-4" style="width: 130px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,58 +103,99 @@
                     @foreach (var user in Model)
                     {
                         bool isSelf = user.MaNguoiDung == currentUserId;
+                        var role = user.VaiTro?.ToLower() ?? "";
+                        var initial = !string.IsNullOrEmpty(user.TenDangNhap) ? user.TenDangNhap.Substring(0, 1).ToUpper() : "U";
+
                         <tr>
-                            <td class="text-center" style="color: var(--gray-500); font-weight: 600;">#@user.MaNguoiDung</td>
+                            <td class="text-center font-mono text-muted small">#@user.MaNguoiDung</td>
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <div style="width: 34px; height: 34px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
-                                        <i class="bi bi-person-fill"></i>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center justify-content-center fw-bold" 
+                                         style="width: 38px; height: 38px; border-radius: 50%; background: #EFF6FF; color: var(--primary); font-size: 14px; flex-shrink: 0;">
+                                        @initial
                                     </div>
                                     <div>
-                                        <strong style="color: var(--gray-800);">@user.TenDangNhap</strong>
-                                        @if (isSelf)
-                                        {
-                                            <span class="status-badge status-badge-primary ms-1">Bạn</span>
-                                        }
+                                        <div class="fw-semibold text-dark">
+                                            @user.TenDangNhap
+                                            @if (isSelf)
+                                            {
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 10px;">Bạn</span>
+                                            }
+                                        </div>
+                                        <small class="text-muted" style="font-size: 11.5px;">Mã định danh: UID-@user.MaNguoiDung.ToString("D4")</small>
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-center">
-                                @if (user.VaiTro == "admin")
+                            <td>
+                                @if (user.DoanhNghiep != null)
                                 {
-                                    <span class="status-badge status-badge-primary"><i class="bi bi-shield-check"></i> Admin</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-building text-secondary small"></i>
+                                        <a asp-controller="DoanhNghiep" asp-action="Details" asp-route-id="@user.MaDoanhNghiep" class="fw-medium text-dark text-decoration-none text-truncate" style="max-width: 200px;" title="@user.DoanhNghiep.TenDoanhNghiep">
+                                            @user.DoanhNghiep.TenDoanhNghiep
+                                        </a>
+                                    </div>
                                 }
-                                else if (user.VaiTro == "quanly")
+                                else if (role == "admin" || role == "admin_san")
                                 {
-                                    <span class="status-badge status-badge-success"><i class="bi bi-person-gear"></i> Quản lý</span>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-shield-check text-primary me-1"></i>Ban Quản Trị Sàn
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge-secondary"><i class="bi bi-person"></i> Nhân viên</span>
+                                    <span class="text-muted small fst-italic">Chưa gán doanh nghiệp</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (role == "admin" || role == "admin_san")
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> Admin Sàn
+                                    </span>
+                                }
+                                else if (role == "quanly" || role == "chu_npp")
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">
+                                        <i class="bi bi-briefcase-fill me-1"></i> Chủ NPP
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-dark border px-3 py-1">
+                                        <i class="bi bi-person-fill me-1"></i> Nhân viên
+                                    </span>
                                 }
                             </td>
                             <td class="text-center">
                                 @if (user.TrangThai == true)
                                 {
-                                    <span class="status-badge status-badge-success"><i class="bi bi-check-circle"></i> Hoạt động</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Hoạt động
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge-danger"><i class="bi bi-lock"></i> Đã khóa</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="bi bi-lock-fill me-1"></i> Đã khóa
+                                    </span>
                                 }
                             </td>
-                            <td style="color: var(--gray-500); font-size: 13px;">
+                            <td class="text-muted small font-mono">
                                 @(user.NgayTao?.ToString("dd/MM/yyyy HH:mm") ?? "—")
                             </td>
-                            <td class="text-end">
-                                <div class="action-btn-group">
-                                    <a asp-action="Edit" asp-route-id="@user.MaNguoiDung" class="btn btn-sm btn-outline-primary" title="Sửa"><i class="bi bi-pencil"></i></a>
+                            <td class="text-end px-4">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a asp-action="Edit" asp-route-id="@user.MaNguoiDung" class="btn btn-outline-primary" title="Chỉnh sửa tài khoản">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
                                     @if (!isSelf)
                                     {
                                         <form asp-action="ToggleTrangThai" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn @(user.TrangThai == true ? "khóa" : "mở khóa") tài khoản này?')">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@user.MaNguoiDung" />
-                                            <button type="submit" class="btn btn-sm @(user.TrangThai == true ? "btn-outline-danger" : "btn-outline-success")" title="@(user.TrangThai == true ? "Khóa" : "Mở khóa")">
+                                            <button type="submit" class="btn @(user.TrangThai == true ? "btn-outline-danger" : "btn-outline-success")" 
+                                                    title="@(user.TrangThai == true ? "Khóa tài khoản" : "Kích hoạt lại")">
                                                 <i class="bi @(user.TrangThai == true ? "bi-lock" : "bi-unlock")"></i>
                                             </button>
                                         </form>
@@ -131,8 +208,9 @@
                 else
                 {
                     <tr>
-                        <td colspan="6">
-                            <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy người dùng nào.</p></div>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
+                            <span class="fw-medium">Không tìm thấy tài khoản người dùng nào phù hợp.</span>
                         </td>
                     </tr>
                 }

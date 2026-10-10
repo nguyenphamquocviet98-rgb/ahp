@@ -1,0 +1,221 @@
+@model code.Models.SanPham
+
+@{
+    ViewData["Title"] = "Thiết lập AHP - " + Model.TenSanPham;
+    var candidates = ViewBag.Candidates as List<code.Models.TonKhoNPP> ?? new List<code.Models.TonKhoNPP>();
+    string kieuUuTien = ViewBag.KieuUuTien ?? "can_bang";
+    double[,] matrix = ViewBag.Matrix as double[,] ?? new double[4, 4];
+    int soLuong = ViewBag.SoLuong ?? 20;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-action="Index">AHP Chọn Đối Tác</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Thiết lập tiêu chí</li>
+            </ol>
+        </nav>
+        <h2 class="page-title">Thiết Lập Bài Toán AHP Cho: @Model.TenSanPham</h2>
+        <p class="text-muted mb-0 small">Chọn chiến lược ưu tiên hoặc tùy biến ma trận so sánh cặp giữa 4 tiêu chí cốt lõi.</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Đổi sản phẩm khác
+        </a>
+    </div>
+</div>
+
+<!-- Bảng dữ liệu thực tế của các ứng viên tham gia đánh giá -->
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-primary">
+            <i class="bi bi-people me-2"></i>Dữ liệu chào hàng thực tế của @candidates.Count Nhà phân phối trên sàn
+        </h6>
+        <span class="badge bg-light text-muted border">Dữ liệu thời gian thực</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nhà phân phối (Ứng viên)</th>
+                    <th class="text-end">Tiêu chí 1: Giá sỉ</th>
+                    <th class="text-center">Tiêu chí 2: Giao hàng</th>
+                    <th class="text-center">Tiêu chí 3: Độ uy tín</th>
+                    <th class="text-center">Tiêu chí 4: Tồn kho sẵn</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in candidates)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold">
+                                @c.DoanhNghiep?.TenDoanhNghiep
+                                @if (c.DoanhNghiep != null && c.DoanhNghiep.LaGianHangMall)
+                                {
+                                    <span class="badge bg-danger ms-1 small">MALL</span>
+                                }
+                            </div>
+                            <small class="text-muted">Đ/C: @(c.DoanhNghiep?.DiaChi ?? "TP.HCM")</small>
+                        </td>
+                        <td class="text-end fw-bold text-success fs-6">
+                            @c.GiaSi.ToString("N0") đ
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                @c.ThoiGianGiaoHang ngày
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-warning-subtle text-dark px-2 py-1 fw-bold">
+                                ⭐ @c.DoanhNghiep?.DiemUyTin
+                            </span>
+                        </td>
+                        <td class="text-center fw-bold text-primary">
+                            @c.SoLuongTon @Model.DonViTinh?.TenDonVi
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Form thiết lập kịch bản và chạy AHP -->
+<form asp-action="ChayAHP" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="maSanPham" value="@Model.MaSanPham" />
+
+    <div class="row g-4">
+        <!-- Cột trái: Chọn kịch bản chiến lược -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-sliders me-2 text-primary"></i>Chọn Chiến Lược Ưu Tiên Mua Hàng</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số lượng bạn dự định mua sỉ (@Model.DonViTinh?.TenDonVi)</label>
+                        <input type="number" name="soLuong" class="form-control form-control-lg fw-bold text-primary" value="@soLuong" min="1" required />
+                    </div>
+
+                    <label class="form-label fw-bold mb-2">Kịch bản ma trận AHP:</label>
+
+                    <div class="form-check p-3 border rounded-3 mb-2 @(kieuUuTien == "can_bang" ? "border-primary bg-primary-subtle" : "")">
+                        <input class="form-check-input ms-0 me-2" type="radio" name="kieuUuTien" id="kb_can_bang" value="can_bang" checked="@(kieuUuTien == "can_bang")" onchange="doiKichBan('can_bang')">
+                        <label class="form-check-label fw-bold" for="kb_can_bang">
+                            ⚖️ Cân bằng Đa Mục Tiêu (Khuyến nghị chuẩn)
+                        </label>
+                        <p class="text-muted small mb-0 mt-1 ms-4">
+                            Cân đối hài hòa giữa Giá cả, Tốc độ giao hàng, Uy tín và Tồn kho dồi dào.
+                        </p>
+                    </div>
+
+                    <div class="form-check p-3 border rounded-3 mb-2 @(kieuUuTien == "gia_re" ? "border-primary bg-primary-subtle" : "")">
+                        <input class="form-check-input ms-0 me-2" type="radio" name="kieuUuTien" id="kb_gia_re" value="gia_re" checked="@(kieuUuTien == "gia_re")" onchange="doiKichBan('gia_re')">
+                        <label class="form-check-label fw-bold" for="kb_gia_re">
+                            💰 Tối Ưu Chi Phí (Ưu tiên giá sỉ rẻ nhất)
+                        </label>
+                        <p class="text-muted small mb-0 mt-1 ms-4">
+                            Tập trung tối đa vào đơn giá sỉ thấp nhất để tăng biên lợi nhuận cho đại lý.
+                        </p>
+                    </div>
+
+                    <div class="form-check p-3 border rounded-3 mb-2 @(kieuUuTien == "giao_nhanh" ? "border-primary bg-primary-subtle" : "")">
+                        <input class="form-check-input ms-0 me-2" type="radio" name="kieuUuTien" id="kb_giao_nhanh" value="giao_nhanh" checked="@(kieuUuTien == "giao_nhanh")" onchange="doiKichBan('giao_nhanh')">
+                        <label class="form-check-label fw-bold" for="kb_giao_nhanh">
+                            ⚡ Giao Hàng Siêu Tốc (Cần hàng gấp)
+                        </label>
+                        <p class="text-muted small mb-0 mt-1 ms-4">
+                            Ưu tiên hàng đầu cho thời gian cam kết giao hàng nhanh nhất để tránh đứt gãy tồn kho.
+                        </p>
+                    </div>
+
+                    <div class="form-check p-3 border rounded-3 mb-3 @(kieuUuTien == "uy_tin" ? "border-primary bg-primary-subtle" : "")">
+                        <input class="form-check-input ms-0 me-2" type="radio" name="kieuUuTien" id="kb_uy_tin" value="uy_tin" checked="@(kieuUuTien == "uy_tin")" onchange="doiKichBan('uy_tin')">
+                        <label class="form-check-label fw-bold" for="kb_uy_tin">
+                            🛡️ Ưu tiên uy tín cao
+                        </label>
+                        <p class="text-muted small mb-0 mt-1 ms-4">
+                            Ưu tiên điểm uy tín được ghi nhận; gói Mall không tự động làm tăng điểm.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Xem trước Ma trận cặp Saaty 1-9 & Nút kích hoạt -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-grid-3x3 me-2 text-primary"></i>Ma Trận So Sánh Cặp Tiêu Chí (Saaty 1-9)</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered text-center align-middle small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tiêu chí</th>
+                                        <th>Giá sỉ</th>
+                                        <th>Giao hàng</th>
+                                        <th>Uy tín</th>
+                                        <th>Tồn kho</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @{ var labels = new[] { "Giá sỉ", "Giao hàng", "Uy tín", "Tồn kho" }; }
+                                @for (int i = 0; i < 4; i++)
+                                {
+                                    <tr><th>@labels[i]</th>
+                                    @for (int j = 0; j < 4; j++)
+                                    {
+                                        <td>
+                                        @if (i < j)
+                                        {
+                                            <select name="comparisons" class="form-select form-select-sm" data-row="@i" data-col="@j" onchange="updateReciprocal(this)">
+                                            @for (int level = -8; level <= 8; level++)
+                                            {
+                                                var value = level < 0 ? 1.0 / (1 - level) : level + 1.0;
+                                                <option value="@value.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected="@(Math.Abs(matrix[i,j] - value) < 0.00001)">@(level < 0 ? "1/" + (1-level) : (level+1).ToString())</option>
+                                            }
+                                            </select>
+                                        }
+                                        else { <span id="cell-@i-@j">@matrix[i,j].ToString("F3")</span> }
+                                        </td>
+                                    }
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info py-2 px-3 small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Chọn mức ưu tiên ở nửa trên ma trận; nửa dưới tự lấy nghịch đảo. Hệ thống chỉ xếp hạng khi CR ≤ 0,10. Chỉ nhà cung cấp đủ toàn bộ số lượng yêu cầu được xét.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fw-bold py-3 shadow">
+                        <i class="bi bi-calculator me-2"></i> BẮT ĐẦU TÍNH TOÁN VÀ XẾP HẠNG AHP
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    function updateReciprocal(input) {
+        document.getElementById(`cell-${input.dataset.col}-${input.dataset.row}`).textContent = (1 / Number(input.value)).toFixed(3);
+    }
+    function doiKichBan(scenario) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('kieuUuTien', scenario);
+        url.searchParams.set('soLuong', document.querySelector('[name=soLuong]').value);
+        window.location.href = url.toString();
+    }
+</script>

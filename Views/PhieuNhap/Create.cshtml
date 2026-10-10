@@ -45,6 +45,7 @@
             </div>
 
             <div class="card-body-custom form-custom">
+                <p class="alert alert-info">Phiếu này ghi nhận nhập hàng từ nhà cung cấp ngoài luồng đơn B2B. Đơn B2B được cộng kho khi xác nhận nhận hàng, không lập thêm phiếu cho cùng lô hàng.</p>
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
 
@@ -76,7 +77,6 @@
                             <label asp-for="TrangThai" class="form-label">Trạng thái ban đầu</label>
                             <select asp-for="TrangThai" class="form-select">
                                 <option value="nhap">Chờ xử lý / Nháp</option>
-                                <option value="xacnhan">Đã xác nhận</option>
                             </select>
                             <span asp-validation-for="TrangThai" class="text-danger small"></span>
                         </div>

@@ -12,6 +12,7 @@
 *.sln.docstates
 *.suo
 
-## OS generated files
+## OS & App generated files
 .DS_Store
 Thumbs.db
+~$*

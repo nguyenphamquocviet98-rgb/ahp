@@ -30,6 +30,8 @@ namespace code.Models
 
         public DateTime? NgayTao { get; set; }
 
+        public int PhienBanNhapKho { get; set; } = 2;
+
         // Navigation properties
         [ForeignKey("MaNhaCungCap")]
         public virtual NhaCungCap? NhaCungCap { get; set; }

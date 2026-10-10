@@ -1,0 +1,514 @@
+@model code.Models.PhienAHP_B2B
+
+@{
+    ViewData["Title"] = "Kết Quả Phân Tích AHP - " + Model.SanPham?.TenSanPham;
+    var khoDict = ViewBag.KhoDict as Dictionary<int, code.Models.TonKhoNPP> ?? new Dictionary<int, code.Models.TonKhoNPP>();
+    var snapshot = ViewBag.Snapshot as code.Services.AhpSnapshot;
+    var currentStock = ViewBag.CurrentStock as Dictionary<int, code.Models.TonKhoNPP> ?? new();
+    var topCandidate = Model.KetQuaAHPs.OrderBy(k => k.XepHang).FirstOrDefault();
+    var topCurrentStock = topCandidate != null ? currentStock.GetValueOrDefault(topCandidate.MaDoanhNghiep) : null;
+    var topKho = topCandidate != null && khoDict.ContainsKey(topCandidate.MaDoanhNghiep) ? khoDict[topCandidate.MaDoanhNghiep] : null;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-action="Index">AHP Chọn Đối Tác</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Báo cáo kết quả #@Model.MaPhien</li>
+            </ol>
+        </nav>
+        <h2 class="page-title">Báo Cáo Phân Tích Thứ Bậc AHP: @Model.SanPham?.TenSanPham</h2>
+        <p class="text-muted mb-0 small">Mã phiên AHP: #@Model.MaPhien | Ngày tính: @Model.NgayTao?.ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-dark shadow-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> In / Xuất PDF Biên Bản AHP
+        </button>
+        <a asp-action="ThietLap" asp-route-maSanPham="@Model.MaSanPham" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat me-1"></i> Chạy lại với kịch bản khác
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-list me-1"></i> Danh sách mặt hàng
+        </a>
+    </div>
+</div>
+
+<div id="advisorToken" hidden>@Html.AntiForgeryToken()</div>
+@if (snapshot != null)
+{
+    <div class="alert alert-info">
+        AHP + WSM — λmax: @snapshot.LambdaMax.ToString("F4"), CI: @snapshot.CI.ToString("F4"), CR: @snapshot.CR.ToString("F4").
+        Trọng số (Giá / Giao hàng / Uy tín / Tồn kho): @string.Join(" / ", snapshot.Weights.Select(w => w.ToString("P1"))).
+        Dữ liệu báo cáo được lưu tại thời điểm đánh giá. Giá và tồn kho khi đặt hàng được kiểm tra lại.
+    </div>
+    <details class="mb-3"><summary>Ma trận so sánh đã sử dụng</summary>
+        <table class="table table-bordered w-auto"><tbody>
+        @foreach (var row in snapshot.Matrix) { <tr>@foreach (var cell in row) { <td>@cell.ToString("F4")</td> }</tr> }
+        </tbody></table>
+    </details>
+}
+else
+{
+    <div class="alert alert-warning">Phiên cũ chưa lưu đầu vào và trọng số. Điểm xếp hạng được giữ nguyên; hãy chạy phiên mới để có báo cáo đầy đủ.</div>
+}
+<!-- KHỐI IN ẤN BIÊN BẢN CHÍNH THỨC (Chỉ hiển thị khi In hoặc Xuất PDF) -->
+<div class="d-none d-print-block print-official-header mb-4">
+    <div class="row align-items-center text-center pb-3 border-bottom border-dark">
+        <div class="col-5 text-start">
+            <div class="fw-bold text-uppercase" style="font-size: 13px;">HỘI ĐỒNG THẨM ĐỊNH MUA HÀNG B2B</div>
+            <div class="small">BAN QUẢN LÝ CHUỖI CUNG ỨNG</div>
+            <div class="small text-muted font-mono">Số: @Model.MaPhien/BB-AHP/@DateTime.Now.Year</div>
+        </div>
+        <div class="col-7 text-end">
+            <div class="fw-bold text-uppercase" style="font-size: 13px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+            <div class="fw-bold small">Độc lập - Tự do - Hạnh phúc</div>
+            <div class="small text-muted fst-italic">TP. Hồ Chí Minh, ngày @DateTime.Now.Day tháng @DateTime.Now.Month năm @DateTime.Now.Year</div>
+        </div>
+    </div>
+
+    <div class="text-center my-4">
+        <h4 class="fw-bold text-uppercase mb-1">BIÊN BẢN ĐÁNH GIÁ &amp; LỰA CHỌN NHÀ CUNG CẤP TỐI ƯU</h4>
+        <p class="mb-1"><strong>ỨNG DỤNG MÔ HÌNH PHÂN TÍCH THỨ BẬC AHP (ANALYTIC HIERARCHY PROCESS)</strong></p>
+        <div class="small text-muted">Mặt hàng đánh giá: <strong>@Model.SanPham?.TenSanPham</strong> (SKU: @Model.SanPham?.MaSanPhamCode) | Số lượng dự kiến nhập: <strong>@Model.SoLuongCanMua @Model.SanPham?.DonViTinh?.TenDonVi</strong></div>
+    </div>
+</div>
+
+<!-- Banner Vinh Danh Top #1 Được Đề Xuất Bằng AHP -->
+@if (topCandidate != null)
+{
+    <div class="card border-0 rounded-4 shadow-sm mb-4 text-white overflow-hidden" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-1 fw-bold shadow-sm">
+                            🏆 ĐỐI TÁC CUNG ỨNG XẾP HẠNG #1 TỐI ƯU NHẤT
+                        </span>
+                        @if (topCandidate.DoanhNghiep != null && topCandidate.DoanhNghiep.LaGianHangMall)
+                        {
+                            <span class="badge bg-danger text-white fs-6 px-3 py-1 fw-bold shadow-sm">
+                                <i class="bi bi-patch-check-fill me-1"></i> GIAN HÀNG MALL
+                            </span>
+                        }
+                    </div>
+
+                    <h2 class="display-6 fw-bold mb-2">@topCandidate.DoanhNghiep?.TenDoanhNghiep</h2>
+                    <p class="fs-5 mb-4 text-white-50">
+                        Thuật toán AHP chấm điểm tổng hợp đạt: <strong class="text-white fs-4">@topCandidate.DiemTongHop.ToString("F3") / 9.000 điểm</strong> (Cao nhất trong số các nhà phân phối cùng chào bán).
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-3 col-6">
+                            <small class="d-block text-white-50">Giá chào sỉ:</small>
+                            <span class="fw-bold fs-5 text-white">
+                                @(topKho != null ? topKho.GiaSi.ToString("N0") + " đ" : "---")
+                            </span>
+                        </div>
+                        <div class="col-sm-3 col-6">
+                            <small class="d-block text-white-50">Giao hàng:</small>
+                            <span class="fw-bold fs-5 text-white">
+                                @(topKho != null ? topKho.ThoiGianGiaoHang + " ngày" : "---")
+                            </span>
+                        </div>
+                        <div class="col-sm-3 col-6">
+                            <small class="d-block text-white-50">Uy tín sàn:</small>
+                            <span class="fw-bold fs-5 text-white">
+                                ⭐ @topCandidate.DoanhNghiep?.DiemUyTin / 10
+                            </span>
+                        </div>
+                        <div class="col-sm-3 col-6">
+                            <small class="d-block text-white-50">Kho sẵn sàng:</small>
+                            <span class="fw-bold fs-5 text-white">
+                                @(topKho != null ? topKho.SoLuongTon.ToString() : "---") @Model.SanPham?.DonViTinh?.TenDonVi
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                    <div class="bg-white text-dark p-4 rounded-4 shadow">
+                        <h6 class="fw-bold text-muted mb-2">Hành động trực tiếp</h6>
+                        <p class="small text-muted mb-3">Bạn có muốn đặt hàng ngay từ đối tác xuất sắc nhất này?</p>
+
+                        @if (topKho != null)
+                        {
+                            <form asp-controller="SanB2B" asp-action="DatHangNhanh" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="maTonKhoNPP" value="@topCurrentStock?.MaTonKhoNPP" />
+                                <input type="hidden" name="giaDuKien" value="@topKho?.GiaSi" />
+                                <input type="hidden" name="soLuong" value="@Model.SoLuongCanMua" />
+                                <input type="hidden" name="ghiChu" value="Đặt hàng tự động qua gợi ý tối ưu thuật toán AHP" />
+                                <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow">
+                                    <i class="bi bi-cart-check-fill me-1"></i> ĐẶT HÀNG NGAY TỪ NPP NÀY
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100 disabled">Không có sẵn kho</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Khối AI Decision Advisor (Trợ lý Trí tuệ Nhân tạo hỗ trợ ra quyết định mua hàng & đàm phán) -->
+<div class="card border-0 rounded-4 shadow-sm mb-4 overflow-hidden" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%); color: white;">
+    <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="p-2 bg-white bg-opacity-25 rounded-circle fs-4 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    🤖
+                </span>
+                <div>
+                    <h4 class="fw-bold mb-0 text-white">AI Strategic Decision Advisor</h4>
+                    <p class="mb-0 text-white-50 small">Trợ lý Trí tuệ Nhân tạo: Tư vấn phân tích đa chiều, đánh giá rủi ro & chiến lược đàm phán giá sỉ</p>
+                </div>
+            </div>
+            <div class="mt-2 mt-md-0">
+                <button id="btnGoiAI" class="btn btn-warning btn-lg fw-bold px-4 py-2 shadow rounded-pill text-dark" onclick="kichHoatTuVanAI()">
+                    <i class="bi bi-stars me-1"></i> Nhờ Trợ Lý AI Phân Tích Ngay
+                </button>
+            </div>
+        </div>
+
+        <!-- Trạng thái Đang phân tích (Loading Spinner) -->
+        <div id="aiLoadingBox" class="text-center py-4 d-none">
+            <div class="spinner-border text-warning mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Đang phân tích...</span>
+            </div>
+            <h5 class="fw-bold text-white mb-1">AI đang xử lý dữ liệu ma trận AHP & bối cảnh thị trường...</h5>
+            <p class="text-white-50 small mb-0">Đang so sánh chênh lệch giá sỉ, đánh giá năng lực tồn kho, thời gian giao vận và xây dựng chiến lược đàm phán tối ưu.</p>
+        </div>
+
+        <!-- Trạng thái Kết Quả Phân Tích Của AI -->
+        <div id="aiResultBox" class="d-none mt-4">
+            <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom border-white border-opacity-25">
+                <span id="aiEngineBadge" class="badge bg-light text-dark px-3 py-2 fs-6 fw-semibold shadow-sm">
+                    <i class="bi bi-cpu-fill text-primary me-1"></i> <span id="aiEngineName">Đang tải...</span>
+                </span>
+                <span class="text-white-50 small"><i class="bi bi-check-circle-fill text-info me-1"></i> Phân tích tự động dựa trên phiên AHP #@Model.MaPhien</span>
+            </div>
+
+            <!-- Tóm tắt nhận định -->
+            <div class="bg-white bg-opacity-10 rounded-3 p-3 p-md-4 mb-3 border border-white border-opacity-25">
+                <h6 class="fw-bold text-warning mb-2"><i class="bi bi-chat-quote-fill me-2"></i>Nhận định Tổng quan & Cơ sở Đề xuất:</h6>
+                <p id="aiTomTat" class="mb-0 fs-6 text-white lead" style="line-height: 1.6;"></p>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <!-- Cột 1: Lý do chọn & Điểm mạnh -->
+                <div class="col-md-6">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 p-md-4 h-100 border border-white border-opacity-25">
+                        <h6 class="fw-bold text-info mb-3"><i class="bi bi-shield-check me-2"></i>Điểm Mạnh Cốt Lõi (Tại sao chọn Top 1?):</h6>
+                        <ul id="aiLyDoChon" class="list-unstyled mb-0 d-flex flex-column gap-2 small"></ul>
+                    </div>
+                </div>
+
+                <!-- Cột 2: Cảnh báo rủi ro -->
+                <div class="col-md-6">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 p-md-4 h-100 border border-white border-opacity-25">
+                        <h6 class="fw-bold text-warning mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Đánh Giá Rủi Ro & Dự Phòng (Risk Matrix):</h6>
+                        <ul id="aiCanhBaoRuiRo" class="list-unstyled mb-0 d-flex flex-column gap-2 small"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chiến lược đàm phán -->
+            <div class="bg-white bg-opacity-10 rounded-3 p-3 p-md-4 mb-3 border border-white border-opacity-25">
+                <h6 class="fw-bold text-success mb-3"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Chiến Lược Đàm Phán B2B & Điều Khoản Hợp Đồng (Negotiation Playbook):</h6>
+                <ul id="aiChienLuocDamPhan" class="list-unstyled mb-0 d-flex flex-column gap-2 small"></ul>
+            </div>
+
+            <!-- Khuyến nghị hành động -->
+            <div class="p-3 bg-white text-dark rounded-3 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <span class="badge bg-primary text-white me-2">ĐỀ XUẤT HÀNH ĐỘNG</span>
+                    <span id="aiKhuyenNghi" class="fw-bold text-dark"></span>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="kichHoatTuVanAI()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Phân tích lại
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng điểm chi tiết toàn bộ các NPP ứng viên -->
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-primary">
+            <i class="bi bi-trophy me-2"></i>Bảng Xếp Hạng & Điểm Thành Phần AHP (Thang chuẩn Saaty 1-9)
+        </h6>
+        <span class="badge bg-success-subtle text-success border border-success-subtle">
+            Tính toán theo Weighted Sum Model
+        </span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="text-center">Thứ hạng</th>
+                    <th>Nhà phân phối</th>
+                    <th class="text-center">Điểm Giá sỉ (C1)</th>
+                    <th class="text-center">Điểm Giao hàng (C2)</th>
+                    <th class="text-center">Điểm Uy tín (C3)</th>
+                    <th class="text-center">Điểm Tồn kho (C4)</th>
+                    <th class="text-end">ĐIỂM TỔNG HỢP</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var k in Model.KetQuaAHPs.OrderBy(x => x.XepHang))
+                {
+                    var khoItem = khoDict.ContainsKey(k.MaDoanhNghiep) ? khoDict[k.MaDoanhNghiep] : null;
+                    <tr class="@(k.DeXuat ? "table-success fw-medium" : "")">
+                        <td class="text-center">
+                            @if (k.XepHang == 1)
+                            {
+                                <span class="badge bg-warning text-dark px-3 py-2 fw-bold fs-6">🥇 HẠNG 1</span>
+                            }
+                            else if (k.XepHang == 2)
+                            {
+                                <span class="badge bg-secondary text-white px-2 py-1 fw-bold">🥈 Hạng 2</span>
+                            }
+                            else if (k.XepHang == 3)
+                            {
+                                <span class="badge bg-dark-subtle text-dark px-2 py-1 fw-bold">🥉 Hạng 3</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-muted border">#@k.XepHang</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-bold">
+                                @k.DoanhNghiep?.TenDoanhNghiep
+                                @if (k.DoanhNghiep != null && k.DoanhNghiep.LaGianHangMall)
+                                {
+                                    <span class="badge bg-danger ms-1 small">MALL</span>
+                                }
+                            </div>
+                            @if (khoItem != null)
+                            {
+                                <small class="text-muted">
+                                    Giá: @khoItem.GiaSi.ToString("N0") đ | Giao: @khoItem.ThoiGianGiaoHang ngày | Kho: @khoItem.SoLuongTon
+                                </small>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">@k.DiemGia.ToString("F2")</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">@k.DiemGiaoHang.ToString("F2")</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">@k.DiemUyTin.ToString("F2")</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">@k.DiemTonKho.ToString("F2")</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="fs-5 fw-bold @(k.DeXuat ? "text-success" : "text-primary")">
+                                @k.DiemTongHop.ToString("F3")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            @if (khoItem != null)
+                            {
+                                <form asp-controller="SanB2B" asp-action="DatHangNhanh" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="maTonKhoNPP" value="@currentStock.GetValueOrDefault(k.MaDoanhNghiep)?.MaTonKhoNPP" />
+                                    <input type="hidden" name="giaDuKien" value="@khoItem.GiaSi" />
+                                    <input type="hidden" name="soLuong" value="@Model.SoLuongCanMua" />
+                                    <button type="submit" class="btn btn-sm @(k.DeXuat ? "btn-success" : "btn-outline-primary") rounded-2">
+                                        <i class="bi bi-cart-plus me-1"></i> Đặt hàng
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Khung giải trình học thuật (Bảo vệ đồ án / Luận văn) -->
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="fw-bold mb-0 text-secondary"><i class="bi bi-mortarboard me-2"></i>Cơ sở Khoa học & Công thức Thuật toán AHP</h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 h-100">
+                    <h6 class="fw-bold text-primary mb-2">1. Quy đổi dữ liệu thành điểm đánh giá (1–9)</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li><strong>Tiêu chí Chi phí (Giá sỉ & Thời gian giao):</strong> Áp dụng hàm Min-Max nghịch đảo $Score = 1 + 8 \times \frac{Max - X}{Max - Min}$. Đối tác có chi phí hoặc thời gian nhỏ nhất sẽ đạt điểm tối đa 9.</li>
+                        <li><strong>Tiêu chí Lợi ích (Tồn kho):</strong> Áp dụng hàm Min-Max thuận $Score = 1 + 8 \times \frac{X - Min}{Max - Min}$. Đối tác đạt chỉ số cao nhất đạt điểm 9.</li>
+                        <li><strong>Gian hàng Mall:</strong> Không được cộng điểm chỉ vì đăng ký dịch vụ. Uy tín được quy đổi từ thang 1–10: 1 + 8 × (uy tín − 1) / 9.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 h-100">
+                    <h6 class="fw-bold text-primary mb-2">2. Tổng hợp Trọng số & Kiểm định Nhất quán</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li><strong>Công thức tổng hợp điểm:</strong> $Score_{NPP} = \sum_{i=1}^{n} (W_i \times C_{i})$.</li>
+                        <li><strong>Kiểm định $CR \le 0.1$:</strong> Phiên tính toán tuân thủ chỉ số nhất quán Saaty, cho biết mức độ nhất quán chấp nhận được; không bảo đảm dữ liệu đầu vào khách quan.</li>
+                        <li><strong>Tính ứng dụng thực tế:</strong> AHP tính trọng số; WSM tổng hợp điểm. Người quản lý quyết định cuối cùng. Khi bằng điểm, ưu tiên giá thấp, giao nhanh rồi mã nhà cung cấp.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function parseMarkdownText(txt) {
+        if (!txt) return '';
+        // Đổi **text** thành <strong>text</strong>
+        const element = document.createElement('span');
+        element.textContent = txt;
+        return element.innerHTML.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    }
+
+    async function kichHoatTuVanAI() {
+        const loadingBox = document.getElementById('aiLoadingBox');
+        const resultBox = document.getElementById('aiResultBox');
+        const btnGoiAI = document.getElementById('btnGoiAI');
+
+        if (loadingBox) loadingBox.classList.remove('d-none');
+        if (resultBox) resultBox.classList.add('d-none');
+        if (btnGoiAI) btnGoiAI.classList.add('disabled');
+
+        try {
+            const response = await fetch('@Url.Action("TuVanAI", "AHPB2B", new { id = Model.MaPhien })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('#advisorToken input').value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Máy chủ phản hồi lỗi HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+            if (!data.success && data.message) {
+                alert('Lỗi: ' + data.message);
+                return;
+            }
+
+            // Gán dữ liệu vào giao diện
+            document.getElementById('aiEngineName').innerText = data.engineUsed || 'Mô hình Phân tích AI';
+            document.getElementById('aiTomTat').innerHTML = parseMarkdownText(data.tomTatDeXuat);
+
+            // Lý do chọn
+            const lyDoUl = document.getElementById('aiLyDoChon');
+            lyDoUl.innerHTML = '';
+            if (data.lyDoChon && data.lyDoChon.length > 0) {
+                data.lyDoChon.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = '<i class="bi bi-arrow-right-circle text-info me-2"></i>' + parseMarkdownText(item);
+                    lyDoUl.appendChild(li);
+                });
+            }
+
+            // Cảnh báo rủi ro
+            const ruiRoUl = document.getElementById('aiCanhBaoRuiRo');
+            ruiRoUl.innerHTML = '';
+            if (data.canhBaoRuiRo && data.canhBaoRuiRo.length > 0) {
+                data.canhBaoRuiRo.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = '<i class="bi bi-shield-exclamation text-warning me-2"></i>' + parseMarkdownText(item);
+                    ruiRoUl.appendChild(li);
+                });
+            }
+
+            // Chiến lược đàm phán
+            const damPhanUl = document.getElementById('aiChienLuocDamPhan');
+            damPhanUl.innerHTML = '';
+            if (data.chienLuocDamPhan && data.chienLuocDamPhan.length > 0) {
+                data.chienLuocDamPhan.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = '<i class="bi bi-check-circle-fill text-success me-2"></i>' + parseMarkdownText(item);
+                    damPhanUl.appendChild(li);
+                });
+            }
+
+            // Khuyến nghị hành động
+            document.getElementById('aiKhuyenNghi').innerHTML = parseMarkdownText(data.khuyenNghiHanhDong);
+
+            // Hiển thị kết quả
+            if (resultBox) resultBox.classList.remove('d-none');
+        } catch (err) {
+            console.error('Lỗi khi kích hoạt AI Advisor:', err);
+            alert('Không thể kết nối đến Trợ lý AI. Vui lòng thử lại sau giây lát.');
+        } finally {
+            if (loadingBox) loadingBox.classList.add('d-none');
+            if (btnGoiAI) btnGoiAI.classList.remove('disabled');
+        }
+    }
+</script>
+
+<!-- CHỮ KÝ 3 BÊN KHI IN ẤN BIÊN BẢN (Print Only) -->
+<div class="d-none d-print-block print-signatures mt-5 pt-4">
+    <div class="row text-center">
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Người Lập Biên Bản</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Ký và ghi rõ họ tên)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">@User.Identity?.Name</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Trưởng Ban Thẩm Định AHP</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Ký và xác nhận tỷ số CR &lt; 0.1)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">Hội Đồng Kho Vận</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Giám Đốc Phê Duyệt</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Ký tên và đóng dấu)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">Ban Giám Đốc Doanh Nghiệp</div>
+        </div>
+    </div>
+</div>
+
+<style>
+@@media print {
+    .sidebar, .top-header, .page-header .d-flex, #quickSwitcher, .page-footer, .btn, .breadcrumb, form, .public-navbar, .public-footer {
+        display: none !important;
+    }
+    .main-content, .container, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+    }
+    .card {
+        border: 1px solid #999 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    .text-white {
+        color: #000000 !important;
+    }
+    .text-white-50 {
+        color: #444444 !important;
+    }
+    .bg-gradient-dark, .bg-primary, .card-header {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+    }
+}
+</style>
+}

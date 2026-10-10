@@ -6,295 +6,554 @@
     var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-11 col-md-12">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
-        }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]</div>
+}
 
-        <!-- Thanh điều hướng bước AHP -->
-        <div class="page-header">
-            <div class="page-header-left">
-                <div class="d-flex align-items-center">
-                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại danh sách kỳ">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div>
-                        <h3><i class="bi bi-grid-3x3 text-primary"></i> Bước 1: Ma Trận So Sánh Cặp Tiêu Chí</h3>
-                        <p>Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> &bull; Thiết lập mức độ ưu tiên giữa các tiêu chí</p>
-                    </div>
-                </div>
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline" title="Quay lại danh sách kỳ">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="mb-0">Bước 1: Ma trận so sánh cặp tiêu chí</h3>
+                <p class="mb-0">Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> — so sánh mức độ ưu tiên giữa các tiêu chí</p>
             </div>
-            <div class="d-flex gap-2">
-                @if (Model.TrongSos.Any())
-                {
-                    <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
-                        <i class="bi bi-star-fill text-warning"></i> Chuyển sang Bước 2: Chấm điểm NCC <i class="bi bi-arrow-right"></i>
-                    </a>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.TrongSos.Any())
+        {
+            <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-primary">
+                Bước 2: Chấm điểm NCC <i class="bi bi-arrow-right"></i>
+            </a>
+        }
+    </div>
+</div>
+
+<form asp-action="LuuVaTinhToanAHP" method="post" id="ahpMatrixForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="maKyDanhGia" value="@Model.MaKyDanhGia" />
+
+    <!-- So sánh cặp tiêu chí bằng Slider -->
+    <div class="card-custom mb-4">
+        <div class="card-header-custom">
+            <div>
+                <h5 class="mb-0"><i class="bi bi-sliders text-primary"></i> So sánh mức độ ưu tiên giữa các tiêu chí</h5>
+                <small style="color: var(--slate-400);">Kéo thanh trượt về phía tiêu chí mà bạn cho là quan trọng hơn</small>
+            </div>
+            <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillBalancedDemo()">
+                <i class="bi bi-magic me-1"></i> Điền mẫu (CR ≤ 0.1)
+            </button>
+        </div>
+        <div class="card-body-custom">
+
+            <!-- CSS nội tuyến cho slider -->
+            <style>
+                .ahp-slider-card {
+                    background: var(--white, #fff);
+                    border: 1px solid var(--slate-200, #e2e8f0);
+                    border-radius: var(--radius-lg, 12px);
+                    padding: 20px 24px;
+                    transition: box-shadow 0.2s ease, border-color 0.2s ease;
                 }
-            </div>
-        </div>
+                .ahp-slider-card:hover {
+                    border-color: var(--primary-300, #93c5fd);
+                    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
+                }
+                .ahp-slider-pair-number {
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: var(--primary-500, #3b82f6);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 14px;
+                }
+                .ahp-slider-criteria {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .ahp-slider-label {
+                    flex: 0 0 auto;
+                    min-width: 130px;
+                    text-align: center;
+                }
+                .ahp-slider-label-left { text-align: right; }
+                .ahp-slider-label-right { text-align: left; }
+                .ahp-slider-label .ahp-criteria-name {
+                    font-weight: 700;
+                    font-size: 14px;
+                    color: var(--slate-800, #1e293b);
+                    display: block;
+                    margin-bottom: 3px;
+                }
+                .ahp-slider-label .ahp-criteria-type {
+                    font-size: 10.5px;
+                    padding: 2px 8px;
+                    border-radius: 20px;
+                    font-weight: 600;
+                }
+                .ahp-type-cost {
+                    background: #fef3c7;
+                    color: #92400e;
+                }
+                .ahp-type-benefit {
+                    background: #d1fae5;
+                    color: #065f46;
+                }
+                .ahp-slider-track-wrapper {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .ahp-slider-range {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 100%;
+                    height: 8px;
+                    border-radius: 4px;
+                    outline: none;
+                    cursor: pointer;
+                    transition: background 0.15s;
+                }
+                .ahp-slider-range::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: var(--primary-500, #3b82f6);
+                    border: 3px solid var(--white, #fff);
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+                    cursor: pointer;
+                    transition: transform 0.15s ease, box-shadow 0.15s ease;
+                }
+                .ahp-slider-range::-webkit-slider-thumb:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.45);
+                }
+                .ahp-slider-range::-moz-range-thumb {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: var(--primary-500, #3b82f6);
+                    border: 3px solid var(--white, #fff);
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+                    cursor: pointer;
+                }
+                .ahp-slider-scale {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 6px;
+                    font-size: 10px;
+                    color: var(--slate-400, #94a3b8);
+                    user-select: none;
+                }
+                .ahp-slider-scale span {
+                    flex: 1;
+                    text-align: center;
+                }
+                .ahp-slider-scale .ahp-scale-center {
+                    color: var(--primary-600, #2563eb);
+                    font-weight: 700;
+                }
+                .ahp-slider-description {
+                    margin-top: 12px;
+                    padding: 8px 14px;
+                    background: var(--slate-50, #f8fafc);
+                    border-radius: var(--radius-md, 8px);
+                    font-size: 13.5px;
+                    color: var(--slate-700, #334155);
+                    transition: all 0.2s ease;
+                    min-height: 38px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .ahp-cr-meter {
+                    background: var(--white, #fff);
+                    border: 1px solid var(--slate-200, #e2e8f0);
+                    border-radius: var(--radius-lg, 12px);
+                    padding: 18px 24px;
+                }
+                .ahp-cr-bar {
+                    height: 10px;
+                    border-radius: 5px;
+                    background: var(--slate-100, #f1f5f9);
+                    overflow: hidden;
+                    margin-top: 8px;
+                }
+                .ahp-cr-bar-fill {
+                    height: 100%;
+                    border-radius: 5px;
+                    transition: width 0.4s ease, background 0.4s ease;
+                }
+                .ahp-cr-pass { background: linear-gradient(90deg, #22c55e, #16a34a); }
+                .ahp-cr-fail { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
-        <!-- Hướng dẫn cách hiểu ma trận siêu trực quan -->
-        <div class="card-custom mb-4" style="background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%); border-color: #BFDBFE;">
-            <div class="card-body-custom">
-                <div class="d-flex align-items-start gap-3">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #2563EB; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-                        <i class="bi bi-lightbulb-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1" style="color: #1E3A8A; font-size: 14px;">
-                            Hướng dẫn cách đọc & nhập Ma trận so sánh cặp AHP
-                        </h6>
-                        <p class="small mb-2" style="color: #1E40AF; line-height: 1.6;">
-                            Bạn đang so sánh mức độ quan trọng giữa tiêu chí ở <strong>Hàng (bên trái)</strong> so với tiêu chí ở <strong>Cột (phía trên)</strong>:
-                        </p>
-                        <div class="row g-2 small text-secondary">
-                            <div class="col-md-3 col-sm-6">
-                                <div class="p-2 bg-white rounded border">
-                                    <strong class="text-dark">Số nguyên (3, 5, 7):</strong><br />
-                                    <span class="text-primary font-mono fw-bold">Hàng</span> quan trọng hơn <span class="text-dark font-mono">Cột</span>.
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-sm-6">
-                                <div class="p-2 bg-white rounded border">
-                                    <strong class="text-dark">Phân số (1/3, 1/5, 1/7):</strong><br />
-                                    <span class="text-dark font-mono">Cột</span> quan trọng hơn <span class="text-primary font-mono fw-bold">Hàng</span>.
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-sm-6">
-                                <div class="p-2 bg-white rounded border">
-                                    <strong class="text-dark">Đường chéo (= 1):</strong><br />
-                                    Tiêu chí tự so với chính nó luôn bằng 1.
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-sm-6">
-                                <div class="p-2 bg-white rounded border">
-                                    <strong class="text-dark">Nửa dưới (Tự tính 1/a):</strong><br />
-                                    Hệ thống tự động nghịch đảo, không cần nhập.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                @@media (max-width: 768px) {
+                    .ahp-slider-criteria {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    .ahp-slider-label {
+                        min-width: unset;
+                        text-align: center !important;
+                    }
+                    .ahp-slider-label-left,
+                    .ahp-slider-label-right {
+                        text-align: center !important;
+                    }
+                }
+            </style>
 
-        <form asp-action="LuuVaTinhToanAHP" method="post" id="ahpMatrixForm">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="maKyDanhGia" value="@Model.MaKyDanhGia" />
+            @{
+                // Tạo danh sách các cặp (i, j) cần so sánh (i < j)
+                var pairs = new List<(int i, int j)>();
+                for (int i = 0; i < n; i++)
+                {
+                    for (int j = i + 1; j < n; j++)
+                    {
+                        pairs.Add((i, j));
+                    }
+                }
+            }
 
-            <!-- Ma Trận 4x4 -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div>
-                        <h5><i class="bi bi-table text-primary"></i> Bảng Ma Trận So Sánh Cặp (Thang điểm Saaty 1–9)</h5>
-                        <small style="color: var(--slate-500);">Chỉ cần chọn giá trị cho các ô màu trắng phía trên đường chéo</small>
-                    </div>
-                    <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillBalancedDemo()">
-                        <i class="bi bi-magic me-1"></i> Điền ma trận mẫu chuẩn (CR ≤ 0.1)
-                    </button>
-                </div>
-                <div class="card-body-custom">
-                    <div class="table-responsive">
-                        <table class="ahp-matrix-table">
-                            <thead>
-                                <tr>
-                                    <th class="ahp-header-cell" style="width: 200px;">
-                                        Tiêu chí (Hàng \ Cột)
-                                    </th>
-                                    @for (int j = 0; j < n; j++)
-                                    {
-                                        <th style="min-width: 170px;">
-                                            <div style="font-weight: 700; color: var(--primary-700);">@tieuChis[j].TenTieuChi</div>
-                                            <span class="status-badge @(tieuChis[j].LoaiTieuChi == "cost" ? "status-badge-warning" : "status-badge-success")" style="font-size: 10px;">
-                                                @(tieuChis[j].LoaiTieuChi == "cost" ? "Chi phí (Thấp tốt)" : "Lợi ích (Cao tốt)")
-                                            </span>
-                                        </th>
-                                    }
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int i = 0; i < n; i++)
-                                {
-                                    <tr>
-                                        <td class="ahp-header-cell">
-                                            <strong style="color: var(--slate-900);">@tieuChis[i].TenTieuChi</strong>
-                                            <div class="small text-muted font-mono">@(tieuChis[i].LoaiTieuChi == "cost" ? "Cost" : "Benefit")</div>
-                                        </td>
-                                        @for (int j = 0; j < n; j++)
-                                        {
-                                            var val = Model.MaTran[i][j];
-                                            if (i == j)
-                                            {
-                                                <td class="ahp-diagonal" title="Tự so sánh với chính nó = 1">
-                                                    <input type="hidden" name="matrix[@i][@j]" value="1" />
-                                                    <span class="fw-bold font-mono fs-6 text-secondary">1</span>
-                                                    <div style="font-size: 10px; color: var(--slate-400);">Tự so sánh</div>
-                                                </td>
-                                            }
-                                            else if (j > i)
-                                            {
-                                                <td class="ahp-upper" style="background: #FFFFFF;">
-                                                    <select name="matrix[@i][@j]" id="cell_@(i)_@(j)" class="form-select" onchange="onMatrixCellChange(@i, @j)" style="font-size: 12.5px; font-weight: 600;">
-                                                        <!option value="1" @(Math.Abs(val - 1.0) < 0.01 ? "selected" : "")>1 &mdash; Ngang nhau</!option>
-                                                        <!option value="2" @(Math.Abs(val - 2.0) < 0.01 ? "selected" : "")>2 &mdash; Hàng hơi hơn Cột</!option>
-                                                        <!option value="3" @(Math.Abs(val - 3.0) < 0.01 ? "selected" : "")>3 &mdash; Hàng hơn Cột 3 lần</!option>
-                                                        <!option value="4" @(Math.Abs(val - 4.0) < 0.01 ? "selected" : "")>4 &mdash; Hàng hơn Cột 4 lần</!option>
-                                                        <!option value="5" @(Math.Abs(val - 5.0) < 0.01 ? "selected" : "")>5 &mdash; Hàng hơn Cột 5 lần (Rất nhiều)</!option>
-                                                        <!option value="6" @(Math.Abs(val - 6.0) < 0.01 ? "selected" : "")>6 &mdash; Hàng hơn Cột 6 lần</!option>
-                                                        <!option value="7" @(Math.Abs(val - 7.0) < 0.01 ? "selected" : "")>7 &mdash; Hàng hơn Cột 7 lần (Rất lớn)</!option>
-                                                        <!option value="8" @(Math.Abs(val - 8.0) < 0.01 ? "selected" : "")>8 &mdash; Hàng hơn Cột 8 lần</!option>
-                                                        <!option value="9" @(Math.Abs(val - 9.0) < 0.01 ? "selected" : "")>9 &mdash; Hàng hơn Cột tuyệt đối</!option>
-                                                        <!option value="0.5" @(Math.Abs(val - 0.5) < 0.01 ? "selected" : "")>1/2 &mdash; Cột hơi hơn Hàng</!option>
-                                                        <!option value="0.333333" @(Math.Abs(val - 0.333333) < 0.01 ? "selected" : "")>1/3 &mdash; Cột hơn Hàng 3 lần</!option>
-                                                        <!option value="0.25" @(Math.Abs(val - 0.25) < 0.01 ? "selected" : "")>1/4 &mdash; Cột hơn Hàng 4 lần</!option>
-                                                        <!option value="0.2" @(Math.Abs(val - 0.2) < 0.01 ? "selected" : "")>1/5 &mdash; Cột hơn Hàng 5 lần (Rất nhiều)</!option>
-                                                        <!option value="0.166667" @(Math.Abs(val - 0.166667) < 0.01 ? "selected" : "")>1/6 &mdash; Cột hơn Hàng 6 lần</!option>
-                                                        <!option value="0.142857" @(Math.Abs(val - 0.142857) < 0.01 ? "selected" : "")>1/7 &mdash; Cột hơn Hàng 7 lần (Rất lớn)</!option>
-                                                        <!option value="0.125" @(Math.Abs(val - 0.125) < 0.01 ? "selected" : "")>1/8 &mdash; Cột hơn Hàng 8 lần</!option>
-                                                        <!option value="0.111111" @(Math.Abs(val - 0.111111) < 0.01 ? "selected" : "")>1/9 &mdash; Cột hơn Hàng tuyệt đối</!option>
-                                                    </select>
-                                                </td>
-                                            }
-                                            else
-                                            {
-                                                <td class="ahp-lower" style="background: #F8FAFC;" title="Giá trị nghịch đảo tự động tính 1/a">
-                                                    <input type="hidden" name="matrix[@i][@j]" id="hidden_cell_@(i)_@(j)" value="@val" />
-                                                    <span id="display_cell_@(i)_@(j)" class="fw-bold font-mono fs-6 text-primary">@(FormatInverse(val))</span>
-                                                    <div style="font-size: 10px; color: var(--slate-400);">Nghịch đảo (1/a)</div>
-                                                </td>
-                                            }
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Khung Tóm Tắt Ý Nghĩa Thời Gian Thực (Live Sentence Helper) -->
-                    <div class="mt-4 p-3 rounded-3 border" style="background: #F8FAFC; border-color: #E2E8F0;">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-chat-left-text-fill text-primary"></i>
-                            <strong style="color: var(--slate-900); font-size: 13px;">Tóm tắt ý nghĩa các nhận định so sánh hiện tại:</strong>
-                        </div>
-                        <div id="liveSentencesList" class="row g-2 small" style="color: var(--slate-700);">
-                            <!-- Javascript sẽ tự động điền các câu giải thích vào đây -->
-                        </div>
-                    </div>
-
-                    <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <span class="text-muted small">
-                            <i class="bi bi-info-circle me-1"></i> Sau khi bấm tính toán, hệ thống sẽ kiểm tra tỷ số nhất quán $CR \le 0.10$.
-                        </span>
-                        @if (isManagerOrAdmin)
+            <div class="row">
+                <!-- Cột trái: Thanh trượt -->
+                <div class="col-xl-7 col-lg-6 mb-4 mb-lg-0">
+                    <div class="d-flex flex-column gap-3">
+                        @for (int p = 0; p < pairs.Count; p++)
                         {
-                            <button type="submit" class="btn btn-custom btn-custom-accent px-4 py-2">
-                                <i class="bi bi-calculator-fill me-1"></i> Lưu & Tính Trọng Số AHP
-                            </button>
+                            var pair = pairs[p];
+                            var pi = pair.i;
+                            var pj = pair.j;
+                            var currentVal = Model.MaTran[pi][pj];
+                            // Chuyển giá trị Saaty → vị trí slider (1–17, với 9 = ngang nhau)
+                            int sliderPos = 9; // mặc định = ngang nhau
+                            if (Math.Abs(currentVal - 1.0) < 0.01) { sliderPos = 9; }
+                            else if (currentVal >= 2.0) { sliderPos = 8 + (int)Math.Round(currentVal); }
+                            else if (currentVal < 1.0 && currentVal > 0.0)
+                            {
+                                int inv = (int)Math.Round(1.0 / currentVal);
+                                sliderPos = 9 - inv;
+                                if (sliderPos < 1) sliderPos = 1;
+                            }
+
+                            <div class="ahp-slider-card">
+                                <div class="ahp-slider-pair-number">
+                                    Cặp @(p + 1)/@pairs.Count
+                                </div>
+                                <div class="ahp-slider-criteria">
+                                    <!-- Tiêu chí bên trái -->
+                                    <div class="ahp-slider-label ahp-slider-label-left">
+                                        <span class="ahp-criteria-name">@tieuChis[pi].TenTieuChi</span>
+                                        <span class="ahp-criteria-type @(tieuChis[pi].LoaiTieuChi == "cost" ? "ahp-type-cost" : "ahp-type-benefit")">
+                                            @(tieuChis[pi].LoaiTieuChi == "cost" ? "Chi phí" : "Lợi ích")
+                                        </span>
+                                    </div>
+
+                                    <!-- Thanh trượt -->
+                                    <div class="ahp-slider-track-wrapper">
+                                        <input type="range"
+                                               class="ahp-slider-range"
+                                               min="1" max="17" step="1"
+                                               value="@sliderPos"
+                                               id="slider_@(pi)_@(pj)"
+                                               oninput="onSliderChange(@pi, @pj)" />
+
+                                        <div class="ahp-slider-scale">
+                                            <span>9</span>
+                                            <span></span>
+                                            <span>7</span>
+                                            <span></span>
+                                            <span>5</span>
+                                            <span></span>
+                                            <span>3</span>
+                                            <span></span>
+                                            <span class="ahp-scale-center">1</span>
+                                            <span></span>
+                                            <span>3</span>
+                                            <span></span>
+                                            <span>5</span>
+                                            <span></span>
+                                            <span>7</span>
+                                            <span></span>
+                                            <span>9</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tiêu chí bên phải -->
+                                    <div class="ahp-slider-label ahp-slider-label-right">
+                                        <span class="ahp-criteria-name">@tieuChis[pj].TenTieuChi</span>
+                                        <span class="ahp-criteria-type @(tieuChis[pj].LoaiTieuChi == "cost" ? "ahp-type-cost" : "ahp-type-benefit")">
+                                            @(tieuChis[pj].LoaiTieuChi == "cost" ? "Chi phí" : "Lợi ích")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Mô tả ý nghĩa -->
+                                <div class="ahp-slider-description" id="desc_@(pi)_@(pj)">
+                                    <i class="bi bi-arrow-right-circle text-primary"></i>
+                                    <span>Đang tải...</span>
+                                </div>
+
+                                <!-- Hidden inputs gửi về server (matrix[i][j] và matrix[j][i]) -->
+                                <input type="hidden" name="matrix[@pi][@pj]" id="hidden_@(pi)_@(pj)" value="@currentVal.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                                <input type="hidden" name="matrix[@pj][@pi]" id="hidden_@(pj)_@(pi)" value="@((1.0 / currentVal).ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+                            </div>
+                        }
+
+                        <!-- Hidden inputs cho đường chéo (i == j) → giá trị = 1 -->
+                        @for (int i = 0; i < n; i++)
+                        {
+                            <input type="hidden" name="matrix[@i][@i]" value="1" />
                         }
                     </div>
-                </div>
-            </div>
-        </form>
 
-        <!-- Hướng dẫn chi tiết thang đo Saaty -->
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5><i class="bi bi-journal-bookmark-fill text-primary"></i> Bảng ý nghĩa Thang đo Saaty chuẩn 1–9 trong lý thuyết AHP</h5>
-            </div>
-            <div class="card-body-custom p-0">
-                <div class="table-responsive">
-                    <table class="table-custom" style="font-size: 13px;">
-                        <thead>
-                            <tr>
-                                <th style="width: 90px;" class="text-center">Thang điểm</th>
-                                <th style="width: 240px;">Định nghĩa mức độ</th>
-                                <th>Ý nghĩa thực tiễn & Ví dụ lựa chọn NCC</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-primary">1</span></td>
-                                <td><strong>Quan trọng như nhau</strong> (Equal)</td>
-                                <td style="color: var(--slate-600);">Hai tiêu chí đóng góp tương đương nhau vào quyết định chọn NCC. (Ví dụ: Giá cả quan trọng ngang Thời gian giao).</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-secondary">3</span></td>
-                                <td><strong>Hơi quan trọng hơn</strong> (Moderate)</td>
-                                <td style="color: var(--slate-600);">Kinh nghiệm và nhận định thực tế nghiêng nhẹ về một tiêu chí hơn. (Ví dụ: Chất lượng hơi hơn Giá cả).</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-success">5</span></td>
-                                <td><strong>Quan trọng hơn nhiều</strong> (Strong)</td>
-                                <td style="color: var(--slate-600);">Một tiêu chí vượt trội rõ rệt. (Ví dụ: Chất lượng quan trọng hơn hẳn Thời gian giao hàng).</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-warning">7</span></td>
-                                <td><strong>Rất quan trọng hơn</strong> (Very Strong)</td>
-                                <td style="color: var(--slate-600);">Tiêu chí đóng vai trò then chốt và mang tính quyết định chi phối.</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-danger">9</span></td>
-                                <td><strong>Tuyệt đối quan trọng</strong> (Extreme)</td>
-                                <td style="color: var(--slate-600);">Tiêu chí đạt mức ưu tiên tối cao tuyệt đối trong bài toán mua hàng.</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center"><span class="status-badge status-badge-secondary">1/3, 1/5, 1/7</span></td>
-                                <td><strong>Nghịch đảo tương ứng</strong></td>
-                                <td style="color: var(--slate-600);">Biểu thị tiêu chí Cột quan trọng hơn tiêu chí Hàng ở các mức tương ứng.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Tóm tắt ý nghĩa các nhận định -->
+                    <div class="mt-4 p-3" style="background: var(--slate-50); border-radius: var(--radius-md);">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-chat-left-text text-primary"></i>
+                            <strong style="color: var(--slate-800); font-size: 13.5px;">Tóm tắt các nhận định hiện tại:</strong>
+                        </div>
+                        <div id="liveSentencesList" class="row g-2 small" style="color: var(--slate-600);">
+                            <!-- Javascript tự động điền -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Ma trận thời gian thực -->
+                <div class="col-xl-5 col-lg-6">
+                    <div class="position-sticky" style="top: 20px;">
+                        <!-- Ma trận -->
+                        <div class="card-custom mb-4" style="box-shadow: none; border: 1px solid var(--slate-200);">
+                            <div class="card-header-custom py-3" style="background: var(--slate-50); border-bottom: 1px solid var(--slate-200);">
+                                <h6 class="mb-0 text-primary" style="font-size: 14.5px;"><i class="bi bi-grid-3x3 me-1"></i> Ma trận AHP thời gian thực</h6>
+                            </div>
+                            <div class="card-body-custom p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered text-center align-middle ahp-live-matrix mb-0" style="font-size: 13px;">
+                                        <thead style="background: var(--slate-100);">
+                                            <tr>
+                                                <th style="width: 30px; background: var(--slate-50);">#</th>
+                                                @foreach (var tc in tieuChis)
+                                                {
+                                                    <th title="@tc.TenTieuChi" style="background: var(--slate-50); font-weight: 600;">@((tc.TenTieuChi ?? "")[..Math.Min((tc.TenTieuChi ?? "").Length, 10)])</th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < n; i++)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold text-start" title="@tieuChis[i].TenTieuChi" style="background: var(--slate-50); color: var(--slate-700);">
+                                                        @((tieuChis[i].TenTieuChi ?? "")[..Math.Min((tieuChis[i].TenTieuChi ?? "").Length, 15)])..
+                                                    </td>
+                                                    @for (int j = 0; j < n; j++)
+                                                    {
+                                                        if (i == j)
+                                                        {
+                                                            <td class="bg-light fw-bold text-muted">1</td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td id="display_cell_@(i)_@(j)" class="font-mono fw-semibold" style="color: var(--primary-600);">1</td>
+                                                        }
+                                                    }
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thanh đo CR thời gian thực -->
+                        <div class="ahp-cr-meter">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-speedometer2 text-primary" style="font-size: 18px;"></i>
+                                    <strong style="font-size: 14px; color: var(--slate-800);">Tỷ số nhất quán (CR):</strong>
+                                    <span id="crValue" style="font-size: 16px; font-weight: 700; font-family: monospace;" class="text-success">0.000</span>
+                                </div>
+                                <span id="crStatus" class="status-badge status-badge-success" style="font-size: 11px;">
+                                    ✅ Đạt chuẩn (≤ 0.10)
+                                </span>
+                            </div>
+                            <div class="ahp-cr-bar">
+                                <div class="ahp-cr-bar-fill ahp-cr-pass" id="crBarFill" style="width: 0%;"></div>
+                            </div>
+                            <div class="mt-2 small" style="color: var(--slate-400);">
+                                <i class="bi bi-info-circle me-1"></i>
+                                CR ≤ 0.10 → Nhận định nhất quán. CR > 0.10 → Cần xem lại các so sánh.
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            @if (isManagerOrAdmin)
+                            {
+                                <button type="submit" class="btn btn-custom btn-custom-primary w-100">
+                                    <i class="bi bi-calculator me-1"></i> Lưu &amp; Tính trọng số AHP
+                                </button>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
-@functions {
-    public static string FormatInverse(double val)
-    {
-        if (Math.Abs(val - 1.0) < 0.01) return "1";
-        if (Math.Abs(val - 2.0) < 0.01) return "2";
-        if (Math.Abs(val - 3.0) < 0.01) return "3";
-        if (Math.Abs(val - 4.0) < 0.01) return "4";
-        if (Math.Abs(val - 5.0) < 0.01) return "5";
-        if (Math.Abs(val - 6.0) < 0.01) return "6";
-        if (Math.Abs(val - 7.0) < 0.01) return "7";
-        if (Math.Abs(val - 8.0) < 0.01) return "8";
-        if (Math.Abs(val - 9.0) < 0.01) return "9";
-        if (Math.Abs(val - 0.5) < 0.01) return "1/2";
-        if (Math.Abs(val - 0.333333) < 0.01) return "1/3";
-        if (Math.Abs(val - 0.25) < 0.01) return "1/4";
-        if (Math.Abs(val - 0.2) < 0.01) return "1/5";
-        if (Math.Abs(val - 0.166667) < 0.01) return "1/6";
-        if (Math.Abs(val - 0.142857) < 0.01) return "1/7";
-        if (Math.Abs(val - 0.125) < 0.01) return "1/8";
-        if (Math.Abs(val - 0.111111) < 0.01) return "1/9";
-        return val.ToString("0.000");
-    }
-}
+<!-- Hướng dẫn sử dụng -->
+<details class="help-card">
+    <summary>
+        <i class="bi bi-question-circle text-primary"></i> Hướng dẫn sử dụng thanh trượt &amp; thang đo Saaty
+    </summary>
+    <div class="p-3">
+        <p class="mb-3" style="font-size: 13.5px; color: var(--slate-600);">
+            Mỗi thanh trượt đại diện cho một cặp so sánh giữa 2 tiêu chí. <strong>Kéo về phía tiêu chí mà bạn cho là quan trọng hơn</strong>. Kéo càng xa trung tâm thì mức độ ưu tiên càng cao.
+        </p>
+        <div class="row g-2 mb-4" style="font-size: 13px; color: var(--slate-600);">
+            <div class="col-md-4 col-sm-6">
+                <div class="p-2" style="background: var(--slate-50); border-radius: var(--radius-md);">
+                    <strong style="color: var(--slate-800);">Ở giữa (vị trí 1):</strong><br />
+                    Hai tiêu chí <span class="text-primary fw-semibold">ngang nhau</span>, không bên nào hơn.
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="p-2" style="background: var(--slate-50); border-radius: var(--radius-md);">
+                    <strong style="color: var(--slate-800);">Kéo sang trái:</strong><br />
+                    Tiêu chí bên <span class="text-primary fw-semibold">trái</span> quan trọng hơn tiêu chí bên phải.
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="p-2" style="background: var(--slate-50); border-radius: var(--radius-md);">
+                    <strong style="color: var(--slate-800);">Kéo sang phải:</strong><br />
+                    Tiêu chí bên <span class="text-primary fw-semibold">phải</span> quan trọng hơn tiêu chí bên trái.
+                </div>
+            </div>
+        </div>
+
+        <h6 class="fw-bold mb-2">Ý nghĩa thang đo Saaty 1–9</h6>
+        <div class="table-responsive">
+            <table class="table-custom" style="font-size: 13.5px;">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;" class="text-center">Mức</th>
+                        <th style="width: 220px;">Mức độ ưu tiên</th>
+                        <th>Ý nghĩa thực tiễn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center"><span class="code-badge">1</span></td>
+                        <td><strong>Ngang nhau</strong> (Equal)</td>
+                        <td style="color: var(--slate-600);">Hai tiêu chí đóng góp tương đương nhau vào quyết định.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><span class="code-badge">3</span></td>
+                        <td><strong>Hơi quan trọng hơn</strong> (Moderate)</td>
+                        <td style="color: var(--slate-600);">Nghiêng nhẹ về một tiêu chí dựa trên kinh nghiệm thực tế.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><span class="code-badge">5</span></td>
+                        <td><strong>Quan trọng hơn nhiều</strong> (Strong)</td>
+                        <td style="color: var(--slate-600);">Một tiêu chí vượt trội rõ rệt so với tiêu chí kia.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><span class="code-badge">7</span></td>
+                        <td><strong>Rất quan trọng hơn</strong> (Very Strong)</td>
+                        <td style="color: var(--slate-600);">Tiêu chí đóng vai trò then chốt, chi phối quyết định.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><span class="code-badge">9</span></td>
+                        <td><strong>Tuyệt đối quan trọng</strong> (Extreme)</td>
+                        <td style="color: var(--slate-600);">Mức ưu tiên tối cao, không thể bỏ qua.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</details>
 
 @section Scripts {
     <script>
         const criteriaNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tieuChis.Select(t => t.TenTieuChi).ToList()));
+        const n = criteriaNames.length;
 
-        function onMatrixCellChange(i, j) {
-            const selectEl = document.getElementById('cell_' + i + '_' + j);
-            const val = parseFloat(selectEl.value);
-            const invVal = 1.0 / val;
-            const hiddenEl = document.getElementById('hidden_cell_' + j + '_' + i);
-            const displayEl = document.getElementById('display_cell_' + j + '_' + i);
-            if (hiddenEl) hiddenEl.value = invVal;
-            if (displayEl) displayEl.innerText = getDisplayFraction(invVal);
+        // Bảng RI (Random Index) cho AHP — dùng để tính CR
+        const RI_TABLE = [0, 0, 0, 0.58, 0.90, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49];
 
+        // Danh sách các cặp (i, j) cần so sánh
+        const pairs = [];
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                pairs.push([i, j]);
+            }
+        }
+
+        // ===== CHUYỂN ĐỔI SLIDER ↔ SAATY =====
+
+        // Vị trí slider (1–17) → Giá trị Saaty
+        // 1=1/9, 2=1/8, 3=1/7, 4=1/6, 5=1/5, 6=1/4, 7=1/3, 8=1/2, 9=1, 10=2, 11=3...17=9
+        function sliderPosToSaaty(pos) {
+            pos = parseInt(pos);
+            if (pos === 9) return 1.0;
+            if (pos > 9) return pos - 8; // 10→2, 11→3, ... 17→9
+            // pos < 9: nghịch đảo
+            const inv = 9 - pos; // 8→1(=1/1? no), 7→2(=1/2), ... 1→8(=1/8)... wait
+            // pos=1→inv=8→1/9? Let me recalc:
+            // pos=1: saaty=1/9, pos=2: 1/8, pos=3: 1/7, ... pos=8: 1/2
+            const denominator = 10 - pos; // pos=1→9, pos=2→8, ... pos=8→2
+            return 1.0 / denominator;
+        }
+
+        // Giá trị Saaty → Vị trí slider
+        function saatyToSliderPos(val) {
+            if (Math.abs(val - 1.0) < 0.01) return 9;
+            if (val >= 2.0) return 8 + Math.round(val); // 2→10, 3→11, ... 9→17
+            if (val < 1.0 && val > 0.0) {
+                const inv = Math.round(1.0 / val); // 1/3→3, 1/5→5, etc
+                return 10 - inv; // 3→7, 5→5, 9→1
+            }
+            return 9;
+        }
+
+        // ===== XỬ LÝ KHI KÉO SLIDER =====
+
+        function onSliderChange(i, j) {
+            const slider = document.getElementById('slider_' + i + '_' + j);
+            if (!slider) return;
+
+            const pos = parseInt(slider.value);
+            const saatyVal = sliderPosToSaaty(pos);
+            const invVal = 1.0 / saatyVal;
+
+            // Cập nhật hidden inputs
+            const hiddenIJ = document.getElementById('hidden_' + i + '_' + j);
+            const hiddenJI = document.getElementById('hidden_' + j + '_' + i);
+            if (hiddenIJ) hiddenIJ.value = saatyVal;
+            if (hiddenJI) hiddenJI.value = invVal;
+
+            // Cập nhật mô tả
+            updateSliderDescription(i, j, saatyVal);
+
+            // Cập nhật gradient trên thanh trượt
+            updateSliderGradient(slider);
+
+            // Cập nhật ma trận hiển thị bên phải
+            updateMatrixDisplay(i, j, saatyVal, invVal);
+
+            // Cập nhật tóm tắt nhận định & CR
             updateLiveSentences();
+            updateCRMeter();
         }
 
         function getDisplayFraction(val) {
@@ -318,61 +577,243 @@
             return val.toFixed(3);
         }
 
-        function getSentenceExplanation(nameA, nameB, val) {
-            if (Math.abs(val - 1.0) < 0.01) {
-                return `<strong>${nameA}</strong> quan trọng <span class="text-primary fw-bold">ngang bằng</span> <strong>${nameB}</strong>`;
-            } else if (val > 1.0) {
-                const roundVal = Math.round(val);
-                return `<strong>${nameA}</strong> quan trọng hơn <strong>${nameB}</strong> <span class="badge bg-primary-subtle text-primary fw-bold">${roundVal} lần</span>`;
+        function updateMatrixDisplay(i, j, val, invVal) {
+            const displayIJ = document.getElementById('display_cell_' + i + '_' + j);
+            const displayJI = document.getElementById('display_cell_' + j + '_' + i);
+            if (displayIJ) displayIJ.innerText = getDisplayFraction(val);
+            if (displayJI) displayJI.innerText = getDisplayFraction(invVal);
+        }
+
+        function updateSliderDescription(i, j, saatyVal) {
+            const descEl = document.getElementById('desc_' + i + '_' + j);
+            if (!descEl) return;
+
+            const nameA = criteriaNames[i];
+            const nameB = criteriaNames[j];
+            let text = '';
+            let icon = 'bi-arrow-right-circle text-primary';
+
+            if (Math.abs(saatyVal - 1.0) < 0.01) {
+                text = `<strong>${nameA}</strong> và <strong>${nameB}</strong> <span class="text-primary fw-bold">quan trọng ngang nhau</span>`;
+                icon = 'bi-arrows-collapse text-primary';
+            } else if (saatyVal > 1.0) {
+                const level = Math.round(saatyVal);
+                const desc = getLevelDesc(level);
+                text = `<strong>${nameA}</strong> ${desc} <strong>${nameB}</strong> <span class="fw-bold text-primary">(gấp ${level} lần)</span>`;
+                icon = 'bi-arrow-left-circle text-primary';
             } else {
-                const invRound = Math.round(1.0 / val);
-                return `<strong>${nameB}</strong> quan trọng hơn <strong>${nameA}</strong> <span class="badge bg-warning-subtle text-warning fw-bold">${invRound} lần</span>`;
+                const invLevel = Math.round(1.0 / saatyVal);
+                const desc = getLevelDesc(invLevel);
+                text = `<strong>${nameB}</strong> ${desc} <strong>${nameA}</strong> <span class="fw-bold text-warning">(gấp ${invLevel} lần)</span>`;
+                icon = 'bi-arrow-right-circle text-warning';
+            }
+
+            descEl.innerHTML = `<i class="bi ${icon}"></i> <span>${text}</span>`;
+        }
+
+        function getLevelDesc(level) {
+            if (level <= 1) return 'quan trọng ngang';
+            if (level <= 2) return 'hơi quan trọng hơn';
+            if (level <= 3) return 'hơi quan trọng hơn';
+            if (level <= 4) return 'quan trọng hơn';
+            if (level <= 5) return 'quan trọng hơn nhiều';
+            if (level <= 6) return 'rất quan trọng hơn';
+            if (level <= 7) return 'rất quan trọng hơn';
+            if (level <= 8) return 'cực kỳ quan trọng hơn';
+            return 'tuyệt đối quan trọng hơn';
+        }
+
+        // Tô gradient cho thanh trượt (xanh ở giữa, cam ở hai bên)
+        function updateSliderGradient(slider) {
+            const pos = parseInt(slider.value);
+            const pct = ((pos - 1) / 16) * 100;
+            const midPct = ((9 - 1) / 16) * 100; // 50%
+
+            if (pos === 9) {
+                slider.style.background = `linear-gradient(to right, #e2e8f0 0%, #3b82f6 ${pct}%, #e2e8f0 100%)`;
+            } else if (pos < 9) {
+                // Tiêu chí trái yếu hơn → cam về bên trái
+                slider.style.background = `linear-gradient(to right, #f59e0b ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
+            } else {
+                // Tiêu chí phải quan trọng hơn → xanh về bên phải
+                slider.style.background = `linear-gradient(to right, #e2e8f0 0%, #e2e8f0 ${midPct}%, #3b82f6 ${midPct}%, #3b82f6 ${pct}%, #e2e8f0 ${pct}%)`;
             }
         }
+
+        // ===== TÓM TẮT NHẬN ĐỊNH =====
 
         function updateLiveSentences() {
             const listEl = document.getElementById('liveSentencesList');
             if (!listEl) return;
 
             let html = '';
-            const n = criteriaNames.length;
-            for (let i = 0; i < n; i++) {
-                for (let j = i + 1; j < n; j++) {
-                    const selectEl = document.getElementById('cell_' + i + '_' + j);
-                    if (selectEl) {
-                        const val = parseFloat(selectEl.value);
-                        const explanation = getSentenceExplanation(criteriaNames[i], criteriaNames[j], val);
-                        html += `<div class="col-md-6"><div class="p-2 bg-white rounded border d-flex align-items-center gap-2"><i class="bi bi-arrow-right-circle text-primary"></i> <div>${explanation}</div></div></div>`;
-                    }
+            for (const [i, j] of pairs) {
+                const hiddenEl = document.getElementById('hidden_' + i + '_' + j);
+                if (hiddenEl) {
+                    const val = parseFloat(hiddenEl.value);
+                    const explanation = getSentenceExplanation(criteriaNames[i], criteriaNames[j], val);
+                    html += `<div class="col-md-6"><div class="p-2 d-flex align-items-center gap-2" style="background: var(--white); border-radius: var(--radius-md);"><i class="bi bi-arrow-right-circle text-primary"></i> <div>${explanation}</div></div></div>`;
                 }
             }
             listEl.innerHTML = html;
         }
 
-        function fillBalancedDemo() {
-            setVal(0, 1, 0.333333); // Giá vs Chất lượng: Chất lượng hơn Giá 3 lần
-            setVal(0, 2, 2.0);      // Giá vs Thời gian giao: Giá hơn Giao hàng 2 lần
-            setVal(0, 3, 0.5);      // Giá vs Uy tín: Uy tín hơn Giá 2 lần
-            setVal(1, 2, 5.0);      // Chất lượng vs Giao hàng: Chất lượng hơn 5 lần
-            setVal(1, 3, 3.0);      // Chất lượng vs Uy tín: Chất lượng hơn 3 lần
-            setVal(2, 3, 0.333333); // Giao hàng vs Uy tín: Uy tín hơn 3 lần
-        }
-
-        function setVal(i, j, val) {
-            const selectEl = document.getElementById('cell_' + i + '_' + j);
-            if (selectEl) {
-                for (let k = 0; k < selectEl.options.length; k++) {
-                    if (Math.abs(parseFloat(selectEl.options[k].value) - val) < 0.01) {
-                        selectEl.selectedIndex = k;
-                        break;
-                    }
-                }
-                onMatrixCellChange(i, j);
+        function getSentenceExplanation(nameA, nameB, val) {
+            if (Math.abs(val - 1.0) < 0.01) {
+                return `<strong>${nameA}</strong> quan trọng <span class="text-primary fw-bold">ngang bằng</span> <strong>${nameB}</strong>`;
+            } else if (val > 1.0) {
+                const roundVal = Math.round(val);
+                return `<strong>${nameA}</strong> quan trọng hơn <strong>${nameB}</strong> <span class="fw-bold text-primary">${roundVal} lần</span>`;
+            } else {
+                const invRound = Math.round(1.0 / val);
+                return `<strong>${nameB}</strong> quan trọng hơn <strong>${nameA}</strong> <span class="fw-bold text-warning">${invRound} lần</span>`;
             }
         }
 
+        // ===== TÍNH CR THỜI GIAN THỰC =====
+
+        function buildMatrix() {
+            const mat = [];
+            for (let i = 0; i < n; i++) {
+                mat[i] = [];
+                for (let j = 0; j < n; j++) {
+                    if (i === j) {
+                        mat[i][j] = 1.0;
+                    } else {
+                        const hiddenEl = document.getElementById('hidden_' + i + '_' + j);
+                        mat[i][j] = hiddenEl ? parseFloat(hiddenEl.value) : 1.0;
+                    }
+                }
+            }
+            return mat;
+        }
+
+        function calculateCR(mat) {
+            const size = mat.length;
+            if (size < 3) return { cr: 0, ci: 0, lambdaMax: size, isConsistent: true };
+
+            // Bước 1: Tính tổng cột
+            const colSums = new Array(size).fill(0);
+            for (let j = 0; j < size; j++) {
+                for (let i = 0; i < size; i++) {
+                    colSums[j] += mat[i][j];
+                }
+            }
+
+            // Bước 2: Chuẩn hóa ma trận
+            const normalized = [];
+            for (let i = 0; i < size; i++) {
+                normalized[i] = [];
+                for (let j = 0; j < size; j++) {
+                    normalized[i][j] = colSums[j] > 0 ? mat[i][j] / colSums[j] : 0;
+                }
+            }
+
+            // Bước 3: Tính trọng số (trung bình dòng)
+            const weights = [];
+            for (let i = 0; i < size; i++) {
+                let rowSum = 0;
+                for (let j = 0; j < size; j++) {
+                    rowSum += normalized[i][j];
+                }
+                weights[i] = rowSum / size;
+            }
+
+            // Bước 4: Tính Lambda Max
+            let lambdaMax = 0;
+            for (let i = 0; i < size; i++) {
+                let weightedSum = 0;
+                for (let j = 0; j < size; j++) {
+                    weightedSum += mat[i][j] * weights[j];
+                }
+                if (weights[i] > 0) {
+                    lambdaMax += weightedSum / weights[i];
+                }
+            }
+            lambdaMax /= size;
+
+            // Bước 5: Tính CI và CR
+            const ci = (lambdaMax - size) / (size - 1);
+            const ri = RI_TABLE[size] || 1.0;
+            const cr = ri > 0 ? ci / ri : 0;
+
+            return {
+                cr: Math.max(0, cr),
+                ci: ci,
+                lambdaMax: lambdaMax,
+                isConsistent: cr <= 0.1
+            };
+        }
+
+        function updateCRMeter() {
+            const mat = buildMatrix();
+            const result = calculateCR(mat);
+
+            const crValueEl = document.getElementById('crValue');
+            const crStatusEl = document.getElementById('crStatus');
+            const crBarFill = document.getElementById('crBarFill');
+
+            if (crValueEl) {
+                crValueEl.textContent = result.cr.toFixed(3);
+                crValueEl.className = result.isConsistent ? 'text-success' : 'text-danger';
+            }
+
+            if (crStatusEl) {
+                if (result.isConsistent) {
+                    crStatusEl.innerHTML = '✅ Đạt chuẩn (≤ 0.10)';
+                    crStatusEl.className = 'status-badge status-badge-success';
+                    crStatusEl.style.fontSize = '11px';
+                } else {
+                    crStatusEl.innerHTML = '⚠️ Chưa đạt (> 0.10)';
+                    crStatusEl.className = 'status-badge status-badge-danger';
+                    crStatusEl.style.fontSize = '11px';
+                }
+            }
+
+            if (crBarFill) {
+                // Hiển thị tỷ lệ: CR/0.2 * 100% (cắt tại 100%)
+                const pct = Math.min(result.cr / 0.2 * 100, 100);
+                crBarFill.style.width = pct + '%';
+                crBarFill.className = 'ahp-cr-bar-fill ' + (result.isConsistent ? 'ahp-cr-pass' : 'ahp-cr-fail');
+            }
+        }
+
+        // ===== ĐIỀN GIÁ TRỊ MẪU =====
+
+        function fillBalancedDemo() {
+            setSliderVal(0, 1, 1.0 / 3);   // Giá vs Chất lượng: Chất lượng hơn Giá 3 lần
+            setSliderVal(0, 2, 2.0);        // Giá vs Thời gian giao: Giá hơn 2 lần
+            setSliderVal(0, 3, 0.5);        // Giá vs Uy tín: Uy tín hơn 2 lần
+            setSliderVal(1, 2, 5.0);        // Chất lượng vs Giao hàng: Chất lượng hơn 5 lần
+            setSliderVal(1, 3, 3.0);        // Chất lượng vs Uy tín: Chất lượng hơn 3 lần
+            setSliderVal(2, 3, 1.0 / 3);    // Giao hàng vs Uy tín: Uy tín hơn 3 lần
+        }
+
+        function setSliderVal(i, j, saatyVal) {
+            const slider = document.getElementById('slider_' + i + '_' + j);
+            if (!slider) return;
+
+            slider.value = saatyToSliderPos(saatyVal);
+            onSliderChange(i, j);
+        }
+
+        // ===== KHỞI TẠO =====
+
         document.addEventListener("DOMContentLoaded", function () {
+            // Cập nhật gradient, mô tả và ma trận cho tất cả slider
+            for (const [i, j] of pairs) {
+                const slider = document.getElementById('slider_' + i + '_' + j);
+                if (slider) {
+                    const saatyVal = sliderPosToSaaty(parseInt(slider.value));
+                    const invVal = 1.0 / saatyVal;
+                    updateSliderDescription(i, j, saatyVal);
+                    updateSliderGradient(slider);
+                    updateMatrixDisplay(i, j, saatyVal, invVal);
+                }
+            }
             updateLiveSentences();
+            updateCRMeter();
         });
     </script>
 }
+

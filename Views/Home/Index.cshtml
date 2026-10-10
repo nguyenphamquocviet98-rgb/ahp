@@ -1,481 +1,616 @@
-@model DashboardViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@model code.Models.ViewModels.LandingPageViewModel
 @{
-    ViewData["Title"] = "Trang chủ - Tổng quan hệ thống";
-    var username = User.Identity?.Name ?? "Người dùng";
-    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "nhanvien";
+    ViewData["Title"] = "Cổng Sàn Giao Dịch B2B & Lựa Chọn Đối Tác AHP";
 }
 
-<!-- Page Header Toolbar -->
-<div class="page-header">
-    <div class="page-header-left">
-        <h3><i class="bi bi-house-door-fill text-primary"></i> Bảng điều khiển Trang chủ</h3>
-        <p>Theo dõi luồng nhập hàng, cảnh báo tồn kho và kết quả lựa chọn nhà cung cấp AHP</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-outline">
-            <i class="bi bi-plus-lg"></i> Lập phiếu nhập
-        </a>
-        <a asp-controller="AHP" asp-action="MaTranSoSanh" class="btn btn-custom btn-custom-accent">
-            <i class="bi bi-diagram-3-fill"></i> Đánh giá AHP
-        </a>
-    </div>
-</div>
+<!-- HERO SECTION: B2B Marketplace Search -->
+<section class="b2b-hero py-5 text-white position-relative overflow-hidden">
+    <div class="container position-relative py-4" style="z-index: 2;">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-20 mb-3 backdrop-blur">
+                    <span class="badge bg-warning text-dark fw-bold" style="font-size: 11px;">MỚI</span>
+                    <span class="small text-white-50">Nền tảng B2B tích hợp Mô hình Ra Quyết Định AHP</span>
+                </div>
+                <h1 class="display-5 fw-bold text-white mb-3 lh-sm">
+                    Cổng Kết Nối <span class="text-gradient-cyan">Nhà Phân Phối</span> & Tìm Nguồn Hàng B2B Tối Ưu
+                </h1>
+                <p class="lead text-white-50 mb-4 fs-6" style="max-width: 600px; line-height: 1.7;">
+                    Khám phá hàng ngàn mặt hàng giá sỉ trực tiếp từ các tổng kho phân phối. Tự động đánh giá, xếp hạng và đề xuất Nhà cung cấp uy tín nhất bằng thuật toán <strong>AHP đa tiêu chí</strong>.
+                </p>
 
-<!-- 5 Bento KPI Cards (High Precision) -->
-<div class="row g-3 mb-4">
-    <!-- Thẻ 1: Sản phẩm -->
-    <div class="col-xl col-md-4 col-sm-6">
-        <div class="kpi-bento-card">
-            <div>
-                <div class="kpi-top-row">
-                    <span class="kpi-title">Sản phẩm</span>
-                    <div class="kpi-icon-badge badge-icon-blue"><i class="bi bi-box-seam-fill"></i></div>
-                </div>
-                <div class="kpi-main-metric">@Model.TongSanPham</div>
-            </div>
-            <div>
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill bg-primary" style="width: 100%;"></div>
-                </div>
-                <div class="kpi-bottom-meta">
-                    <i class="bi bi-check-circle-fill text-success"></i> Đang lưu thông
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Thẻ 2: Nhà cung cấp -->
-    <div class="col-xl col-md-4 col-sm-6">
-        <div class="kpi-bento-card">
-            <div>
-                <div class="kpi-top-row">
-                    <span class="kpi-title">Nhà cung cấp</span>
-                    <div class="kpi-icon-badge badge-icon-purple"><i class="bi bi-buildings-fill"></i></div>
-                </div>
-                <div class="kpi-main-metric">@Model.TongNhaCungCap</div>
-            </div>
-            <div>
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill" style="width: 100%; background: #7C3AED;"></div>
-                </div>
-                <div class="kpi-bottom-meta">
-                    <i class="bi bi-shield-check text-primary"></i> Đã thẩm định AHP
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Thẻ 3: Phiếu nhập -->
-    <div class="col-xl col-md-4 col-sm-6">
-        <div class="kpi-bento-card">
-            <div>
-                <div class="kpi-top-row">
-                    <span class="kpi-title">Phiếu nhập kho</span>
-                    <div class="kpi-icon-badge badge-icon-indigo"><i class="bi bi-receipt-cutoff"></i></div>
-                </div>
-                <div class="kpi-main-metric">@Model.TongPhieuNhap</div>
-            </div>
-            <div>
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill" style="width: 100%; background: #4F46E5;"></div>
-                </div>
-                <div class="kpi-bottom-meta">
-                    <i class="bi bi-clock-history text-secondary"></i> Toàn thời gian
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Thẻ 4: Tổng giá trị nhập -->
-    <div class="col-xl col-md-6 col-sm-6">
-        <div class="kpi-bento-card">
-            <div>
-                <div class="kpi-top-row">
-                    <span class="kpi-title">Tổng giá trị nhập</span>
-                    <div class="kpi-icon-badge badge-icon-emerald"><i class="bi bi-cash-stack"></i></div>
-                </div>
-                <div class="kpi-main-metric" style="font-size: 20px;">@Model.TongGiaTriNhap.ToString("N0") <span style="font-size: 12px; font-weight: 500; color: var(--slate-500);">VNĐ</span></div>
-            </div>
-            <div>
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill bg-success" style="width: 100%;"></div>
-                </div>
-                <div class="kpi-bottom-meta">
-                    <i class="bi bi-arrow-up-right text-success"></i> Vốn luân chuyển
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Thẻ 5: Tổng tồn kho -->
-    <div class="col-xl col-md-6 col-sm-12">
-        <div class="kpi-bento-card">
-            <div>
-                <div class="kpi-top-row">
-                    <span class="kpi-title">Tổng tồn kho</span>
-                    <div class="kpi-icon-badge badge-icon-amber"><i class="bi bi-boxes"></i></div>
-                </div>
-                <div class="kpi-main-metric">@Model.TongSoLuongTon <span style="font-size: 12px; font-weight: 500; color: var(--slate-500);">đơn vị</span></div>
-            </div>
-            <div>
-                <div class="kpi-progress-bar">
-                    <div class="kpi-progress-fill bg-warning" style="width: 100%;"></div>
-                </div>
-                <div class="kpi-bottom-meta">
-                    <i class="bi bi-layers-fill text-warning"></i> Đang lưu kho
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- AHP Executive Decision Spotlight Card -->
-<div class="mb-4">
-    <div class="ahp-executive-card">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <div class="ahp-crown-badge mb-2">
-                    <i class="bi bi-award-fill"></i> ĐỐI TÁC ĐỀ XUẤT NHẬP HÀNG TỐI ƯU #1 (AHP + WSM)
+                <!-- Search Box B2B -->
+                <div class="b2b-search-card p-2 rounded-4 shadow-lg bg-white text-dark mb-3">
+                    <form asp-controller="SanB2B" asp-action="Index" method="get" class="row g-2 align-items-center">
+                        <div class="col-md-7">
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="bi bi-search fs-5"></i></span>
+                                <input type="text" name="search" id="heroSearchInput" class="form-control border-0 shadow-none ps-2"
+                                       placeholder="Tìm tên sản phẩm, mã hàng, tên nhà phân phối..." autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-none d-md-block border-start">
+                            <select name="maDanhMuc" id="heroCategorySelect" class="form-select border-0 shadow-none text-muted">
+                                <option value="">Tất cả ngành hàng</option>
+                                @foreach (var dm in Model.DanhSachDanhMuc)
+                                {
+                                    <option value="@dm.MaDanhMuc">@dm.TenDanhMuc (@dm.SoLuongSanPham)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-12">
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-semibold">
+                                <i class="bi bi-search me-1"></i> Tìm sỉ
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                @if (Model.NhaCungCapDeXuatGanNhat != null && Model.NhaCungCapDeXuatGanNhat.NhaCungCap != null)
-                {
-                    var ncc = Model.NhaCungCapDeXuatGanNhat.NhaCungCap;
-                    <div class="ahp-supplier-title">
-                        @ncc.TenNhaCungCap
-                        <span class="status-badge status-badge-success ms-2">Hạng 1</span>
+                <!-- Popular search tags -->
+                <div class="d-flex flex-wrap align-items-center gap-2 small text-white-50">
+                    <span>Tìm nhanh:</span>
+                    <a href="/SanB2B?search=nước" class="hero-tag">Nước giải khát</a>
+                    <a href="/SanB2B?search=bánh" class="hero-tag">Bánh kẹo</a>
+                    <a href="/SanB2B?search=dầu" class="hero-tag">Dầu ăn & Gia vị</a>
+                    <a href="/SanB2B?loaiNPP=mall" class="hero-tag text-warning border-warning border-opacity-50"><i class="bi bi-award-fill me-1"></i>Gian hàng Mall</a>
+                </div>
+            </div>
+
+            <!-- Hero Graphic / AHP Snapshot -->
+            <div class="col-lg-5">
+                <div class="hero-glass-panel p-4 rounded-4 shadow-2xl border border-white border-opacity-20 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="icon-bubble bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                <i class="bi bi-cpu-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Trợ Lý Đánh Giá AHP</h6>
+                                <small class="text-white-50" style="font-size: 11px;">Mô hình tối ưu đa tiêu chí</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">
+                            <i class="bi bi-check2-circle me-1"></i>Hoạt động
+                        </span>
                     </div>
 
-                    <div class="ahp-info-chips">
-                        <div class="ahp-info-chip">
-                            <i class="bi bi-calendar3"></i> Kỳ: @(Model.NhaCungCapDeXuatGanNhat.KyDanhGia?.TenKyDanhGia ?? "Kỳ hiện tại")
+                    <div class="ahp-criteria-list mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-white-50">Tiêu chí Giá cả & Chiết khấu</span>
+                            <span class="fw-bold text-info">38.5%</span>
                         </div>
-                        <div class="ahp-info-chip">
-                            <i class="bi bi-person"></i> @(ncc.NguoiLienHe ?? "Liên hệ: —")
+                        <div class="progress mb-2" style="height: 6px; background-color: rgba(255,255,255,0.15);">
+                            <div class="progress-bar bg-info" style="width: 38.5%"></div>
                         </div>
-                        <div class="ahp-info-chip">
-                            <i class="bi bi-telephone"></i> @(ncc.SoDienThoai ?? "SĐT: —")
+
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-white-50">Tiêu chí Chất lượng sản phẩm</span>
+                            <span class="fw-bold text-success">29.0%</span>
                         </div>
-                        <div class="ahp-info-chip">
-                            <i class="bi bi-envelope"></i> @(ncc.Email ?? "Email: —")
+                        <div class="progress mb-2" style="height: 6px; background-color: rgba(255,255,255,0.15);">
+                            <div class="progress-bar bg-success" style="width: 29%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-white-50">Thời gian & Cam kết giao hàng</span>
+                            <span class="fw-bold text-warning">18.5%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px; background-color: rgba(255,255,255,0.15);">
+                            <div class="progress-bar bg-warning" style="width: 18.5%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-white-50">Uy tín & Hậu mãi đối tác</span>
+                            <span class="fw-bold text-purple">14.0%</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background-color: rgba(255,255,255,0.15);">
+                            <div class="progress-bar bg-primary" style="width: 14%"></div>
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap gap-2">
-                        <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-emerald">
-                            <i class="bi bi-cart-plus-fill me-1"></i> Tạo phiếu nhập từ đối tác này
-                        </a>
-                        <a asp-controller="AHP" asp-action="KetQuaXepHang" asp-route-id="@Model.NhaCungCapDeXuatGanNhat.MaKyDanhGia" class="btn btn-custom btn-custom-outline" style="color: #FFF; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);">
-                            Xem ma trận & giải trình AHP
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 d-flex align-items-center justify-content-between">
+                        <div>
+                            <small class="text-white-50 d-block" style="font-size: 11px;">Tự động lọc đối tác tốt nhất</small>
+                            <span class="fw-bold small text-white">Giảm 25% chi phí rủi ro nhập hàng</span>
+                        </div>
+                        <a href="#cong-nghe-ahp" class="btn btn-sm btn-light text-primary fw-semibold rounded-pill px-3">
+                            Xem mô hình &rarr;
                         </a>
                     </div>
-                }
-                else
-                {
-                    <h5 class="fw-bold text-white mt-2 mb-1">Chưa có kết quả đánh giá AHP</h5>
-                    <p style="color: var(--slate-300); font-size: 13px; margin: 0;">
-                        Hãy hoàn thiện ma trận so sánh cặp và chấm điểm nhà cung cấp để hệ thống tự động đưa ra đề xuất đối tác tối ưu.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Stats Strip -->
+    <div class="hero-stats-strip py-3 border-top border-white border-opacity-10 bg-black bg-opacity-20">
+        <div class="container">
+            <div class="row text-center g-3">
+                <div class="col-6 col-md-3 border-end border-white border-opacity-10">
+                    <div class="fs-4 fw-bold text-white">@Model.TongNhaPhanPhoi+</div>
+                    <small class="text-white-50">Nhà Phân Phối & NCC</small>
+                </div>
+                <div class="col-6 col-md-3 border-end-md border-white border-opacity-10">
+                    <div class="fs-4 fw-bold text-white">@Model.TongSanPham+</div>
+                    <small class="text-white-50">Mặt Hàng Lưu Thông Sỉ</small>
+                </div>
+                <div class="col-6 col-md-3 border-end border-white border-opacity-10">
+                    <div class="fs-4 fw-bold text-white">@Model.TongGiaoDich+</div>
+                    <small class="text-white-50">Phiếu Đơn Hàng & Nhập Kho</small>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="fs-4 fw-bold text-warning">@Model.TiLeToiUuAHP%</div>
+                    <small class="text-white-50">Độ Tối Ưu Ra Quyết Định</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 1: CATEGORY FILTER BAR (Lướt theo ngành hàng) -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-grid-fill text-primary me-2"></i>Khám Phá Ngành Hàng Sỉ</h5>
+                <small class="text-muted">Chọn ngành hàng để lọc nhanh các nhà phân phối và sản phẩm phù hợp</small>
+            </div>
+            <a asp-controller="SanB2B" asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                Xem tất cả sàn &rarr;
+            </a>
+        </div>
+
+        <div class="category-pill-container d-flex gap-2 overflow-auto pb-2">
+            <button class="btn btn-category-pill active" onclick="filterByCatalog(0, this)">
+                <i class="bi bi-stars text-warning me-1"></i> Tất cả ngành hàng
+            </button>
+            @foreach (var dm in Model.DanhSachDanhMuc)
+            {
+                <button class="btn btn-category-pill" onclick="filterByCatalog(@dm.MaDanhMuc, this)" data-cat-id="@dm.MaDanhMuc">
+                    <i class="bi @dm.IconClass text-primary me-1"></i> @dm.TenDanhMuc
+                    <span class="badge bg-light text-dark rounded-pill ms-1">@dm.SoLuongSanPham</span>
+                </button>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 2: DANH BẠ NHÀ PHÂN PHỐI & NHÀ CUNG CẤP UY TÍN -->
+<section class="py-5 bg-light" id="nha-phan-phoi">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill mb-2 fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i>ĐỐI TÁC XÁC THỰC
+                </span>
+                <h3 class="fw-bold text-dark mb-1">Mạng Lưới Nhà Phân Phối Uy Tín</h3>
+                <p class="text-muted mb-0">Các nhà phân phối đầu mối, tổng kho cung ứng với nguồn hàng dồi dào và giá sỉ tận gốc</p>
+            </div>
+            <a asp-controller="SanB2B" asp-action="Index" asp-route-loaiNPP="mall" class="btn btn-outline-primary rounded-pill px-4 mt-2 mt-md-0 fw-semibold">
+                <i class="bi bi-award me-1"></i> Gian hàng Mall xác thực
+            </a>
+        </div>
+
+        <div class="row g-4" id="distributorGrid">
+            @foreach (var np in Model.DanhSachNhaPhanPhoi)
+            {
+                <div class="col-xl-3 col-lg-4 col-md-6 distributor-card-wrapper">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 supplier-bento-card position-relative overflow-hidden">
+                        @if (np.LaGianHangMall)
+                        {
+                            <div class="badge-mall-ribbon">
+                                <i class="bi bi-patch-check-fill me-1"></i> MALL
+                            </div>
+                        }
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="supplier-avatar-box rounded-3 bg-light border d-flex align-items-center justify-content-center shadow-xs">
+                                    @if (!string.IsNullOrEmpty(np.Logo))
+                                    {
+                                        <img src="@np.Logo" alt="@np.TenDoanhNghiep" class="img-fluid rounded-3 p-1" style="max-height: 48px;"
+                                             onerror="this.onerror=null; this.src='/images/placeholder-supplier.svg';" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/placeholder-supplier.svg" alt="@np.TenDoanhNghiep" class="img-fluid rounded-3" style="max-height: 48px;" />
+                                    }
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <h6 class="fw-bold text-dark mb-1 text-truncate" title="@np.TenDoanhNghiep">@np.TenDoanhNghiep</h6>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-0" style="font-size: 11px;">
+                                            <i class="bi bi-star-fill text-warning me-1"></i>@np.DiemUyTin.ToString("0.0")
+                                        </span>
+                                        @if (np.CoDeXuatAHP)
+                                        {
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-0" style="font-size: 11px;" title="Xếp hạng cao trong đánh giá AHP">
+                                                <i class="bi bi-award me-1"></i>AHP Top
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-muted small mb-3 supplier-desc flex-grow-1" style="font-size: 12.5px; line-height: 1.5;">
+                                @np.MoTa
+                            </p>
+
+                            <div class="supplier-meta-box p-2 rounded-3 bg-light mb-3 small">
+                                <div class="d-flex align-items-center text-muted mb-1 text-truncate">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                                    <span class="text-truncate">@np.DiaChi</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center text-muted">
+                                    <span><i class="bi bi-box-seam text-primary me-1"></i> Nguồn hàng:</span>
+                                    <span class="fw-semibold text-dark">@(np.SoSanPhamChaoBan > 0 ? $"{np.SoSanPhamChaoBan} mặt hàng" : "Kho lớn đa dạng")</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-controller="SanB2B" asp-action="Index" asp-route-search="@np.TenDoanhNghiep"
+                                   class="btn btn-sm btn-primary flex-grow-1 rounded-pill fw-semibold py-2">
+                                    <i class="bi bi-shop me-1"></i> Xem kho sỉ
+                                </a>
+                                <a href="tel:@np.SoDienThoai" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                   style="width: 36px; height: 36px;" title="Gọi tư vấn sỉ: @np.SoDienThoai">
+                                    <i class="bi bi-telephone"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 3: NGUỒN HÀNG GIÁ SỈ B2B TIÊU BIỂU (Lướt tìm sản phẩm giá sỉ) -->
+<section class="py-5 bg-white" id="nguon-hang">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill mb-2 fw-semibold">
+                    <i class="bi bi-tag-fill me-1"></i>GIÁ SỈ TẬN GỐC
+                </span>
+                <h3 class="fw-bold text-dark mb-1">Nguồn Hàng B2B Đang Chào Bán Giá Tốt</h3>
+                <p class="text-muted mb-0">Hàng hóa sẵn kho, giá chiết khấu buôn từ 10% - 25% cho các Nhà Phân Phối</p>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a asp-controller="SanB2B" asp-action="Index" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+                    <i class="bi bi-grid me-1"></i> Lướt toàn bộ sàn B2B &rarr;
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4" id="productListGrid">
+            @foreach (var sp in Model.DanhSachSanPhamHot)
+            {
+                var discountPercent = sp.GiaGoc > sp.GiaSi ? Math.Round((1 - (sp.GiaSi / sp.GiaGoc)) * 100) : 0;
+                <div class="col-xl-3 col-lg-4 col-md-6 product-b2b-col" data-cat="@sp.TenDanhMuc">
+                    <div class="card h-100 border rounded-4 product-b2b-card shadow-xs overflow-hidden">
+                        <div class="position-relative product-img-box bg-light text-center p-3">
+                            @if (discountPercent > 0)
+                            {
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-3 px-2 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                    -@discountPercent% SỈ
+                                </span>
+                            }
+                            @if (sp.LaMall)
+                            {
+                                <span class="badge bg-dark position-absolute top-0 end-0 m-3 px-2 py-1 rounded-pill fw-bold text-warning" style="font-size: 10px;">
+                                    MALL
+                                </span>
+                            }
+
+                            <div class="d-flex align-items-center justify-content-center" style="height: 140px;">
+                                @if (!string.IsNullOrEmpty(sp.AnhSanPham))
+                                {
+                                    <img src="@sp.AnhSanPham" alt="@sp.TenSanPham" class="img-fluid"
+                                         style="max-height: 130px; object-fit: contain;" loading="lazy"
+                                         onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" />
+                                }
+                                else
+                                {
+                                    <img src="~/images/placeholder-product.svg" alt="Sản phẩm" class="img-fluid" style="max-height: 110px;" />
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body p-3 d-flex flex-column">
+                            <small class="text-muted text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px;">
+                                @sp.TenDanhMuc
+                            </small>
+                            <h6 class="fw-bold text-dark mb-2 text-truncate-2" title="@sp.TenSanPham" style="min-height: 42px; line-height: 1.4;">
+                                @sp.TenSanPham
+                            </h6>
+
+                            <div class="supplier-row d-flex align-items-center gap-1 text-muted small mb-2 text-truncate" title="Kho phân phối: @sp.TenNhaCungCap">
+                                <i class="bi bi-building text-primary"></i>
+                                <span class="text-truncate">@sp.TenNhaCungCap</span>
+                            </div>
+
+                            <div class="mt-auto pt-2 border-top">
+                                <div class="d-flex align-items-baseline justify-content-between mb-2">
+                                    <div>
+                                        <span class="fs-5 fw-bold text-danger">@sp.GiaSi.ToString("N0")</span>
+                                        <small class="text-muted" style="font-size: 11px;">đ/@sp.DonViTinh</small>
+                                    </div>
+                                    @if (sp.GiaGoc > sp.GiaSi)
+                                    {
+                                        <span class="text-decoration-line-through text-muted small">@sp.GiaGoc.ToString("N0") đ</span>
+                                    }
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between small text-muted mb-3">
+                                    <span><i class="bi bi-truck me-1"></i> Giao: ~@sp.ThoiGianGiaoHang ngày</span>
+                                    <span>Sẵn: <strong class="text-dark">@sp.SoLuongCoSan</strong></span>
+                                </div>
+
+                                <a asp-controller="SanB2B" asp-action="ChiTiet" asp-route-id="@(sp.MaTonKhoNPP ?? sp.MaSanPham)"
+                                   class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-semibold py-2">
+                                    <i class="bi bi-cart-plus me-1"></i> Xem & Đặt sỉ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 4: ĐIỂM NHẤN CÔNG NGHỆ THUẬT TOÁN AHP -->
+<section class="py-5 bg-gradient-dark text-white position-relative" id="cong-nghe-ahp">
+    <div class="container py-3">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-primary px-3 py-1 rounded-pill mb-3 fw-semibold">
+                    <i class="bi bi-lightbulb me-1"></i>CÔNG NGHỆ ĐỘC QUYỀN
+                </span>
+                <h2 class="display-6 fw-bold text-white mb-3">
+                    Thuật Toán AHP — Trợ Lý Ra Quyết Định Nhập Hàng Thông Minh
+                </h2>
+                <p class="text-white-50 mb-4" style="line-height: 1.7;">
+                    Khác với các sàn B2B thông thường chỉ so sánh giá bán lẻ tẻ, hệ thống ứng dụng <strong>Mô hình Phân tích Thứ bậc AHP (Analytic Hierarchy Process)</strong> do GS. Thomas Saaty sáng lập, giúp Nhà Phân Phối cân đối toàn diện 4 trụ cột quan trọng:
+                </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-info">
+                                <i class="bi bi-cash-coin fs-4"></i>
+                                <h6 class="mb-0 fw-bold text-white">1. Giá cả & Chiết khấu</h6>
+                            </div>
+                            <small class="text-white-50">So sánh giá buôn niêm yết, chính sách chiết khấu bậc thang theo sản lượng đặt hàng.</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                                <i class="bi bi-patch-check fs-4"></i>
+                                <h6 class="mb-0 fw-bold text-white">2. Chất lượng & Hạn dùng</h6>
+                            </div>
+                            <small class="text-white-50">Đánh giá tiêu chuẩn hàng hóa, chứng nhận ATTP và hạn sử dụng dài hạn của lô hàng.</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-warning">
+                                <i class="bi bi-clock-history fs-4"></i>
+                                <h6 class="mb-0 fw-bold text-white">3. Tốc độ Giao hàng</h6>
+                            </div>
+                            <small class="text-white-50">Cam kết thời gian xuất kho, khoảng cách địa lý và tỷ lệ đúng hẹn để chống đứt hàng.</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-purple">
+                                <i class="bi bi-shield-shaded fs-4"></i>
+                                <h6 class="mb-0 fw-bold text-white">4. Uy tín & Dịch vụ</h6>
+                            </div>
+                            <small class="text-white-50">Chính sách đổi trả hàng hư hỏng, hỗ trợ công nợ và xếp hạng sao từ cộng đồng phân phối.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow">
+                        <i class="bi bi-diagram-3 me-1"></i> Dùng thử Ma trận AHP
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-6 text-center">
+                <div class="p-4 rounded-4 bg-white text-dark shadow-2xl text-start">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-steps text-primary me-2"></i>Mô Phỏng Xếp Hạng Đối Tác</h6>
+                        <span class="badge bg-success-subtle text-success">Chỉ số nhất quán CR = 0.04 < 0.1</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small border-bottom">
+                                    <th>Xếp hạng</th>
+                                    <th>Nhà Cung Cấp</th>
+                                    <th>Điểm Tổng (AHP)</th>
+                                    <th class="text-end">Đề xuất</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-primary-subtle rounded-3">
+                                    <td><span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i> #1</span></td>
+                                    <td class="fw-bold text-dark">Tổng Kho Miền Nam</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-primary" style="width: 89%;"></div>
+                                            </div>
+                                            <span class="fw-bold text-primary font-mono" style="font-size: 13px;">0.892</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end"><span class="badge bg-success">Ưu tiên nhập</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-light text-dark">#2</span></td>
+                                    <td class="fw-semibold text-slate-800">Cty Nước Giải Khát Á Châu</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-info" style="width: 76%;"></div>
+                                            </div>
+                                            <span class="text-muted font-mono" style="font-size: 13px;">0.764</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end"><span class="badge bg-light text-muted">Dự phòng</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-light text-dark">#3</span></td>
+                                    <td class="fw-semibold text-slate-800">Đại Lý Bánh Kẹo Hữu Nghị</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-secondary" style="width: 61%;"></div>
+                                            </div>
+                                            <span class="text-muted font-mono" style="font-size: 13px;">0.618</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end"><span class="badge bg-light text-muted">Dự phòng</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 p-2 rounded-3 bg-light text-muted small d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle text-primary fs-5"></i>
+                        <span>Thuật toán tự động tính vector trọng số ma trận vuông cấp <em>n</em> và kiểm tra tỷ số nhất quán CR theo chuẩn học thuật.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 5: KHU VỰC TRẢI NGHIỆM TÀI KHOẢN DEMO 1-CLICK -->
+@if (HostEnvironment.IsDevelopment())
+{
+<section class="py-5 bg-light" id="tai-khoan-demo">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                <i class="bi bi-lightning-charge-fill me-1"></i>DÀNH CHO HỘI ĐỒNG & KHÁCH ĐÁNH GIÁ
+            </span>
+            <h3 class="fw-bold text-dark mb-2">Trải Nghiệm Nhanh Toàn Diện Hệ Thống (1-Click)</h3>
+            <p class="text-muted mx-auto" style="max-width: 680px;">
+                Không cần đăng ký phức tạp. Chọn một trong các vai trò người dùng bên dưới để hệ thống tự động đăng nhập và trải nghiệm ngay quy trình thực tế.
+            </p>
+        </div>
+
+        <div class="row g-3 justify-content-center">
+            @foreach (var acc in Model.TaiKhoanDemo)
+            {
+                var roleBadge = acc.VaiTro == "admin_san" ? "bg-danger text-white" : acc.VaiTro == "chu_npp" ? "bg-success text-white" : "bg-primary text-white";
+                var roleName = acc.VaiTro == "admin_san" ? "Admin Quản Trị Sàn" : acc.VaiTro == "chu_npp" ? "Chủ Nhà Phân Phối" : "Nhân Viên Quản Lý Kho";
+                var roleIcon = acc.VaiTro == "admin_san" ? "bi-shield-shaded" : acc.VaiTro == "chu_npp" ? "bi-building-fill-check" : "bi-person-badge";
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 demo-role-card p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge @roleBadge px-3 py-1 rounded-pill" style="font-size: 11px;">
+                                <i class="bi @roleIcon me-1"></i>@roleName
+                            </span>
+                            @if (acc.LaMall)
+                            {
+                                <span class="badge bg-dark text-warning border" style="font-size: 10px;">MALL VIP</span>
+                            }
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="demo-avatar rounded-circle bg-light border d-flex align-items-center justify-content-center fw-bold text-dark fs-5" style="width: 44px; height: 44px;">
+                                @(acc.TenDangNhap.Length > 0 ? acc.TenDangNhap.Substring(0, 1).ToUpper() : "U")
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">@acc.HoTen</h6>
+                                <small class="text-muted">Username: <strong class="text-primary font-mono">@acc.TenDangNhap</strong></small>
+                            </div>
+                        </div>
+
+                        <p class="text-muted small mb-3 flex-grow-1" style="font-size: 12px; line-height: 1.5;">
+                            @if (acc.VaiTro == "admin_san")
+                            {
+                                <text>Quản trị toàn bộ sàn B2B, duyệt banner quảng cáo, cấu hình tham số AHP và xem thống kê doanh thu.</text>
+                            }
+                            else if (acc.VaiTro == "chu_npp")
+                            {
+                                <text>Gian hàng @acc.TenDoanhNghiep: Chào bán sỉ, nhập hàng, chạy thuật toán AHP chọn nhà cung cấp tối ưu.</text>
+                            }
+                            else
+                            {
+                                <text>Tài khoản nhân viên: Theo dõi tồn kho thực tế, lập phiếu nhập kho và kiểm tra hàng dưới định mức an toàn.</text>
+                            }
+                        </p>
+
+                        <form asp-controller="Account" asp-action="QuickSwitch" method="post">
+                            <input type="hidden" name="userId" value="@acc.MaNguoiDung" />
+                            <button type="submit" class="btn btn-outline-primary w-100 rounded-pill fw-semibold py-2">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập vai trò này &rarr;
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+}
+
+
+<!-- SECTION 6: CALL TO ACTION BANNER -->
+<section class="py-5 bg-white border-top">
+    <div class="container">
+        <div class="cta-banner rounded-4 p-5 text-white position-relative overflow-hidden shadow-lg">
+            <div class="row align-items-center position-relative" style="z-index: 2;">
+                <div class="col-lg-8">
+                    <h3 class="display-6 fw-bold text-white mb-2">Bạn Muốn Mở Rộng Kênh Phân Phối B2B?</h3>
+                    <p class="lead text-white-50 mb-4 fs-6" style="max-width: 600px;">
+                        Đăng ký mở gian hàng phân phối trên sàn ngay hôm nay để tiếp cận nguồn khách hàng bán buôn và tối ưu quy trình nhập xuất kho bằng công nghệ AHP.
                     </p>
-                }
-            </div>
-
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                @if (Model.NhaCungCapDeXuatGanNhat != null)
-                {
-                    <div class="ahp-score-display d-inline-block">
-                        <div style="font-size: 11px; font-weight: 700; color: #FDE68A; text-transform: uppercase; letter-spacing: 0.05em;">Điểm tổng hợp WSM</div>
-                        <div class="ahp-score-big mt-1">
-                            @(Model.NhaCungCapDeXuatGanNhat.DiemTong?.ToString("0.00") ?? "N/A")
-                            <span style="font-size: 14px; color: var(--slate-300); font-weight: 500;">/ 9.00</span>
-                        </div>
-                        <div class="ahp-score-sub">Mô hình phân tích thứ bậc Saaty</div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-pill shadow-sm">
+                            <i class="bi bi-shop me-1"></i> Đăng ký gian hàng NPP
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light fw-semibold px-4 py-2 rounded-pill">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập hệ thống
+                        </a>
                     </div>
-                }
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <i class="bi bi-box-seam-fill text-white opacity-25" style="font-size: 140px;"></i>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<!-- 2 Interactive Charts (Connected 100% to SQL) -->
-<div class="row g-4 mb-4">
-    <div class="col-lg-6">
-        <div class="card-custom h-100">
-            <div class="card-header-custom">
-                <h5><i class="bi bi-pie-chart-fill text-primary"></i> Phân bố sản phẩm theo Danh mục</h5>
-                <span class="status-badge status-badge-primary">Từ cơ sở dữ liệu</span>
-            </div>
-            <div class="card-body-custom d-flex align-items-center justify-content-center" style="min-height: 250px;">
-                <canvas id="categoryChart" style="max-height: 220px;"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-6">
-        <div class="card-custom h-100">
-            <div class="card-header-custom">
-                <h5><i class="bi bi-trophy-fill text-warning"></i> Top 3 Nhà cung cấp Xuất sắc (AHP)</h5>
-                <span class="status-badge status-badge-success">Điểm WSM tối ưu</span>
-            </div>
-            <div class="card-body-custom d-flex align-items-center justify-content-center p-3" style="min-height: 250px;">
-                <canvas id="supplierChart" style="max-height: 220px; width: 100%;"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 2 Data Tables -->
-<div class="row g-4 mb-4">
-    <!-- Phiếu nhập gần nhất -->
-    <div class="col-lg-7">
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5><i class="bi bi-receipt text-primary"></i> Phiếu nhập gần đây</h5>
-                <a asp-controller="PhieuNhap" asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
-                    Xem tất cả <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-            <div class="card-body-custom p-0">
-                @if (Model.PhieuNhapMoiNhat.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table-custom">
-                            <thead>
-                                <tr>
-                                    <th>Mã phiếu</th>
-                                    <th>Nhà cung cấp</th>
-                                    <th>Ngày nhập</th>
-                                    <th class="text-end">Tổng tiền</th>
-                                    <th class="text-center">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var pn in Model.PhieuNhapMoiNhat)
-                                {
-                                    var tongTien = (pn.TongTien.HasValue && pn.TongTien.Value > 0)
-                                        ? pn.TongTien.Value
-                                        : (pn.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
-                                    <tr>
-                                        <td>
-                                            <a asp-controller="PhieuNhap" asp-action="Details" asp-route-id="@pn.MaPhieuNhap" class="code-badge text-decoration-none">
-                                                @(pn.MaPhieuNhapCode ?? $"PN{pn.MaPhieuNhap:D4}")
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <strong style="color: var(--slate-900);">@(pn.NhaCungCap?.TenNhaCungCap ?? "N/A")</strong>
-                                        </td>
-                                        <td style="color: var(--slate-500); font-size: 12.5px;">
-                                            @(pn.NgayNhap?.ToString("dd/MM/yyyy") ?? pn.NgayTao?.ToString("dd/MM/yyyy") ?? "N/A")
-                                        </td>
-                                        <td class="text-end font-mono fw-bold" style="color: var(--slate-900);">
-                                            @(tongTien.ToString("N0")) đ
-                                        </td>
-                                        <td class="text-center">
-                                            @if (pn.TrangThai == "xacnhan")
-                                            {
-                                                <span class="status-badge status-badge-success">Đã duyệt</span>
-                                            }
-                                            else if (pn.TrangThai == "huy")
-                                            {
-                                                <span class="status-badge status-badge-danger">Đã hủy</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="status-badge status-badge-warning">Chờ xử lý</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>Chưa có phiếu nhập hàng nào trong hệ thống.</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Tồn kho theo dõi -->
-    <div class="col-lg-5">
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5><i class="bi bi-boxes text-warning"></i> Theo dõi tồn kho</h5>
-                <a asp-controller="TonKho" asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
-                    Chi tiết <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-            <div class="card-body-custom p-0">
-                @if (Model.DanhSachTonKho.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table-custom">
-                            <thead>
-                                <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>ĐVT</th>
-                                    <th class="text-end">Tồn kho</th>
-                                    <th class="text-center">Tình trạng</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var tk in Model.DanhSachTonKho.Take(6))
-                                {
-                                    var soLuong = tk.SoLuongTon ?? 0;
-                                    <tr>
-                                        <td>
-                                            <div class="fw-semibold" style="color: var(--slate-900);">@(tk.SanPham?.TenSanPham ?? "N/A")</div>
-                                            <small style="color: var(--slate-400); font-size: 11.5px;">@(tk.SanPham?.DanhMuc?.TenDanhMuc ?? "")</small>
-                                        </td>
-                                        <td style="color: var(--slate-600);">@(tk.SanPham?.DonViTinh?.TenDonVi ?? "-")</td>
-                                        <td class="text-end font-mono fw-bold" style="color: var(--slate-900);">@soLuong</td>
-                                        <td class="text-center">
-                                            @if (soLuong < 20)
-                                            {
-                                                <span class="status-badge status-badge-danger">Tồn thấp</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="status-badge status-badge-success">Đủ hàng</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>Chưa có dữ liệu tồn kho.</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+</section>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // 1. Biểu đồ Donut: Lấy dữ liệu danh mục thực tế 100% từ SQL database
-            const catLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.TenDanhMuc)));
-            const catData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.SoLuongSanPham)));
+        // Lọc danh mục sản phẩm trên giao diện
+        function filterByCatalog(catId, btnElement) {
+            document.querySelectorAll('.btn-category-pill').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
 
-            const ctxCat = document.getElementById('categoryChart');
-            if (ctxCat && catLabels && catLabels.length > 0) {
-                new Chart(ctxCat, {
-                    type: 'doughnut',
-                    data: {
-                        labels: catLabels,
-                        datasets: [{
-                            data: catData,
-                            backgroundColor: ['#2563EB', '#6366F1', '#06B6D4', '#10B981', '#F59E0B', '#64748B'],
-                            borderWidth: 3,
-                            borderColor: '#FFFFFF',
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
-                                    boxWidth: 12,
-                                    padding: 12
-                                }
-                            }
-                        },
-                        cutout: '70%'
-                    }
-                });
+            const catSelect = document.getElementById('heroCategorySelect');
+            if (catSelect) {
+                catSelect.value = catId > 0 ? catId : "";
             }
 
-            // 2. Biểu đồ Cột Ngang: Top 3 Nhà cung cấp xuất sắc nhất từ AHP
-            const allSuppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeNhaCungCapAHP.OrderBy(n => n.XepHang)));
-            
-            // Hàm rút gọn tiền tố doanh nghiệp để nhãn biểu đồ hiển thị cực kỳ đẹp và thoáng
-            function cleanSupplierName(name) {
-                if (!name) return '';
-                return name
-                    .replace(/^(Công ty TNHH Thực phẩm|Công ty TNHH Quốc tế|Công ty TNHH Dầu thực vật|Công ty TNHH Phân phối|Công ty TNHH Vận tải|Công ty TNHH|Công ty Cổ phần|Công ty CP Tập đoàn|Công ty CP Thương mại|Công ty CP Chế biến|Công ty CP|Doanh nghiệp Tư nhân|Tập đoàn Nước giải khát|Tập đoàn)\s+/i, '')
-                    .trim();
+            // Scroll nhẹ xuống danh sách sản phẩm
+            const productSection = document.getElementById('nguon-hang');
+            if (productSection && catId > 0) {
+                productSection.scrollIntoView({ behavior: 'smooth' });
             }
-
-            const top3Suppliers = allSuppliers.slice(0, 3);
-            const supLabels = top3Suppliers.map((s, idx) => {
-                const medals = ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'];
-                const prefix = medals[idx] || `Top ${idx + 1}`;
-                return `${prefix}: ${cleanSupplierName(s.TenNhaCungCap)}`;
-            });
-            const supData = top3Suppliers.map(s => s.DiemTong);
-            const bgColors = ['#2563EB', '#6366F1', '#F59E0B']; // Hạng 1: Blue, Hạng 2: Indigo, Hạng 3: Amber
-
-            const ctxSup = document.getElementById('supplierChart');
-            if (ctxSup && top3Suppliers && top3Suppliers.length > 0) {
-                new Chart(ctxSup, {
-                    type: 'bar',
-                    data: {
-                        labels: supLabels,
-                        datasets: [{
-                            label: 'Điểm tổng hợp (WSM)',
-                            data: supData,
-                            backgroundColor: bgColors,
-                            borderRadius: 8,
-                            borderSkipped: false,
-                            barThickness: 24,
-                            maxBarThickness: 28
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y', // Biểu đồ dạng thanh ngang
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(items) {
-                                        const idx = items[0].dataIndex;
-                                        return top3Suppliers[idx].TenNhaCungCap;
-                                    },
-                                    label: function(item) {
-                                        return ` Điểm đánh giá WSM: ${Number(item.raw).toFixed(2)} / 9.00 điểm`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                max: 9,
-                                grid: { color: '#F1F5F9' },
-                                ticks: { 
-                                    font: { family: 'JetBrains Mono', size: 11 }, 
-                                    stepSize: 3,
-                                    callback: function(v) { return v + ' đ'; }
-                                }
-                            },
-                            y: {
-                                grid: { display: false },
-                                ticks: { 
-                                    font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
-                                    color: '#1E293B'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        });
+        }
     </script>
 }

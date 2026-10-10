@@ -1,0 +1,945 @@
+@model code.Models.DoanhNghiep
+
+@{
+    ViewData["Title"] = "Gói Gian Hàng Mall & Dịch Vụ Quảng Cáo";
+    var dn = ViewBag.DoanhNghiep as code.Models.DoanhNghiep ?? Model;
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    var lichSuGiaoDich = ViewBag.LichSuGiaoDich as List<code.Models.DoanhThuSan> ?? new List<code.Models.DoanhThuSan>();
+    var myBanners = ViewBag.MyBanners as List<code.Models.QuangCaoBanner> ?? new List<code.Models.QuangCaoBanner>();
+
+    bool isMall = dn != null && dn.LaGianHangMall;
+    int daysRemaining = 0;
+    if (isMall && dn?.HanMall.HasValue == true)
+    {
+        daysRemaining = Math.Max(0, (dn.HanMall.Value - DateTime.Now).Days);
+    }
+}
+
+<div class="container-fluid px-lg-4 py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="SanB2B" asp-action="Index" class="text-decoration-none text-muted">Sàn B2B</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Gói Mall & Dịch Vụ Sàn</li>
+        </ol>
+    </nav>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4 d-flex align-items-center gap-2 p-3" role="alert">
+            <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4 d-flex align-items-center gap-2 p-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+            <div>@TempData["ErrorMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Header & Trạng Thái Doanh Nghiệp Hiện Tại -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 overflow-hidden" 
+         style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e3a8a 100%);">
+        <div class="card-body p-4 p-md-5 text-white position-relative">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-20 mb-3 backdrop-blur">
+                        <span class="badge bg-warning text-dark fw-bold" style="font-size: 11px;">B2B PREMIUM SERVICES</span>
+                        <span class="small text-white-50">Dịch Vụ Gia Tăng Cho Nhà Phân Phối</span>
+                    </div>
+
+                    <h1 class="display-6 fw-bold mb-2 text-white">
+                        Trung Tâm Gói Mall & Quảng Cáo B2B
+                    </h1>
+                    <p class="text-white-50 lead fs-6 mb-4" style="max-width: 680px; line-height: 1.6;">
+                        Nâng tầm thương hiệu phân phối, xác thực nguồn hàng chính hãng, tăng gấp 3 lần tiếp cận đại lý mua buôn và được <strong>cộng +1.0 điểm uy tín trong mô hình chấm điểm nhà cung cấp AHP</strong>.
+                    </p>
+
+                    <!-- Widget Trạng Thái Gian Hàng -->
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-15 d-inline-flex flex-wrap align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle p-2 bg-white bg-opacity-20 text-warning fs-5 lh-1">
+                                <i class="bi bi-building-check"></i>
+                            </div>
+                            <div>
+                                <div class="small text-white-50" style="font-size: 11px;">Doanh nghiệp của bạn</div>
+                                <div class="fw-bold text-white fs-6">@(dn?.TenDoanhNghiep ?? "Doanh nghiệp NPP")</div>
+                            </div>
+                        </div>
+
+                        <div class="border-start border-white border-opacity-20 ps-3">
+                            <div class="small text-white-50" style="font-size: 11px;">Cấp bậc gian hàng</div>
+                            <div>
+                                @if (isMall)
+                                {
+                                    <span class="badge bg-danger fw-bold px-2 py-1">
+                                        <i class="bi bi-patch-check-fill me-1"></i> GIAN HÀNG MALL CHÍNH HÃNG
+                                    </span>
+                                }
+                                else if (dn?.TrangThaiMall == "dangky")
+                                {
+                                    <span class="badge bg-warning text-dark fw-bold px-2 py-1">
+                                        <i class="bi bi-clock-history me-1"></i> ĐANG CHỜ ADMIN XÉT DUYỆT MALL
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary fw-bold px-2 py-1">
+                                        <i class="bi bi-shop me-1"></i> GIAN HÀNG THƯỜNG
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        @if (isMall && dn?.HanMall.HasValue == true)
+                        {
+                            <div class="border-start border-white border-opacity-20 ps-3">
+                                <div class="small text-white-50" style="font-size: 11px;">Hạn sử dụng Mall</div>
+                                <div class="fw-bold text-success-emphasis">
+                                    <span class="text-white">@dn.HanMall.Value.ToString("dd/MM/yyyy")</span>
+                                    <span class="badge bg-success-subtle text-success ms-1 small">Còn @daysRemaining ngày</span>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="border-start border-white border-opacity-20 ps-3">
+                            <div class="small text-white-50" style="font-size: 11px;">Điểm uy tín sàn</div>
+                            <div class="fw-bold text-warning">
+                                ⭐ @(dn?.DiemUyTin.ToString("0.0") ?? "5.0")/10
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 text-center text-lg-end">
+                    <div class="d-inline-block text-start p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 shadow">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-shield-fill-check text-warning fs-4"></i>
+                            <h6 class="fw-bold text-white mb-0">Cam Kết Từ Sàn B2B</h6>
+                        </div>
+                        <ul class="list-unstyled small text-white-50 mb-3 space-y-1">
+                            <li><i class="bi bi-check-circle-fill text-success me-1"></i> Xác thực 100% hồ sơ pháp lý</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-1"></i> Ưu tiên phân phối qua AHP B2B</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-1"></i> Hỗ trợ hóa đơn VAT đầy đủ</li>
+                        </ul>
+                        @if (!isMall)
+                        {
+                            <button type="button" class="btn btn-warning w-100 fw-bold rounded-pill shadow-sm" onclick="cuonDenGoi()">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Nâng Cấp Mall Ngay
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-outline-light w-100 fw-bold rounded-pill shadow-sm" onclick="cuonDenGoi()">
+                                <i class="bi bi-arrow-repeat me-1"></i> Gia Hạn Gói Mall
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thanh Điều Hướng Tabs -->
+    <ul class="nav nav-pills gap-2 mb-4 p-2 bg-white rounded-4 shadow-sm border" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-3 fw-bold px-3 py-2 d-flex align-items-center gap-2" 
+                    id="pills-mall-tab" data-bs-toggle="pill" data-bs-target="#pills-mall" type="button" role="tab">
+                <i class="bi bi-patch-check-fill text-danger"></i>
+                <span>Gói Gian Hàng Mall</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-3 fw-bold px-3 py-2 d-flex align-items-center gap-2" 
+                    id="pills-banner-tab" data-bs-toggle="pill" data-bs-target="#pills-banner" type="button" role="tab">
+                <i class="bi bi-megaphone-fill text-primary"></i>
+                <span>Quảng Cáo Banner Trang Nhất</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-3 fw-bold px-3 py-2 d-flex align-items-center gap-2" 
+                    id="pills-sosanh-tab" data-bs-toggle="pill" data-bs-target="#pills-sosanh" type="button" role="tab">
+                <i class="bi bi-diagram-3-fill text-success"></i>
+                <span>Bảng So Sánh Quyền Lợi</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-3 fw-bold px-3 py-2 d-flex align-items-center gap-2" 
+                    id="pills-history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" type="button" role="tab">
+                <i class="bi bi-clock-history text-secondary"></i>
+                <span>Lịch Sử Dịch Vụ Của Bạn (@lichSuGiaoDich.Count)</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Nội Dung Tabs -->
+    <div class="tab-content" id="pills-tabContent">
+        
+        <!-- ========================================== -->
+        <!-- TAB 1: CÁC GÓI GIAN HÀNG MALL -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade show active" id="pills-mall" role="tabpanel">
+            <div class="text-center mb-4">
+                <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-bold text-uppercase mb-2" style="font-size: 11px;">
+                    BẢNG GIÁ DỊCH VỤ GIAN HÀNG CHÍNH HÃNG
+                </span>
+                <h3 class="fw-bold text-dark mb-1">Chọn Gói Gian Hàng Mall Phù Hợp Doanh Nghiệp</h3>
+                <p class="text-muted small">Kích hoạt ngay trong 5 phút qua mã QR ngân hàng hoặc phê duyệt tự động từ hệ thống.</p>
+            </div>
+
+            <div class="row g-4 align-items-stretch" id="khuVucGoiMall">
+                <!-- Gói 1: 6 Tháng -->
+                <div class="col-lg-4">
+                    <div class="card border-0 rounded-4 shadow-sm h-100 package-card transition-all position-relative"
+                         style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="card-body p-4 p-xl-5 d-flex flex-column">
+                            <div class="mb-3">
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                    GÓI KHỞI ĐỘNG
+                                </span>
+                                <h4 class="fw-bold text-dark mt-2 mb-1">Gói Mall 6 Tháng</h4>
+                                <small class="text-muted">Trải nghiệm sức mạnh thương hiệu Mall</small>
+                            </div>
+
+                            <div class="my-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="display-6 fw-bold text-dark font-mono">4.990.000</span>
+                                    <span class="text-muted fw-bold">đ</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Tương đương <strong>~831.000 đ/tháng</strong>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled mb-4 space-y-2 flex-grow-1">
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Huy hiệu <strong>MALL CHÍNH HÃNG</strong> độc quyền</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Ưu tiên hiển thị Top 5 trong bộ lọc Sàn Chợ Sỉ</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span><strong>+1.0 điểm uy tín</strong> trong thuật toán so sánh AHP</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Được đăng tải lên đến <strong>200 sản phẩm sỉ</strong></span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 text-muted mb-2">
+                                    <i class="bi bi-dash-circle mt-1"></i>
+                                    <span>Không tặng Banner tài trợ trang nhất</span>
+                                </li>
+                            </ul>
+
+                            <button type="button" class="btn btn-outline-primary w-100 py-3 rounded-3 fw-bold mt-auto"
+                                    onclick="moModalThanhToan(6, 'Gói Mall Khởi Động 6 Tháng', 4990000)">
+                                <i class="bi bi-check2-circle me-1"></i> Đăng Ký Gói 6 Tháng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gói 2: 12 Tháng (Khuyên dùng - Nổi bật) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 rounded-4 shadow h-100 package-card popular-card transition-all position-relative"
+                         style="background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border: 2px solid #10b981 !important; transform: scale(1.03);">
+                        
+                        <!-- Badge Khuyên dùng -->
+                        <div class="position-absolute top-0 start-50 translate-middle">
+                            <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold shadow-sm" style="font-size: 12px; letter-spacing: 0.5px;">
+                                ⭐ KHUYÊN DÙNG • TIẾT KIỆM 15%
+                            </span>
+                        </div>
+
+                        <div class="card-body p-4 p-xl-5 d-flex flex-column pt-5">
+                            <div class="mb-3">
+                                <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                    GÓI CHUYÊN NGHIỆP
+                                </span>
+                                <h4 class="fw-bold text-dark mt-2 mb-1">Gói Mall 1 Năm (12 Tháng)</h4>
+                                <small class="text-muted">Được hơn 80% đối tác phân phối tin dùng</small>
+                            </div>
+
+                            <div class="my-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="display-6 fw-bold text-success font-mono">8.990.000</span>
+                                    <span class="text-muted fw-bold">đ</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Tương đương <strong>~749.000 đ/tháng</strong> <span class="badge bg-danger-subtle text-danger ms-1">Tiết kiệm 1.000.000đ</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-warning-subtle rounded-3 border border-warning border-opacity-30 mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-gift-fill text-warning fs-5"></i>
+                                    <div class="small fw-bold text-dark">
+                                        TẶNG 1 TUẦN BANNER TRANG NHẤT (Trị giá 1.000.000 đ)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled mb-4 space-y-2 flex-grow-1">
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Tất cả quyền lợi của Gói Khởi Động</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span><strong>Tự động đứng đầu</strong> danh sách gợi ý nhà cung cấp AHP</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Huy hiệu <strong>"Đối Tác Chiến Lược"</strong> trên trang chi tiết</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Không giới hạn sản phẩm đăng tải chào buôn</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Hỗ trợ kỹ thuật và xét duyệt tài liệu 24/7</span>
+                                </li>
+                            </ul>
+
+                            <button type="button" class="btn btn-success btn-lg w-100 py-3 rounded-3 fw-bold shadow mt-auto"
+                                    onclick="moModalThanhToan(12, 'Gói Mall Chuyên Nghiệp 12 Tháng (Tặng Banner)', 8990000)">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Nâng Cấp Gói 12 Tháng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gói 3: 24 Tháng (VIP Diamond) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 rounded-4 shadow-sm h-100 package-card transition-all position-relative"
+                         style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="card-body p-4 p-xl-5 d-flex flex-column">
+                            <div class="mb-3">
+                                <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                    💎 VIP DIAMOND
+                                </span>
+                                <h4 class="fw-bold text-dark mt-2 mb-1">Gói Mall 2 Năm (24 Tháng)</h4>
+                                <small class="text-muted">Đặc quyền tối thượng cho các Tổng kho lớn</small>
+                            </div>
+
+                            <div class="my-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="display-6 fw-bold text-primary font-mono">15.990.000</span>
+                                    <span class="text-muted fw-bold">đ</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Tương đương <strong>~666.000 đ/tháng</strong> <span class="badge bg-success-subtle text-success ms-1">Tiết kiệm 25%</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-primary-subtle rounded-3 border border-primary border-opacity-30 mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-stars text-primary fs-5"></i>
+                                    <div class="small fw-bold text-primary">
+                                        TẶNG 1 THÁNG BANNER TRANG NHẤT (Trị giá 3.000.000 đ)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled mb-4 space-y-2 flex-grow-1">
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Tất cả quyền lợi của Gói 12 Tháng</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Huy hiệu <strong>DIAMOND MALL</strong> danh giá bậc nhất</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Được đưa vào danh mục Nhà Cung Cấp Ưu Tú Quốc Gia</span>
+                                </li>
+                                <li class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                    <span>Chuyên viên tư vấn AHP & Tối ưu nguồn hàng riêng</span>
+                                </li>
+                            </ul>
+
+                            <button type="button" class="btn btn-outline-primary w-100 py-3 rounded-3 fw-bold mt-auto"
+                                    onclick="moModalThanhToan(24, 'Gói Doanh Nghiệp VIP Diamond 24 Tháng', 15990000)">
+                                <i class="bi bi-gem me-1"></i> Đăng Ký Gói VIP 24 Tháng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: QUẢNG CÁO BANNER TRANG NHẤT -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="pills-banner" role="tabpanel">
+            <div class="row g-4 align-items-start">
+                <!-- Cột trái: Form đăng ký Banner -->
+                <div class="col-lg-6">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="rounded-circle p-2 bg-primary bg-opacity-10 text-primary fs-5">
+                                    <i class="bi bi-badge-ad"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-0">Đăng Ký Banner Tài Trợ Trang Nhất</h4>
+                                    <small class="text-muted">Xuất hiện ngay đầu trang Chợ Sỉ B2B để tiếp cận hàng nghìn lượt đại lý truy cập</small>
+                                </div>
+                            </div>
+
+                            <form asp-action="MuaGoiBanner" method="post" id="formBanner">
+                                @Html.AntiForgeryToken()
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">
+                                        Tiêu đề thông điệp chiến dịch <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="tieuDe" id="inputTieuDe" class="form-control form-control-lg fs-6" 
+                                           placeholder="Ví dụ: Giảm sỉ 15% cho đơn đầu tiên - Tổng kho giao nhanh 24h" 
+                                           maxlength="140" required oninput="capNhatLiveBanner()" />
+                                    <small class="text-muted">Tiêu đề sẽ hiển thị nổi bật trên thanh trượt Banner trang nhất Chợ Sỉ.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Đường dẫn liên kết (Link khi click vào Banner)</label>
+                                    <input type="text" name="lienKet" id="inputLienKet" class="form-control" 
+                                           placeholder="/SanB2B?search=@(dn?.TenDoanhNghiep ?? "SanPham")" 
+                                           oninput="capNhatLiveBanner()" />
+                                    <small class="text-muted">Để trống nếu muốn dẫn trực tiếp về danh sách mặt hàng của gian hàng bạn.</small>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small">Chọn gói thời gian hiển thị <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <label class="p-3 border rounded-3 text-center d-block cursor-pointer opt-thoiluong active" style="cursor: pointer;">
+                                                <input type="radio" name="thoiHanTuan" value="1" class="d-none" checked onchange="chonGoiBanner(1, 1000000, this)" />
+                                                <div class="fw-bold small">1 Tuần</div>
+                                                <div class="text-primary fw-bold font-mono">1.000.000 đ</div>
+                                                <small class="text-muted" style="font-size: 10px;">Thử nghiệm</small>
+                                            </label>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="p-3 border rounded-3 text-center d-block cursor-pointer opt-thoiluong" style="cursor: pointer;">
+                                                <input type="radio" name="thoiHanTuan" value="2" class="d-none" onchange="chonGoiBanner(2, 1800000, this)" />
+                                                <div class="fw-bold small">2 Tuần <span class="badge bg-danger small" style="font-size: 8px;">HOT</span></div>
+                                                <div class="text-primary fw-bold font-mono">1.800.000 đ</div>
+                                                <small class="text-muted" style="font-size: 10px;">900k/tuần</small>
+                                            </label>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="p-3 border rounded-3 text-center d-block cursor-pointer opt-thoiluong" style="cursor: pointer;">
+                                                <input type="radio" name="thoiHanTuan" value="4" class="d-none" onchange="chonGoiBanner(4, 3000000, this)" />
+                                                <div class="fw-bold small">1 Tháng ⭐</div>
+                                                <div class="text-primary fw-bold font-mono">3.000.000 đ</div>
+                                                <small class="text-muted" style="font-size: 10px;">Tối đa phủ sóng</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chi phí & Thanh toán -->
+                                <div class="p-3 bg-light rounded-3 mb-4 border d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted small d-block">Tổng phí tài trợ quảng cáo:</span>
+                                        <span class="small text-secondary">Tự động kích hoạt ngay sau khi hoàn tất</span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-danger font-mono" id="giaBannerHienThi">
+                                        1.000.000 đ
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-warning btn-lg w-100 fw-bold rounded-3 shadow-sm" onclick="moModalThanhToanBanner()">
+                                    <i class="bi bi-credit-card me-1"></i> Xác Nhận Thanh Toán & Đăng Ký
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Live Banner Preview Mockup -->
+                <div class="col-lg-6">
+                    <div class="card border-0 rounded-4 shadow-sm bg-white p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-info-subtle text-info fw-bold px-2 py-1">
+                                <i class="bi bi-eye-fill me-1"></i> LIVE PREVIEW MOCKUP
+                            </span>
+                            <small class="text-muted">Mô phỏng vị trí thực tế trên Chợ Sỉ B2B</small>
+                        </div>
+
+                        <!-- Khung giao diện Sàn B2B thu nhỏ -->
+                        <div class="p-3 rounded-4 bg-light border">
+                            <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+                                <span class="badge bg-warning text-dark px-2 py-1 fw-bold" style="font-size: 10px;">VIP</span>
+                                <span class="small fw-bold text-uppercase" style="font-size: 11px;">Gian Hàng & Nguồn Hàng Tài Trợ Nổi Bật</span>
+                            </div>
+
+                            <!-- Thẻ Banner xem trước -->
+                            <div class="card border-0 rounded-4 text-white shadow-sm p-3" 
+                                 id="liveBannerCard"
+                                 style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); min-height: 180px;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-30 small">
+                                        <i class="bi bi-stars text-warning me-1"></i> TÀI TRỢ VIP TRANG NHẤT
+                                    </span>
+                                    <span class="badge bg-danger small">@(isMall ? "MALL CHÍNH HÃNG" : "ĐỐI TÁC XÁC THỰC")</span>
+                                </div>
+
+                                <div class="my-auto py-2">
+                                    <div class="fw-bold fs-5 text-white mb-1" id="livePreviewTieuDe">
+                                        Giảm sỉ 15% cho đơn đầu tiên - Tổng kho giao nhanh 24h
+                                    </div>
+                                    <div class="small text-white-50 d-flex align-items-center gap-1">
+                                        <i class="bi bi-building"></i>
+                                        <span>@(dn?.TenDoanhNghiep ?? "Doanh Nghiệp Phân Phối")</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-white border-opacity-20">
+                                    <span class="small text-white-50" style="font-size: 11px;" id="livePreviewLink">
+                                        Link: /SanB2B
+                                    </span>
+                                    <span class="btn btn-sm btn-light rounded-pill px-3 fw-bold" style="font-size: 11px;">
+                                        Xem ngay <i class="bi bi-arrow-right"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Điểm mạnh của Banner -->
+                        <div class="row g-2 mt-3">
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded-3 text-center">
+                                    <div class="fs-4 fw-bold text-primary font-mono">+350%</div>
+                                    <small class="text-muted">Lượt xem mặt hàng</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded-3 text-center">
+                                    <div class="fs-4 fw-bold text-success font-mono">+180%</div>
+                                    <small class="text-muted">Tỷ lệ đặt đơn sỉ</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: BẢNG SO SÁNH QUYỀN LỢI CHI TIẾT -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="pills-sosanh" role="tabpanel">
+            <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0 text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-start p-3 ps-4" style="width: 40%;">Tính năng & Quyền lợi Sàn B2B</th>
+                                <th class="p-3" style="width: 30%;">
+                                    <div class="fw-bold text-secondary">Gian Hàng Thường</div>
+                                    <small class="text-muted">Mặc định miễn phí</small>
+                                </th>
+                                <th class="p-3 bg-danger-subtle text-danger" style="width: 30%;">
+                                    <div class="fw-bold fs-6">🏅 Gian Hàng Mall Chính Hãng</div>
+                                    <small class="text-danger-emphasis">Gói cao cấp</small>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Huy hiệu nhận diện thương hiệu
+                                </td>
+                                <td><span class="text-muted">Huy hiệu thường</span></td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-danger">
+                                    <i class="bi bi-patch-check-fill text-danger me-1"></i> Huy hiệu MALL Đỏ Uy Tín
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Vị trí trong danh sách chào hàng Sàn B2B
+                                </td>
+                                <td>Theo thứ tự thời gian cập nhật</td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-success">
+                                    <i class="bi bi-arrow-up-circle-fill me-1"></i> Luôn ưu tiên TOP ĐẦU danh mục
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Điểm cộng uy tín thuật toán AHP B2B
+                                </td>
+                                <td>Điểm gốc (1.0 - 10.0)</td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-primary">
+                                    <i class="bi bi-plus-circle-fill me-1"></i> Tự động +1.0 điểm AHP xếp hạng
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Tư vấn gợi ý từ trợ lý AI Advisor
+                                </td>
+                                <td>Gợi ý theo giá thành</td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-dark">
+                                    <i class="bi bi-stars text-warning me-1"></i> Ưu tiên số 1 trong phân tích AI
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Giới hạn số lượng mặt hàng chào sỉ
+                                </td>
+                                <td>Tối đa 50 mặt hàng</td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-success">
+                                    Không giới hạn (Unlimited)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Hỗ trợ xuất hóa đơn VAT & Chứng từ kinh doanh
+                                </td>
+                                <td>Tự quản lý</td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-dark">
+                                    Hỗ trợ tự động hóa hợp đồng & VAT
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-4 fw-bold text-dark">
+                                    Quà tặng chiến dịch Banner quảng cáo
+                                </td>
+                                <td><i class="bi bi-x-circle text-muted"></i></td>
+                                <td class="bg-danger-subtle bg-opacity-25 fw-bold text-danger">
+                                    Tặng 1 tuần đến 1 tháng Banner VIP
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: LỊCH SỬ DỊCH VỤ & HÓA ĐƠN -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="pills-history" role="tabpanel">
+            <div class="card border-0 rounded-4 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">Lịch Sử Giao Dịch Dịch Vụ Sàn</h5>
+                    <span class="badge bg-primary-subtle text-primary">@lichSuGiaoDich.Count giao dịch</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Mã GD</th>
+                                <th>Loại Dịch Vụ</th>
+                                <th>Chi Tiết / Mô Tả</th>
+                                <th class="text-end">Số Tiền</th>
+                                <th class="text-center">Ngày Kích Hoạt</th>
+                                <th class="text-center pe-4">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (lichSuGiaoDich.Any())
+                            {
+                                foreach (var gd in lichSuGiaoDich)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold font-mono text-secondary">#GD-@gd.MaGiaoDich</td>
+                                        <td>
+                                            @if (gd.LoaiThu == "phi_mall")
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fw-bold">
+                                                    <i class="bi bi-patch-check-fill me-1"></i> Gói Mall
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-primary-subtle text-primary px-2 py-1 fw-bold">
+                                                    <i class="bi bi-megaphone-fill me-1"></i> Quảng Cáo Banner
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-dark">@gd.MoTa</div>
+                                            <small class="text-muted">Doanh nghiệp: @(gd.DoanhNghiep?.TenDoanhNghiep ?? dn?.TenDoanhNghiep)</small>
+                                        </td>
+                                        <td class="text-end fw-bold font-mono text-success fs-6">
+                                            @gd.SoTien.ToString("N0") đ
+                                        </td>
+                                        <td class="text-center small text-muted">
+                                            @(gd.NgayGiaoDich?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <span class="badge bg-success px-3 py-1 rounded-pill">Đã kích hoạt</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-receipt fs-2 d-block mb-2 opacity-50"></i>
+                                        Bạn chưa thực hiện giao dịch dịch vụ nào trên sàn.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MODAL THANH TOÁN VIETQR CHO GÓI MALL                   -->
+<!-- ======================================================= -->
+<div class="modal fade" id="modalThanhToanMall" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger p-2 rounded-3"><i class="bi bi-patch-check-fill fs-5"></i></span>
+                    <div>
+                        <h5 class="modal-title fw-bold" id="modalMallTitle">Nâng Cấp Gói Gian Hàng Mall</h5>
+                        <small class="text-muted">Kích hoạt đặc quyền B2B ngay sau khi hoàn tất chuyển khoản</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="MuaGoiMall" method="post" id="formMuaGoiMall">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="thoiHanThang" id="inputThoiHanThang" value="12" />
+                <input type="hidden" name="phuongThuc" value="vietqr_chuyenkhoan" />
+
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <!-- Cột trái: Mã QR Ngân Hàng Tự Động -->
+                        <div class="col-md-5 text-center">
+                            <div class="p-3 bg-light rounded-4 border">
+                                <div class="fw-bold small text-secondary mb-2">QUÉT MÃ VIETQR QUA APP NGÂN HÀNG</div>
+                                
+                                <!-- QR Code -->
+                                <div class="bg-white p-2 rounded-3 shadow-sm d-inline-block mb-2">
+                                    <img id="qrImageMall" 
+                                         src="https://api.vietqr.io/image/970422-0987654321-compact2.jpg?amount=8990000&addInfo=MALL%20@(dn?.MaDoanhNghiep ?? 1)%2012T&accountName=SAN%20B2B%20AHP" 
+                                         alt="VietQR Chuyển Khoản" class="img-fluid rounded" style="max-height: 220px;" 
+                                         onerror="this.src='/favicon.svg'" />
+                                </div>
+
+                                <div class="small text-muted">
+                                    <i class="bi bi-shield-lock-fill text-success me-1"></i> Tự động nhận diện thanh toán
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cột phải: Thông tin chuyển khoản & Thông tin xác thực -->
+                        <div class="col-md-7">
+                            <div class="p-3 bg-light rounded-3 mb-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-muted">Ngân hàng thụ hưởng:</span>
+                                    <span class="fw-bold text-dark">MB Bank (Quân Đội)</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-muted">Số tài khoản:</span>
+                                    <span class="fw-bold text-primary font-mono">
+                                        0987654321 
+                                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none ms-1" onclick="copyText('0987654321')">
+                                            <i class="bi bi-copy"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-muted">Chủ tài khoản:</span>
+                                    <span class="fw-bold text-dark">SAN THUONG MAI B2B VIETNAM</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-muted">Số tiền thanh toán:</span>
+                                    <span class="fw-bold text-danger fs-5 font-mono" id="modalSoTienHienThi">8.990.000 đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Nội dung chuyển khoản:</span>
+                                    <span class="fw-bold text-primary font-mono" id="modalNoiDungCK">
+                                        MALL @(dn?.MaDoanhNghiep ?? 1) 12T
+                                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none ms-1" onclick="copyText(document.getElementById('modalNoiDungCK').innerText.trim())">
+                                            <i class="bi bi-copy"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Mã số thuế / Số Giấy phép kinh doanh (GPKD)</label>
+                                <input type="text" name="giayPhepKinhDoanh" class="form-control" 
+                                       value="@(dn?.MaSoThue ?? dn?.GiayPhepKinhDoanh)" 
+                                       placeholder="Ví dụ: GPKD-0108998822 hoặc MST công ty" />
+                                <small class="text-muted">Cung cấp để hệ thống cấp huy hiệu Verified Mall chính thức.</small>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Ghi chú giao dịch (Tùy chọn)</label>
+                                <input type="text" name="ghiChu" class="form-control form-control-sm" placeholder="Ghi chú thêm về chiến dịch hoặc xuất VAT..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger btn-lg rounded-3 fw-bold px-4 shadow">
+                        <i class="bi bi-check-circle-fill me-1"></i> Xác Nhận Đã Thanh Toán & Kích Hoạt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MODAL THANH TOÁN BANNER QUẢNG CÁO                      -->
+<!-- ======================================================= -->
+<div class="modal fade" id="modalThanhToanBanner" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary p-2 rounded-3"><i class="bi bi-megaphone-fill fs-5"></i></span>
+                    <h5 class="modal-title fw-bold">Xác Nhận Kích Hoạt Banner VIP</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="p-3 bg-light rounded-4 border mb-3">
+                    <div class="small text-secondary mb-1">QUÉT MÃ VIETQR THANH TOÁN BANNER</div>
+                    <img id="qrImageBanner" 
+                         src="https://api.vietqr.io/image/970422-0987654321-compact2.jpg?amount=1000000&addInfo=QC%20BANNER%20@(dn?.MaDoanhNghiep ?? 1)&accountName=SAN%20B2B%20AHP" 
+                         alt="QR Banner" class="img-fluid rounded mb-2" style="max-height: 200px;" />
+                    <div class="d-flex justify-content-between small px-2">
+                        <span class="text-muted">Số tiền:</span>
+                        <span class="fw-bold text-danger font-mono" id="modalBannerTien">1.000.000 đ</span>
+                    </div>
+                </div>
+                <p class="small text-muted mb-0">
+                    Sau khi bấm nút bên dưới, banner chiến dịch sẽ được đưa vào hệ thống và kích hoạt hiển thị ngay trên Chợ Sỉ B2B.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-warning rounded-3 fw-bold px-4 shadow-sm" onclick="document.getElementById('formBanner').submit()">
+                    <i class="bi bi-check-circle-fill me-1"></i> Hoàn Tất & Kích Hoạt Banner
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .package-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .package-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
+    }
+    .popular-card:hover {
+        transform: scale(1.04) translateY(-4px) !important;
+    }
+    .opt-thoiluong {
+        transition: all 0.2s;
+    }
+    .opt-thoiluong.active {
+        border-color: #3b82f6 !important;
+        background-color: #eff6ff !important;
+    }
+</style>
+
+<script>
+    let currentMaDN = @(dn?.MaDoanhNghiep ?? 1);
+
+    function cuonDenGoi() {
+        const tabEl = document.getElementById('pills-mall-tab');
+        const tab = new bootstrap.Tab(tabEl);
+        tab.show();
+        document.getElementById('khuVucGoiMall').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function moModalThanhToan(thang, tenGoi, soTien) {
+        document.getElementById('inputThoiHanThang').value = thang;
+        document.getElementById('modalMallTitle').innerText = 'Nâng Cấp ' + tenGoi;
+        document.getElementById('modalSoTienHienThi').innerText = soTien.toLocaleString('vi-VN') + ' đ';
+        
+        const noiDung = 'MALL ' + currentMaDN + ' ' + thang + 'T';
+        document.getElementById('modalNoiDungCK').innerHTML = noiDung + 
+            ` <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none ms-1" onclick="copyText('${noiDung}')"><i class="bi bi-copy"></i></button>`;
+
+        const qrUrl = `https://api.vietqr.io/image/970422-0987654321-compact2.jpg?amount=${soTien}&addInfo=${encodeURIComponent(noiDung)}&accountName=SAN%20B2B%20AHP`;
+        document.getElementById('qrImageMall').src = qrUrl;
+
+        const modal = new bootstrap.Modal(document.getElementById('modalThanhToanMall'));
+        modal.show();
+    }
+
+    function chonGoiBanner(tuan, soTien, radioEl) {
+        document.getElementById('giaBannerHienThi').innerText = soTien.toLocaleString('vi-VN') + ' đ';
+        document.querySelectorAll('.opt-thoiluong').forEach(el => el.classList.remove('active'));
+        radioEl.closest('.opt-thoiluong').classList.add('active');
+    }
+
+    function capNhatLiveBanner() {
+        const tieuDe = document.getElementById('inputTieuDe').value.trim();
+        const lienKet = document.getElementById('inputLienKet').value.trim();
+        
+        document.getElementById('livePreviewTieuDe').innerText = tieuDe || 'Giảm sỉ 15% cho đơn đầu tiên - Tổng kho giao nhanh 24h';
+        document.getElementById('livePreviewLink').innerText = 'Link: ' + (lienKet || '/SanB2B');
+    }
+
+    function moModalThanhToanBanner() {
+        const tieuDe = document.getElementById('inputTieuDe').value.trim();
+        if (!tieuDe) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chưa nhập tiêu đề',
+                text: 'Vui lòng nhập thông điệp / tiêu đề chiến dịch quảng cáo trước khi tiếp tục!'
+            });
+            return;
+        }
+
+        const radioChon = document.querySelector('input[name="thoiHanTuan"]:checked');
+        const tuan = radioChon ? parseInt(radioChon.value) : 1;
+        const tien = tuan === 1 ? 1000000 : (tuan === 2 ? 1800000 : 3000000);
+        
+        document.getElementById('modalBannerTien').innerText = tien.toLocaleString('vi-VN') + ' đ';
+        const noiDung = 'QC BANNER ' + currentMaDN + ' ' + tuan + 'W';
+        const qrUrl = `https://api.vietqr.io/image/970422-0987654321-compact2.jpg?amount=${tien}&addInfo=${encodeURIComponent(noiDung)}&accountName=SAN%20B2B%20AHP`;
+        document.getElementById('qrImageBanner').src = qrUrl;
+
+        const modal = new bootstrap.Modal(document.getElementById('modalThanhToanBanner'));
+        modal.show();
+    }
+
+    function copyText(str) {
+        navigator.clipboard.writeText(str).then(() => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Đã sao chép: ' + str,
+                showConfirmButton: false,
+                timer: 2000
+            });
+        });
+    }
+</script>

@@ -27,6 +27,7 @@ namespace code.Services
         /// </summary>
         public AHPResult CalculateAHP(double[,] matrix)
         {
+            ValidateMatrix(matrix);
             int n = matrix.GetLength(0);
             var result = new AHPResult { NumberOfCriteria = n };
 
@@ -49,9 +50,39 @@ namespace code.Services
             result.CR = TinhCR(result.CI, n);
 
             // Bước 7: Đánh giá tính nhất quán (CR <= 0.10)
-            result.IsConsistent = result.CR <= 0.1001; // Cho phép sai số làm tròn nhỏ
+            result.IsConsistent = double.IsFinite(result.CR) && result.CR <= 0.10 + 1e-12;
 
             return result;
+        }
+
+        public static void ValidateMatrix(double[,] matrix)
+        {
+            int n = matrix.GetLength(0);
+            if (n < 1 || n > 10 || matrix.GetLength(1) != n)
+                throw new ArgumentException("Ma trận phải vuông, từ 1 đến 10 tiêu chí.");
+            for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+            {
+                double value = matrix[i, j];
+                if (!double.IsFinite(value) || value < 1.0 / 9 - 1e-6 || value > 9)
+                    throw new ArgumentException("Giá trị so sánh phải nằm trong khoảng 1/9 đến 9.");
+                if (i == j && Math.Abs(value - 1) > 1e-6)
+                    throw new ArgumentException("Đường chéo ma trận phải bằng 1.");
+                if (Math.Abs(value * matrix[j, i] - 1) > 1e-4)
+                    throw new ArgumentException("Hai ô so sánh đối xứng phải nghịch đảo nhau.");
+            }
+        }
+
+        // Bảng ma trận phiên bản cũ lưu 3 chữ số thập phân (1/9 thành 0.111).
+        public static double RestoreStoredComparison(double value)
+        {
+            if (value > 0 && value < 1)
+            {
+                double divisor = Math.Round(1 / value);
+                if (divisor >= 2 && divisor <= 9 && Math.Abs(value - 1 / divisor) <= 0.00051)
+                    return 1 / divisor;
+            }
+            return value;
         }
 
         /// <summary>
@@ -166,7 +197,11 @@ namespace code.Services
         /// </summary>
         public double TinhDiemWeightedSum(double[] weights, double[] criteriaScores)
         {
-            int n = Math.Min(weights.Length, criteriaScores.Length);
+            if (weights.Length == 0 || weights.Length != criteriaScores.Length ||
+                weights.Any(w => !double.IsFinite(w) || w < 0) ||
+                criteriaScores.Any(s => !double.IsFinite(s) || s < 1 || s > 9))
+                throw new ArgumentException("Trọng số và điểm phải đủ, hữu hạn; điểm thuộc thang 1–9.");
+            int n = weights.Length;
             double totalScore = 0;
             for (int i = 0; i < n; i++)
             {

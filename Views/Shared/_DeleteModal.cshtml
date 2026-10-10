@@ -1,0 +1,40 @@
+@* Modal xác nhận xóa dùng chung.
+   Mặc định POST về action "Delete" của controller hiện tại.
+   Có thể tùy chỉnh qua ViewData:
+   - DeleteController: tên controller (mặc định: controller hiện tại)
+   - DeleteAction: tên action (mặc định: "Delete")
+   - DeleteNote: dòng chú thích thêm trong thân modal
+   Hàm gọi: confirmDelete(id, label) — định nghĩa trong wwwroot/js/site.js *@
+@{
+    var deleteController = ViewData["DeleteController"] as string
+        ?? ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var deleteAction = ViewData["DeleteAction"] as string ?? "Delete";
+    var deleteNote = ViewData["DeleteNote"] as string;
+}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: var(--rose-700);">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Bạn có chắc chắn muốn xóa <strong id="deleteRecordLabel"></strong>?</p>
+                @if (!string.IsNullOrEmpty(deleteNote))
+                {
+                    <small style="color: var(--slate-500);">@deleteNote</small>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
+                <form method="post" asp-controller="@deleteController" asp-action="@deleteAction">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteRecordId" />
+                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

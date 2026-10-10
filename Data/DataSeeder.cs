@@ -53,6 +53,8 @@ namespace code.Data
                         new NguoiDung { TenDangNhap = "quanly", MatKhau = "123456", VaiTro = "quanly", TrangThai = true, NgayTao = DateTime.Now.AddMonths(-6) },
                         new NguoiDung { TenDangNhap = "nhanvien", MatKhau = "123456", VaiTro = "nhanvien", TrangThai = true, NgayTao = DateTime.Now.AddMonths(-6) }
                     };
+                    var passwords = scope.ServiceProvider.GetRequiredService<PasswordService>();
+                    foreach (var user in users) user.MatKhau = passwords.Hash(user, user.MatKhau!);
                     context.NguoiDungs.AddRange(users);
                     await context.SaveChangesAsync();
                 }
@@ -251,12 +253,12 @@ namespace code.Data
                 var existingSpCount = await context.SanPhams.CountAsync();
                 if (existingSpCount < 18)
                 {
-                    var dmBanhKeo = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Bánh kẹo")) ?? await context.DanhMucs.FirstAsync();
-                    var dmDoUong = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Đồ uống")) ?? dmBanhKeo;
-                    var dmGiaVi = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Gia vị")) ?? dmBanhKeo;
-                    var dmSua = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Sữa")) ?? dmBanhKeo;
-                    var dmDoHop = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Đồ hộp")) ?? dmBanhKeo;
-                    var dmTayRua = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc.Contains("Tẩy rửa")) ?? dmBanhKeo;
+                    var dmBanhKeo = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Bánh kẹo")) ?? await context.DanhMucs.FirstAsync();
+                    var dmDoUong = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Đồ uống")) ?? dmBanhKeo;
+                    var dmGiaVi = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Gia vị")) ?? dmBanhKeo;
+                    var dmSua = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Sữa")) ?? dmBanhKeo;
+                    var dmDoHop = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Đồ hộp")) ?? dmBanhKeo;
+                    var dmTayRua = await context.DanhMucs.FirstOrDefaultAsync(d => d.TenDanhMuc != null && d.TenDanhMuc.Contains("Tẩy rửa")) ?? dmBanhKeo;
 
                     var dvtThung = await context.DonViTinhs.FirstOrDefaultAsync(d => d.TenDonVi == "Thùng") ?? await context.DonViTinhs.FirstAsync();
                     var dvtHop = await context.DonViTinhs.FirstOrDefaultAsync(d => d.TenDonVi == "Hộp") ?? dvtThung;
@@ -311,6 +313,21 @@ namespace code.Data
                         }
                     }
                 }
+
+                // 6.2. Đảm bảo có sẵn các mặt hàng tồn kho thấp mẫu (< 20) để kích hoạt hệ thống cảnh báo
+                try
+                {
+                    var lowStockCount = await context.TonKhos.CountAsync(t => (t.SoLuongTon ?? 0) < 20);
+                    if (lowStockCount < 3)
+                    {
+                        var anyTk = await context.TonKhos.OrderBy(t => t.MaTonKho).Take(3).ToListAsync();
+                        if (anyTk.Count > 0) anyTk[0].SoLuongTon = 8;   // Rất thấp
+                        if (anyTk.Count > 1) anyTk[1].SoLuongTon = 15;  // Tồn thấp
+                        if (anyTk.Count > 2) anyTk[2].SoLuongTon = 18;  // Cận mức an toàn
+                        await context.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine($"[Ensure LowStock]: {ex.Message}"); }
             }
             catch (Exception ex) { Console.WriteLine($"[Seed SanPham]: {ex.Message}"); }
 
@@ -328,12 +345,12 @@ namespace code.Data
                     {
                         var poData = new List<(string code, int nccIndex, int daysAgo, string status, List<(int spIndex, int qty, decimal price)> items)>
                         {
-                            ("PN0001", 0, 45, "hoanthanh", new List<(int, int, decimal)> { (0, 50, 120000), (1, 100, 45000), (5, 80, 115000) }),
-                            ("PN0002", 1, 38, "hoanthanh", new List<(int, int, decimal)> { (3, 60, 53000), (6, 50, 30000), (7, 100, 15000) }),
-                            ("PN0003", 2, 30, "hoanthanh", new List<(int, int, decimal)> { (4, 120, 37000), (11, 80, 26000), (18, 40, 35000) }),
-                            ("PN0004", 3, 22, "hoanthanh", new List<(int, int, decimal)> { (2, 70, 180000), (9, 50, 205000), (19, 60, 220000) }),
-                            ("PN0005", 4, 15, "hoanthanh", new List<(int, int, decimal)> { (8, 90, 60000), (12, 100, 95000) }),
-                            ("PN0006", 5, 10, "hoanthanh", new List<(int, int, decimal)> { (3, 80, 54000), (16, 40, 115000) }),
+                            ("PN0001", 0, 45, "xacnhan", new List<(int, int, decimal)> { (0, 50, 120000), (1, 100, 45000), (5, 80, 115000) }),
+                            ("PN0002", 1, 38, "xacnhan", new List<(int, int, decimal)> { (3, 60, 53000), (6, 50, 30000), (7, 100, 15000) }),
+                            ("PN0003", 2, 30, "xacnhan", new List<(int, int, decimal)> { (4, 120, 37000), (11, 80, 26000), (18, 40, 35000) }),
+                            ("PN0004", 3, 22, "xacnhan", new List<(int, int, decimal)> { (2, 70, 180000), (9, 50, 205000), (19, 60, 220000) }),
+                            ("PN0005", 4, 15, "xacnhan", new List<(int, int, decimal)> { (8, 90, 60000), (12, 100, 95000) }),
+                            ("PN0006", 5, 10, "xacnhan", new List<(int, int, decimal)> { (3, 80, 54000), (16, 40, 115000) }),
                             ("PN0007", 7, 5, "xacnhan", new List<(int, int, decimal)> { (14, 50, 182000), (15, 60, 110000) }),
                             ("PN0008", 0, 1, "nhap", new List<(int, int, decimal)> { (0, 30, 125000), (5, 50, 116000) })
                         };
@@ -371,7 +388,7 @@ namespace code.Data
                                     context.ChiTietPhieuNhaps.Add(ct);
                                     totalSum += (item.qty * item.price);
 
-                                    if (po.status == "hoanthanh")
+                                    if (po.status == "xacnhan")
                                     {
                                         context.LichSuNhapHangs.Add(new LichSuNhapHang
                                         {
@@ -423,20 +440,25 @@ namespace code.Data
                     }
 
                     // Thêm một số bản ghi nhập đầu kỳ và điều chỉnh kho cho đa dạng
-                    var sampleSps = await context.SanPhams.Take(8).ToListAsync();
-                    int dayOffset = 50;
-                    foreach (var sp in sampleSps)
+                    var samplePn = await context.PhieuNhaps.FirstOrDefaultAsync();
+                    if (samplePn != null)
                     {
-                        if (!await context.LichSuNhapHangs.AnyAsync(l => l.MaSanPham == sp.MaSanPham))
+                        var sampleSps = await context.SanPhams.Take(8).ToListAsync();
+                        int dayOffset = 50;
+                        foreach (var sp in sampleSps)
                         {
-                            context.LichSuNhapHangs.Add(new LichSuNhapHang
+                            if (!await context.LichSuNhapHangs.AnyAsync(l => l.MaSanPham == sp.MaSanPham))
                             {
-                                MaSanPham = sp.MaSanPham,
-                                SoLuongThayDoi = 60,
-                                LoaiThayDoi = "nhap",
-                                NgayTao = DateTime.Now.AddDays(-dayOffset)
-                            });
-                            dayOffset -= 4;
+                                context.LichSuNhapHangs.Add(new LichSuNhapHang
+                                {
+                                    MaPhieuNhap = samplePn.MaPhieuNhap,
+                                    MaSanPham = sp.MaSanPham,
+                                    SoLuongThayDoi = 60,
+                                    LoaiThayDoi = "nhap",
+                                    NgayTao = DateTime.Now.AddDays(-dayOffset)
+                                });
+                                dayOffset -= 4;
+                            }
                         }
                     }
 
@@ -448,8 +470,17 @@ namespace code.Data
             // 8. Seed Kỳ đánh giá AHP chuẩn mẫu nếu chưa có
             try
             {
-                if (!await context.KyDanhGias.AnyAsync())
+                var hasCompletedKy = await context.KyDanhGias.AnyAsync(k => k.KetQuaXepHangs.Any());
+                if (!hasCompletedKy)
                 {
+                    // Xóa các kỳ rỗng dở dang nếu có
+                    var incompleteKys = await context.KyDanhGias.Where(k => !k.KetQuaXepHangs.Any()).ToListAsync();
+                    if (incompleteKys.Any())
+                    {
+                        context.KyDanhGias.RemoveRange(incompleteKys);
+                        await context.SaveChangesAsync();
+                    }
+
                     var admin = await context.NguoiDungs.FirstOrDefaultAsync(u => u.VaiTro == "admin") 
                                 ?? await context.NguoiDungs.FirstOrDefaultAsync();
 
@@ -460,7 +491,7 @@ namespace code.Data
                     {
                         var ky = new KyDanhGia
                         {
-                            TenKyDanhGia = $"Đánh giá & Lựa chọn Nhà cung cấp Chiến lược Quý 3/{DateTime.Now.Year}",
+                            TenKyDanhGia = $"Đánh giá NCC Quý 3/{DateTime.Now.Year}",
                             MaNguoiDung = admin.MaNguoiDung,
                             NgayTao = DateTime.Now.AddDays(-7),
                             TrangThai = "hoanthanh"
@@ -506,12 +537,12 @@ namespace code.Data
                             });
                         }
 
-                        // Điểm đánh giá thực tế từng tiêu chí cho các NCC (Thang 1-10)
+                        // Điểm đánh giá thực tế từng tiêu chí cho các NCC (Thang 1-9 theo Saaty & DB constraint)
                         var scoresMatrix = new decimal[8, 4]
                         {
                             { 8.0m, 9.0m, 8.5m, 9.0m }, // Asia Foods: Chất lượng cao, uy tín cao
                             { 8.5m, 8.5m, 8.0m, 8.5m }, // Masan: Rất mạnh, quy mô lớn
-                            { 7.5m, 9.5m, 8.0m, 9.5m }, // Vinamilk: Chất lượng tuyệt hảo
+                            { 7.5m, 9.0m, 8.0m, 9.0m }, // Vinamilk: Chất lượng tuyệt hảo
                             { 9.0m, 7.5m, 8.5m, 8.0m }, // Tân Hiệp Phát: Giá tốt, cung ứng nhanh
                             { 7.0m, 9.0m, 7.5m, 9.0m }, // Nestlé: Tiêu chuẩn quốc tế
                             { 8.5m, 8.0m, 8.5m, 8.0m }, // CALOFIC: Giá cạnh tranh
@@ -529,7 +560,7 @@ namespace code.Data
                                     MaKyDanhGia = ky.MaKyDanhGia,
                                     MaNhaCungCap = nccs[s].MaNhaCungCap,
                                     MaTieuChi = tieuChis[t].MaTieuChi,
-                                    Diem = scoresMatrix[s, t]
+                                    Diem = Math.Clamp(scoresMatrix[s, t], 1.0m, 9.0m)
                                 });
                             }
                         }
@@ -564,7 +595,7 @@ namespace code.Data
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Seed KyDanhGia Warning]: {ex.Message}");
+                Console.WriteLine($"[Seed KyDanhGia Warning]: {ex.Message} --> Inner: {ex.InnerException?.Message}");
             }
         }
     }

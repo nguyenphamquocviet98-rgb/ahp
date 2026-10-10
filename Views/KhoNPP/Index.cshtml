@@ -1,0 +1,199 @@
+<div id="stockToken" hidden>@Html.AntiForgeryToken()</div>
+@model List<code.Models.TonKhoNPP>
+@{
+    ViewData["Title"] = "Kho hàng của tôi";
+    var doanhNghiep = ViewBag.DoanhNghiep as code.Models.DoanhNghiep;
+    var search = ViewBag.Search as string;
+    var trangThai = ViewBag.TrangThai as string;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-box-seam-fill text-primary me-2"></i>Kho hàng
+            @if (doanhNghiep != null)
+            {
+                <span class="text-muted fw-normal" style="font-size: 16px;">— @doanhNghiep.TenDoanhNghiep</span>
+                @if (doanhNghiep.LaGianHangMall)
+                {
+                    <span class="badge bg-danger ms-2" style="font-size: 11px;"><i class="bi bi-patch-check-fill me-1"></i>MALL</span>
+                }
+            }
+        </h4>
+        <p class="text-muted mb-0 small">Quản lý sản phẩm tồn kho, giá sỉ và đăng chào bán trên sàn B2B</p>
+    </div>
+    <a asp-action="ThemSanPham" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm vào kho
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Bộ lọc -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <input type="text" name="search" value="@search" class="form-control" placeholder="🔍 Tìm theo tên hoặc mã sản phẩm..." />
+            </div>
+            <div class="col-md-3">
+                <select name="trangThai" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="dangban" selected="@(trangThai == "dangban")">Đang chào bán</option>
+                    <option value="chuaban" selected="@(trangThai == "chuaban")">Chưa chào bán</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-funnel me-1"></i>Lọc</button>
+            </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Thống kê nhanh -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+            <div class="text-primary fw-bold fs-4">@Model.Count</div>
+            <div class="text-muted small">Tổng mặt hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+            <div class="text-success fw-bold fs-4">@Model.Count(x => x.DangChaoBan)</div>
+            <div class="text-muted small">Đang chào bán</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+            <div class="text-warning fw-bold fs-4">@Model.Count(x => x.SoLuongTon < 20 && x.SoLuongTon > 0)</div>
+            <div class="text-muted small">Sắp hết hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+            <div class="text-danger fw-bold fs-4">@Model.Count(x => x.SoLuongTon == 0)</div>
+            <div class="text-muted small">Hết hàng</div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng kho hàng -->
+<div class="card border-0 shadow-sm" style="border-radius: 12px;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;">#</th>
+                    <th>Sản phẩm</th>
+                    <th class="text-end">Tồn kho</th>
+                    <th class="text-end">Giá sỉ (đ)</th>
+                    <th class="text-center">Giao hàng</th>
+                    <th class="text-center">Chào bán</th>
+                    <th class="text-center" style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                            Chưa có sản phẩm nào trong kho.<br />
+                            <a asp-action="ThemSanPham" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i>Thêm ngay</a>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    var stt = 0;
+                    @foreach (var item in Model)
+                    {
+                        stt++;
+                        var stockClass = item.SoLuongTon == 0 ? "text-danger" : item.SoLuongTon < 20 ? "text-warning" : "text-success";
+                        <tr>
+                            <td class="text-muted">@stt</td>
+                            <td>
+                                <div class="fw-semibold">@item.SanPham?.TenSanPham</div>
+                                <div class="text-muted small">
+                                    @item.SanPham?.MaSanPhamCode
+                                    @if (item.SanPham?.DanhMuc != null)
+                                    {
+                                        <span class="ms-1">· @item.SanPham.DanhMuc.TenDanhMuc</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-end fw-bold @stockClass">
+                                @item.SoLuongTon.ToString("N0")
+                                <span class="text-muted fw-normal small">@item.SanPham?.DonViTinh?.TenDonVi</span>
+                            </td>
+                            <td class="text-end fw-semibold">@item.GiaSi.ToString("N0")</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">@item.ThoiGianGiaoHang ngày</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                    <input class="form-check-input toggle-chaoBan" type="checkbox"
+                                           data-id="@item.MaTonKhoNPP"
+                                           @(item.DangChaoBan ? "checked" : "")
+                                           style="cursor: pointer; width: 36px; height: 20px;" />
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Edit" asp-route-id="@item.MaTonKhoNPP"
+                                   class="btn btn-sm btn-outline-primary" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@item.MaTonKhoNPP" method="post"
+                                      class="d-inline" onsubmit="return confirm('Xác nhận xóa sản phẩm này khỏi kho?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toggle Chào bán qua AJAX
+        document.querySelectorAll('.toggle-chaoBan').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                var id = this.dataset.id;
+                fetch('/KhoNPP/ToggleChaoBan?id=' + id, { method: 'POST', headers: { 'RequestVerificationToken': document.querySelector('#stockToken input').value } })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            alert('Có lỗi xảy ra!');
+                            toggle.checked = !toggle.checked;
+                        }
+                    })
+                    .catch(() => {
+                        alert('Có lỗi xảy ra!');
+                        toggle.checked = !toggle.checked;
+                    });
+            });
+        });
+    </script>
+}

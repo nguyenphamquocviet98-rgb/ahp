@@ -1,0 +1,134 @@
+@model IEnumerable<code.Models.QuangCaoBanner>
+
+@{
+    ViewData["Title"] = "Quản lý Banner Quảng Cáo";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-controller="SanB2B" asp-action="Index">Sàn B2B</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Quảng cáo Banner</li>
+            </ol>
+        </nav>
+        <h2 class="page-title">Quản lý Banner Tài Trợ Trang Nhất</h2>
+        <p class="text-muted mb-0 small">Banner tài trợ xuất hiện nổi bật tại trang nhất Chợ Sỉ B2B để tiếp cận hàng nghìn khách hàng mua sỉ.</p>
+    </div>
+    <div>
+        <a asp-action="DangKy" class="btn btn-warning fw-bold rounded-3 shadow-sm">
+            <i class="bi bi-megaphone-fill me-1"></i> Đăng ký Banner Mới
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã Banner</th>
+                    <th>Doanh nghiệp đăng ký</th>
+                    <th>Nội dung Banner / Tiêu đề</th>
+                    <th class="text-end">Chi phí tài trợ</th>
+                    <th class="text-center">Thời gian hiển thị</th>
+                    <th class="text-center">Trạng thái</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold text-muted">#BN-@item.MaBanner</td>
+                            <td>
+                                <div class="fw-bold">
+                                    @item.DoanhNghiep?.TenDoanhNghiep
+                                    @if (item.DoanhNghiep != null && item.DoanhNghiep.LaGianHangMall)
+                                    {
+                                        <span class="badge bg-danger ms-1 small">MALL</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-primary">@item.TieuDe</div>
+                                <small class="text-muted">Link liên kết: <a href="@item.LienKet" target="_blank" class="text-decoration-none">@item.LienKet</a></small>
+                            </td>
+                            <td class="text-end fw-bold text-success fs-6">
+                                @item.ChiPhi.ToString("N0") đ
+                            </td>
+                            <td class="text-center small">
+                                <div>@item.NgayBatDau.ToString("dd/MM/yyyy") - @item.NgayKetThuc.ToString("dd/MM/yyyy")</div>
+                                @{
+                                    var daysLeft = (item.NgayKetThuc - DateTime.Now).Days;
+                                }
+                                @if (item.TrangThai == "hoat_dong")
+                                {
+                                    <span class="badge bg-success-subtle text-success small">Còn @daysLeft ngày</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @switch (item.TrangThai)
+                                {
+                                    case "cho_duyet":
+                                        <span class="badge bg-warning text-dark px-2 py-1">Chờ duyệt</span>
+                                        break;
+                                    case "hoat_dong":
+                                        <span class="badge bg-success px-2 py-1">Đang hiển thị</span>
+                                        break;
+                                    case "het_han":
+                                        <span class="badge bg-secondary px-2 py-1">Hết hạn</span>
+                                        break;
+                                    case "tu_choi":
+                                        <span class="badge bg-danger px-2 py-1">Từ chối</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (isAdmin && item.TrangThai == "cho_duyet")
+                                {
+                                    <form asp-action="Duyet" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.MaBanner" />
+                                        <input type="hidden" name="approve" value="true" />
+                                        <button type="submit" class="btn btn-sm btn-success rounded-2 me-1" title="Duyệt">
+                                            <i class="bi bi-check-lg"></i> Duyệt
+                                        </button>
+                                    </form>
+                                    <form asp-action="Duyet" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.MaBanner" />
+                                        <input type="hidden" name="approve" value="false" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-2 me-1" title="Từ chối">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                }
+
+                                <form asp-action="Xoa" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa banner này?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.MaBanner" />
+                                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-2" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-megaphone fs-2 d-block mb-2"></i>
+                            Chưa có banner quảng cáo nào trên hệ thống.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

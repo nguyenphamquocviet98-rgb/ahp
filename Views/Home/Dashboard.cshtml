@@ -1,0 +1,392 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Bảng điều khiển - Quản lý tổng quan";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h3 class="mb-0">Bảng điều khiển nội bộ</h3>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 11px;">
+                <i class="bi bi-shield-check me-1"></i>Đã đăng nhập
+            </span>
+        </div>
+        <p class="mb-0">Tổng quan nhập hàng, tồn kho và kết quả lựa chọn nhà cung cấp AHP</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Home" asp-action="Landing" class="btn btn-custom btn-custom-outline" title="Xem giao diện Sàn B2B công khai">
+            <i class="bi bi-globe me-1"></i> Cổng B2B
+        </a>
+        <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-plus-lg"></i> Lập phiếu nhập
+        </a>
+        <a asp-controller="AHP" asp-action="MaTranSoSanh" class="btn btn-custom btn-custom-primary">
+            <i class="bi bi-diagram-3"></i> Đánh giá AHP
+        </a>
+    </div>
+</div>
+
+@if (Model.SoMatHangCanhBao > 0)
+{
+    <div class="alert-custom alert-custom-warning mb-4">
+        <i class="bi bi-exclamation-triangle"></i>
+        <div class="flex-grow-1">
+            <strong>Cảnh báo tồn kho:</strong> @Model.SoMatHangCanhBao mặt hàng dưới định mức an toàn —
+            @string.Join(", ", Model.DanhSachCanhBaoTonKho.Take(3).Select(t => $"{t.SanPham?.TenSanPham} (còn {t.SoLuongTon})"))
+            @(Model.SoMatHangCanhBao > 3 ? $" và {Model.SoMatHangCanhBao - 3} mặt hàng khác." : ".")
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="TonKho" asp-action="Index" asp-route-mucTon="thap" class="btn btn-sm btn-custom btn-custom-outline">
+                Xem danh sách kho
+            </a>
+            <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-sm btn-custom btn-custom-primary">
+                <i class="bi bi-cart-plus me-1"></i> Lập phiếu nhập
+            </a>
+        </div>
+    </div>
+}
+
+<!-- 4 KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl col-md-6 col-sm-6">
+        <div class="kpi-bento-card">
+            <div class="kpi-top-row">
+                <span class="kpi-title">Sản phẩm</span>
+                <div class="kpi-icon-badge badge-icon-blue"><i class="bi bi-box-seam"></i></div>
+            </div>
+            <div class="kpi-main-metric">@Model.TongSanPham</div>
+            <div class="kpi-bottom-meta">Đang lưu thông</div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-6 col-sm-6">
+        <div class="kpi-bento-card">
+            <div class="kpi-top-row">
+                <span class="kpi-title">Phiếu nhập kho</span>
+                <div class="kpi-icon-badge badge-icon-indigo"><i class="bi bi-receipt-cutoff"></i></div>
+            </div>
+            <div class="kpi-main-metric">@Model.TongPhieuNhap</div>
+            <div class="kpi-bottom-meta">Toàn thời gian</div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-6 col-sm-6">
+        <div class="kpi-bento-card">
+            <div class="kpi-top-row">
+                <span class="kpi-title">Tổng giá trị nhập</span>
+                <div class="kpi-icon-badge badge-icon-emerald"><i class="bi bi-cash-stack"></i></div>
+            </div>
+            <div class="kpi-main-metric" style="font-size: 20px;">@Model.TongGiaTriNhap.ToString("N0") <span style="font-size: 12px; font-weight: 500; color: var(--slate-500);">VNĐ</span></div>
+            <div class="kpi-bottom-meta">Vốn luân chuyển</div>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-6 col-sm-6">
+        <div class="kpi-bento-card">
+            <div class="kpi-top-row">
+                <span class="kpi-title">Tổng tồn kho</span>
+                <div class="kpi-icon-badge badge-icon-amber"><i class="bi bi-boxes"></i></div>
+            </div>
+            <div class="kpi-main-metric">@Model.TongSoLuongTon <span style="font-size: 12px; font-weight: 500; color: var(--slate-500);">đơn vị</span></div>
+            <div class="kpi-bottom-meta">Đang lưu kho</div>
+        </div>
+    </div>
+</div>
+
+<!-- Nhà cung cấp tốt nhất theo AHP -->
+<div class="mb-4">
+    @if (Model.NhaCungCapDeXuatGanNhat != null)
+    {
+        <partial name="_AhpWinnerCard" model="Model.NhaCungCapDeXuatGanNhat" />
+    }
+    else
+    {
+        <div class="ahp-winner-card">
+            <div>
+                <span class="ahp-winner-rank"><i class="bi bi-award"></i> Đề xuất nhập hàng #1 (AHP)</span>
+                <div class="ahp-supplier-title">Chưa có kết quả đánh giá AHP</div>
+                <p class="mb-3" style="color: var(--slate-500); font-size: 13.5px;">
+                    Hoàn thiện ma trận so sánh cặp và chấm điểm nhà cung cấp để hệ thống đưa ra đề xuất.
+                </p>
+                <a asp-controller="AHP" asp-action="MaTranSoSanh" class="btn btn-custom btn-custom-outline">
+                    Bắt đầu đánh giá <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Biểu đồ -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-graph-up text-primary"></i> Chi phí nhập hàng theo tháng</h5>
+                <a asp-controller="PhieuNhap" asp-action="ExportExcel" class="btn btn-sm btn-custom btn-custom-outline">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel
+                </a>
+            </div>
+            <div class="card-body-custom" style="min-height: 280px;">
+                <canvas id="costTrendChart" style="max-height: 250px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-pie-chart text-primary"></i> Phân bố theo danh mục</h5>
+            </div>
+            <div class="card-body-custom d-flex align-items-center justify-content-center" style="min-height: 280px;">
+                <canvas id="categoryChart" style="max-height: 240px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng dữ liệu -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-receipt text-primary"></i> Phiếu nhập gần đây</h5>
+                <a asp-controller="PhieuNhap" asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.PhieuNhapMoiNhat.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Nhà cung cấp</th>
+                                    <th>Ngày nhập</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                    <th class="text-center">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pn in Model.PhieuNhapMoiNhat)
+                                {
+                                    var tongTien = (pn.TongTien.HasValue && pn.TongTien.Value > 0)
+                                        ? pn.TongTien.Value
+                                        : (pn.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="PhieuNhap" asp-action="Details" asp-route-id="@pn.MaPhieuNhap" class="code-badge text-decoration-none">
+                                                @(pn.MaPhieuNhapCode ?? $"PN{pn.MaPhieuNhap:D4}")
+                                            </a>
+                                        </td>
+                                        <td class="fw-semibold" style="color: var(--slate-800);">@(pn.NhaCungCap?.TenNhaCungCap ?? "N/A")</td>
+                                        <td style="color: var(--slate-500);">
+                                            @(pn.NgayNhap?.ToString("dd/MM/yyyy") ?? pn.NgayTao?.ToString("dd/MM/yyyy") ?? "N/A")
+                                        </td>
+                                        <td class="text-end font-mono fw-semibold" style="color: var(--slate-900);">
+                                            @(tongTien.ToString("N0")) đ
+                                        </td>
+                                        <td class="text-center">
+                                            @if (pn.TrangThai == "xacnhan")
+                                            {
+                                                <span class="status-badge status-badge-success">Đã duyệt</span>
+                                            }
+                                            else if (pn.TrangThai == "huy")
+                                            {
+                                                <span class="status-badge status-badge-danger">Đã hủy</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-badge-warning">Chờ xử lý</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có phiếu nhập hàng nào trong hệ thống.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-boxes text-warning"></i> Theo dõi tồn kho</h5>
+                <a asp-controller="TonKho" asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
+                    Chi tiết <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.DanhSachTonKho.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-end">Tồn kho</th>
+                                    <th class="text-center">Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tk in Model.DanhSachTonKho.Take(6))
+                                {
+                                    var soLuong = tk.SoLuongTon ?? 0;
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold" style="color: var(--slate-800);">@(tk.SanPham?.TenSanPham ?? "N/A")</div>
+                                            <small style="color: var(--slate-400); font-size: 12px;">@(tk.SanPham?.DanhMuc?.TenDanhMuc ?? "")</small>
+                                        </td>
+                                        <td class="text-end font-mono fw-semibold" style="color: var(--slate-900);">@soLuong</td>
+                                        <td class="text-center">
+                                            @if (soLuong < 20)
+                                            {
+                                                <span class="status-badge status-badge-danger">Tồn thấp</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-badge-success">Đủ hàng</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có dữ liệu tồn kho.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Biểu đồ tròn: phân bố sản phẩm theo danh mục
+            const catLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.TenDanhMuc)));
+            const catData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeDanhMuc.Select(d => d.SoLuongSanPham)));
+
+            const ctxCat = document.getElementById('categoryChart');
+            if (ctxCat && catLabels && catLabels.length > 0) {
+                new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            data: catData,
+                            backgroundColor: ['#2563EB', '#64748B', '#059669', '#D97706', '#4F46E5', '#94A3B8'],
+                            borderWidth: 2,
+                            borderColor: '#FFFFFF',
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { family: "'Be Vietnam Pro', 'Inter', sans-serif", size: 12 },
+                                    boxWidth: 10,
+                                    padding: 10
+                                }
+                            }
+                        },
+                        cutout: '68%'
+                    }
+                });
+            }
+
+            // Biểu đồ đường: chi phí nhập hàng theo tháng
+            const trendData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeChiPhiTheoThang));
+            const ctxTrend = document.getElementById('costTrendChart');
+            if (ctxTrend && trendData && trendData.length > 0) {
+                const months = trendData.map(t => t.ThangNam);
+                const amounts = trendData.map(t => t.TongTien);
+                const orderCounts = trendData.map(t => t.SoPhieuNhap);
+
+                new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Tổng tiền nhập hàng (VNĐ)',
+                            data: amounts,
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#2563EB',
+                            pointBorderColor: '#FFFFFF',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (item) {
+                                        const val = Number(item.raw) || 0;
+                                        const count = orderCounts[item.dataIndex] || 0;
+                                        return [
+                                            ` Chi phí nhập: ${val.toLocaleString('vi-VN')} VNĐ`,
+                                            ` Số phiếu: ${count}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#64748B', font: { size: 12 } }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#F1F5F9' },
+                                ticks: {
+                                    color: '#64748B',
+                                    font: { family: 'JetBrains Mono', size: 11 },
+                                    callback: function (v) {
+                                        if (v >= 1000000) return (v / 1000000).toFixed(1) + ' tr';
+                                        if (v >= 1000) return (v / 1000).toFixed(0) + ' k';
+                                        return v + ' đ';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -4,79 +4,40 @@
     var search = ViewData["Search"] as string;
     var selectedDanhMuc = ViewData["SelectedDanhMuc"] as int?;
     var selectedMucTon = ViewData["SelectedMucTon"] as string;
-
-    int tongMatHang = ViewBag.TongSoMatHang ?? 0;
-    int tongSoLuongTon = ViewBag.TongSoLuongTon ?? 0;
-    int soMatHangTonThap = ViewBag.SoMatHangTonThap ?? 0;
-    decimal tongGiaTriTonKho = ViewBag.TongGiaTriTonKho ?? 0;
 }
 
 <div class="page-header">
     <div class="page-header-left">
-        <h3><i class="bi bi-boxes" style="color: var(--primary);"></i> Quản lý Tồn kho</h3>
-        <p>Theo dõi số lượng hàng tồn trong kho, cảnh báo mức tồn thấp và tổng giá trị kho lưu động</p>
+        <h3>Quản lý Tồn kho</h3>
+        <p>Theo dõi số lượng hàng tồn, cảnh báo mức tồn thấp và giá trị kho lưu động</p>
     </div>
-    <div>
+    <div class="d-flex gap-2">
+        <a asp-controller="LichSuNhapHang" asp-action="Index" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-clock-history me-1"></i> Lịch sử biến động
+        </a>
+        <a asp-action="ExportExcel" asp-route-search="@search" asp-route-maDanhMuc="@selectedDanhMuc" asp-route-mucTon="@selectedMucTon" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel
+        </a>
         <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-primary">
             <i class="bi bi-plus-circle"></i> Lập phiếu nhập hàng
         </a>
     </div>
 </div>
 
-<!-- 4 Thẻ KPI Tồn kho -->
-<div class="row g-3 mb-4">
-    <div class="col-xl-3 col-md-6">
-        <div class="kpi-card">
-            <div class="kpi-icon icon-primary">
-                <i class="bi bi-grid-3x3-gap"></i>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-label">Tổng mặt hàng</div>
-                <div class="kpi-value">@tongMatHang</div>
-                <div class="small text-muted mt-1">Đang quản lý</div>
-            </div>
-        </div>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3">
+        <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-
-    <div class="col-xl-3 col-md-6">
-        <div class="kpi-card kpi-info">
-            <div class="kpi-icon icon-info">
-                <i class="bi bi-box-seam"></i>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-label">Tổng số lượng tồn</div>
-                <div class="kpi-value">@tongSoLuongTon <span class="kpi-unit">đơn vị</span></div>
-                <div class="small text-muted mt-1">Thực tế trong kho</div>
-            </div>
-        </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-
-    <div class="col-xl-3 col-md-6">
-        <div class="kpi-card kpi-warning">
-            <div class="kpi-icon icon-warning">
-                <i class="bi bi-exclamation-triangle"></i>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-label">Cảnh báo tồn thấp</div>
-                <div class="kpi-value text-danger">@soMatHangTonThap <span class="kpi-unit">(&lt; 20)</span></div>
-                <div class="small text-danger mt-1">Cần nhập bổ sung</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6">
-        <div class="kpi-card kpi-success">
-            <div class="kpi-icon icon-success">
-                <i class="bi bi-cash-stack"></i>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-label">Tổng giá trị kho</div>
-                <div class="kpi-value" style="font-size: 18px;">@tongGiaTriTonKho.ToString("N0") <span class="kpi-unit">VNĐ</span></div>
-                <div class="small text-muted mt-1">Ước tính theo giá định mức</div>
-            </div>
-        </div>
-    </div>
-</div>
+}
 
 <!-- Bộ lọc & Tìm kiếm -->
 <div class="search-bar mb-4">
@@ -101,38 +62,18 @@
     </form>
 </div>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
 <!-- Bảng Tồn kho -->
 <div class="table-wrapper">
     <div class="table-responsive">
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th style="width: 90px;">Mã SP</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>ĐVT</th>
+                    <th>Sản phẩm</th>
                     <th class="text-end">Đơn giá định mức</th>
-                    <th class="text-center" style="width: 120px;">Số lượng tồn</th>
-                    <th class="text-end">Giá trị tồn tạm tính</th>
-                    <th class="text-center" style="width: 120px;">Tình trạng</th>
-                    <th style="width: 140px;">Cập nhật gần nhất</th>
-                    <th class="text-center" style="width: 130px;">Thao tác</th>
+                    <th class="text-end">Tồn kho</th>
+                    <th class="text-end">Giá trị tồn</th>
+                    <th class="text-center" style="width: 130px;">Tình trạng</th>
+                    <th class="text-center" style="width: 150px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -151,26 +92,19 @@
 
                         <tr>
                             <td>
-                                <span class="code-badge">
-                                    @spCode
-                                </span>
-                            </td>
-                            <td>
-                                <a asp-controller="SanPham" asp-action="Details" asp-route-id="@sp?.MaSanPham" class="fw-bold text-decoration-none" style="color: var(--slate-900);">
+                                <a asp-controller="SanPham" asp-action="Details" asp-route-id="@sp?.MaSanPham" class="fw-semibold text-decoration-none" style="color: var(--slate-800);">
                                     @spTen
                                 </a>
+                                <div style="margin-top: 2px;">
+                                    <span class="code-badge">@spCode</span>
+                                    <span style="color: var(--slate-400); font-size: 12px;"> · @(sp?.DanhMuc?.TenDanhMuc ?? "Chưa phân loại")</span>
+                                </div>
                             </td>
-                            <td>
-                                <span class="status-badge status-badge-secondary">
-                                    @(sp?.DanhMuc?.TenDanhMuc ?? "Chưa phân loại")
-                                </span>
-                            </td>
-                            <td>@spDvt</td>
                             <td class="text-end font-mono">@(gia.ToString("N0")) đ</td>
-                            <td class="text-center">
-                                <span class="fw-bold font-mono fs-6 @(soLuong < 20 ? "text-danger" : "text-dark")" id="stock-display-@spMa">
-                                    @soLuong
-                                </span>
+                            <td class="text-end"
+                                title="Cập nhật: @(item.NgayCapNhat?.ToString("dd/MM/yyyy HH:mm") ?? "—")">
+                                <span class="fw-bold font-mono @(soLuong < 20 ? "text-danger" : "text-dark")" id="stock-display-@spMa">@soLuong</span>
+                                <span style="color: var(--slate-400); font-size: 12.5px;">@spDvt</span>
                             </td>
                             <td class="text-end font-mono fw-semibold" style="color: var(--primary);">
                                 @(giaTriTon.ToString("N0")) đ
@@ -178,22 +112,15 @@
                             <td class="text-center">
                                 @if (soLuong < 20)
                                 {
-                                    <span class="status-badge status-badge-danger">
-                                        <i class="bi bi-exclamation-circle"></i> Tồn thấp
-                                    </span>
+                                    <span class="status-badge status-badge-danger">Tồn thấp</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge-success">
-                                        <i class="bi bi-check-circle"></i> Đủ hàng
-                                    </span>
+                                    <span class="status-badge status-badge-success">Đủ hàng</span>
                                 }
                             </td>
-                            <td style="color: var(--slate-500); font-size: 13px;">
-                                @(item.NgayCapNhat?.ToString("dd/MM/yyyy HH:mm") ?? "—")
-                            </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold"
+                                <button type="button" class="btn btn-sm btn-outline-primary"
                                         data-id="@spMa"
                                         data-name="@spTen"
                                         data-code="@spCode"
@@ -209,7 +136,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="10">
+                        <td colspan="6">
                             <div class="empty-state"><i class="bi bi-inbox"></i><p>Không tìm thấy dữ liệu tồn kho nào phù hợp.</p></div>
                         </td>
                     </tr>
@@ -219,12 +146,34 @@
     </div>
 </div>
 
+<style>
+    .stock-slider {
+        height: 6px;
+        border-radius: 3px;
+        -webkit-appearance: none;
+        background: var(--slate-200);
+        outline: none;
+        width: 100%;
+        margin-top: 15px;
+    }
+    .stock-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--primary-500);
+        cursor: pointer;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+</style>
+
 <!-- Modal Điều chỉnh Tồn kho (Tăng / Giảm kho) -->
-<div class="modal fade" id="dieuChinhKhoModal" tabindex="-1" aria-labelledby="dieuChinhKhoModalLabel" aria-hidden="true">
+<div class="modal fade" id="dieuChinhKhoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
-                <h5 class="modal-title fw-bold text-dark d-flex align-items-center" id="dieuChinhKhoModalLabel">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
                     <i class="bi bi-sliders text-primary me-2"></i> Điều chỉnh Tồn kho
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -236,11 +185,11 @@
 
                 <div class="modal-body p-4">
                     <!-- Thông tin sản phẩm -->
-                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                    <div class="p-3 rounded-3 mb-3" style="background: var(--slate-50); border: 1px solid var(--border-color);">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <span class="badge bg-secondary-subtle text-secondary small font-monospace text-uppercase" id="modalSpCode">SP001</span>
-                                <h6 class="fw-bold text-dark mt-1 mb-0" id="modalSpTen">Tên sản phẩm</h6>
+                                <span class="code-badge" id="modalSpCode">SP001</span>
+                                <h6 class="fw-bold mt-1 mb-0" style="color: var(--slate-900);" id="modalSpTen">Tên sản phẩm</h6>
                             </div>
                             <div class="text-end">
                                 <small class="text-muted d-block">Tồn kho hiện có</small>
@@ -250,31 +199,38 @@
                         </div>
                     </div>
 
-                    <!-- Chọn Loại điều chỉnh (Giảm kho / Tăng kho) -->
+                    <!-- Chọn Loại điều chỉnh -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Hành động điều chỉnh <span class="text-danger">*</span></label>
                         <div class="d-flex gap-2">
                             <input type="radio" class="btn-check" name="loaiDieuChinh" id="optGiam" value="giam" checked onchange="updateCalculations()">
-                            <label class="btn btn-outline-danger flex-fill rounded-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1" for="optGiam">
-                                <i class="bi bi-dash-circle-fill"></i> Giảm kho (Xuất / Hỏng)
+                            <label class="btn btn-outline-danger flex-fill py-2 fw-semibold" for="optGiam">
+                                <i class="bi bi-dash-circle me-1"></i> Giảm kho
                             </label>
 
                             <input type="radio" class="btn-check" name="loaiDieuChinh" id="optTang" value="tang" onchange="updateCalculations()">
-                            <label class="btn btn-outline-success flex-fill rounded-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1" for="optTang">
-                                <i class="bi bi-plus-circle-fill"></i> Tăng kho (Kiểm kê dôi)
+                            <label class="btn btn-outline-success flex-fill py-2 fw-semibold" for="optTang">
+                                <i class="bi bi-plus-circle me-1"></i> Tăng kho
                             </label>
                         </div>
                     </div>
 
                     <!-- Số lượng thay đổi -->
-                    <div class="mb-3">
-                        <label for="modalSoLuong" class="form-label fw-semibold">Số lượng thay đổi <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-secondary" id="modalIconAction"><i class="bi bi-dash-lg"></i></span>
-                            <input type="number" name="soLuongThayDoi" id="modalSoLuong" class="form-control rounded-end-3 fs-5 fw-bold"
-                                   min="1" value="1" required oninput="updateCalculations()" />
+                    <div class="mb-3 p-3 rounded-3" style="background: var(--white); border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <label for="modalSoLuong" class="form-label fw-bold" style="color: var(--slate-800);">Số lượng thay đổi <span class="text-danger">*</span></label>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-4" id="modalIconAction" style="color: var(--slate-400); width: 24px; text-align: center;">
+                                <i class="bi bi-dash-lg"></i>
+                            </span>
+                            <input type="number" name="soLuongThayDoi" id="modalSoLuong" class="form-control form-control-lg fw-bold text-center text-primary"
+                                   min="1" value="1" required oninput="updateFromInput()" style="max-width: 120px; font-size: 1.25rem; border: 2px solid var(--primary-200);" />
+                            <span class="text-muted ms-2" id="modalSoLuongDvt">đơn vị</span>
                         </div>
-                        <div class="form-text small text-danger" id="modalStockAlert" style="display: none;">
+                        
+                        <input type="range" class="stock-slider" min="1" max="100" value="1" id="modalSoLuongSlider" oninput="updateFromSlider()">
+                        
+                        <div class="form-text text-danger mt-2" id="modalStockAlert" style="display: none;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i> Số lượng giảm không thể lớn hơn số tồn hiện có.
                         </div>
                     </div>
@@ -282,7 +238,7 @@
                     <!-- Lý do điều chỉnh -->
                     <div class="mb-3">
                         <label for="modalLyDo" class="form-label fw-semibold">Lý do điều chỉnh</label>
-                        <select class="form-select rounded-3 mb-2" id="modalLyDoPreset" onchange="onSelectReasonPreset(this)">
+                        <select class="form-select mb-2" id="modalLyDoPreset" onchange="onSelectReasonPreset(this)">
                             <option value="Xuất bán lẻ / Khách mua">Xuất bán lẻ / Khách mua</option>
                             <option value="Xuất luân chuyển chi nhánh">Xuất luân chuyển chi nhánh</option>
                             <option value="Hàng rách bao bì / Hư hỏng">Hàng rách bao bì / Hư hỏng</option>
@@ -290,11 +246,11 @@
                             <option value="Kiểm kê điều chỉnh cân bằng kho">Kiểm kê điều chỉnh cân bằng kho</option>
                             <option value="other">Lý do khác (tự nhập)...</option>
                         </select>
-                        <input type="text" name="lyDo" id="modalLyDo" class="form-control rounded-3" value="Xuất bán lẻ / Khách mua" placeholder="Nhập lý do chi tiết..." />
+                        <input type="text" name="lyDo" id="modalLyDo" class="form-control" value="Xuất bán lẻ / Khách mua" placeholder="Nhập lý do chi tiết..." />
                     </div>
 
-                    <!-- Preview Kết quả sau điều chỉnh -->
-                    <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center" style="background-color: #f8fafc;">
+                    <!-- Xem trước kết quả -->
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: var(--slate-50); border: 1px solid var(--border-color);">
                         <span class="text-secondary small fw-medium">Tồn kho sau điều chỉnh:</span>
                         <div class="text-end">
                             <span class="fs-5 fw-bold font-mono" id="modalTonSauDieuChinh">0</span>
@@ -303,9 +259,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSubmitDieuChinh">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-custom btn-custom-primary" id="btnSubmitDieuChinh">
                         <i class="bi bi-check-lg me-1"></i> Lưu điều chỉnh
                     </button>
                 </div>
@@ -335,7 +291,10 @@
             document.getElementById('modalSpTonHienCo').textContent = ton;
             document.getElementById('modalSpDvt').textContent = currentUnit;
             document.getElementById('modalPreviewDvt').textContent = currentUnit;
+            document.getElementById('modalSoLuongDvt').textContent = currentUnit;
+            
             document.getElementById('modalSoLuong').value = 1;
+            document.getElementById('modalSoLuongSlider').value = 1;
 
             // Mặc định chọn Giảm kho
             document.getElementById('optGiam').checked = true;
@@ -344,8 +303,7 @@
 
             updateCalculations();
 
-            const modal = new bootstrap.Modal(document.getElementById('dieuChinhKhoModal'));
-            modal.show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('dieuChinhKhoModal')).show();
         }
 
         function onSelectReasonPreset(selectEl) {
@@ -358,9 +316,26 @@
             }
         }
 
+        function updateFromInput() {
+            const inp = document.getElementById('modalSoLuong');
+            const sld = document.getElementById('modalSoLuongSlider');
+            let val = parseInt(inp.value) || 1;
+            if (val < 1) val = 1;
+            sld.value = val;
+            updateCalculations();
+        }
+
+        function updateFromSlider() {
+            const inp = document.getElementById('modalSoLuong');
+            const sld = document.getElementById('modalSoLuongSlider');
+            inp.value = sld.value;
+            updateCalculations();
+        }
+
         function updateCalculations() {
             const isGiam = document.getElementById('optGiam').checked;
             const inputSoLuong = document.getElementById('modalSoLuong');
+            const slider = document.getElementById('modalSoLuongSlider');
             const alertEl = document.getElementById('modalStockAlert');
             const btnSubmit = document.getElementById('btnSubmitDieuChinh');
             const iconAction = document.getElementById('modalIconAction');
@@ -373,6 +348,9 @@
             }
 
             if (isGiam) {
+                // Set slider max to current stock if reducing
+                slider.max = currentStock > 0 ? currentStock : 1;
+                
                 iconAction.innerHTML = '<i class="bi bi-dash-lg text-danger"></i>';
                 const newStock = currentStock - qty;
                 previewEl.textContent = newStock;
@@ -386,6 +364,9 @@
                     btnSubmit.disabled = false;
                 }
             } else {
+                // Set slider max to current stock + 200 for increasing (just to give a decent range)
+                slider.max = currentStock + 200;
+
                 iconAction.innerHTML = '<i class="bi bi-plus-lg text-success"></i>';
                 const newStock = currentStock + qty;
                 previewEl.textContent = newStock;

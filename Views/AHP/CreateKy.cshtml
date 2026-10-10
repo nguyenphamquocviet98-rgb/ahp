@@ -6,41 +6,37 @@
 <div class="row justify-content-center">
     <div class="col-lg-6 col-md-8">
         <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0"><i class="bi bi-calendar3-plus text-primary me-1"></i> Tạo Kỳ Đánh Giá AHP Mới</h5>
+                <a asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
             <div class="card-body-custom">
-                <div class="d-flex align-items-center mb-4">
-                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div>
-                        <h4 class="fw-bold mb-0" style="color: var(--slate-900);">Tạo Kỳ Đánh Giá AHP Mới</h4>
-                        <small style="color: var(--slate-500);">Bước 1 trong quy trình 3 bước đánh giá nhà cung cấp</small>
-                    </div>
-                </div>
-
                 <form asp-action="CreateKy" method="post" class="form-custom">
                     @Html.AntiForgeryToken()
 
                     <div class="mb-4">
-                        <label asp-for="TenKyDanhGia" class="form-label">Tên kỳ đánh giá <span style="color: var(--danger);">*</span></label>
+                        <label asp-for="TenKyDanhGia" class="form-label">Tên kỳ đánh giá <span class="text-danger">*</span></label>
                         <input asp-for="TenKyDanhGia" class="form-control" placeholder="Ví dụ: Đánh giá nhà cung cấp Quý 3/2026..." required maxlength="50" />
                         <span asp-validation-for="TenKyDanhGia" class="text-danger small"></span>
                     </div>
 
-                    <div class="p-3 mb-4 rounded-3 border" style="background: var(--slate-50); border-color: var(--border-color) !important;">
-                        <div class="fw-semibold mb-2" style="color: var(--slate-900);">
+                    <div class="p-3 mb-4" style="background: var(--slate-50); border-radius: var(--radius-md);">
+                        <div class="fw-semibold mb-2" style="color: var(--slate-800);">
                             <i class="bi bi-info-circle text-primary me-1"></i> Quy trình đánh giá đa tiêu chí AHP:
                         </div>
                         <ol class="small mb-0 ps-3" style="color: var(--slate-600);">
-                            <li class="mb-1"><strong>Nhập ma trận so sánh cặp:</strong> So sánh mức độ quan trọng giữa 4 tiêu chí (Giá, Chất lượng, Giao hàng, Uy tín) theo thang điểm Saaty 1-9.</li>
-                            <li class="mb-1"><strong>Tính toán AHP & Kiểm tra CR:</strong> Hệ thống tự động tính Trọng số $W_i$, $\lambda_{max}$, $CI$ và kiểm tra tỷ số nhất quán $CR \le 0.10$.</li>
-                            <li><strong>Chấm điểm & Xếp hạng:</strong> Chấm điểm từng NCC theo tiêu chí và tổng hợp theo mô hình Weighted Sum để đề xuất đối tác tốt nhất.</li>
+                            <li class="mb-1"><strong>Nhập ma trận so sánh cặp:</strong> So sánh mức độ quan trọng giữa 4 tiêu chí (Giá, Chất lượng, Giao hàng, Uy tín) theo thang điểm Saaty 1–9.</li>
+                            <li class="mb-1"><strong>Tính toán AHP &amp; kiểm tra CR:</strong> Hệ thống tự động tính trọng số Wi, λmax, CI và kiểm tra tỷ số nhất quán CR ≤ 0.10.</li>
+                            <li><strong>Chấm điểm &amp; xếp hạng:</strong> Chấm điểm từng NCC theo tiêu chí và tổng hợp theo mô hình Weighted Sum để đề xuất đối tác tốt nhất.</li>
                         </ol>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
-                        <button type="submit" class="btn btn-custom btn-custom-primary px-4">
-                            <i class="bi bi-arrow-right-circle me-1"></i> Tạo kỳ & Nhập ma trận
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Tạo kỳ &amp; Nhập ma trận
                         </button>
                     </div>
                 </form>

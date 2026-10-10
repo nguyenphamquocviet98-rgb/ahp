@@ -1,0 +1,59 @@
+@model code.Models.TonKhoNPP
+@{
+    ViewData["Title"] = "Cập nhật kho hàng";
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+    <h4 class="fw-bold mb-0"><i class="bi bi-pencil-square text-primary me-2"></i>Cập nhật kho hàng</h4>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius: 12px; max-width: 700px;">
+    <div class="card-body p-4">
+        <!-- Thông tin sản phẩm (chỉ đọc) -->
+        <div class="bg-light rounded-3 p-3 mb-4">
+            <div class="fw-semibold fs-5">@Model.SanPham?.TenSanPham</div>
+            <div class="text-muted small">
+                Mã: @Model.SanPham?.MaSanPhamCode
+                @if (Model.SanPham?.DonViTinh != null)
+                {
+                    <span>· ĐVT: @Model.SanPham.DonViTinh.TenDonVi</span>
+                }
+            </div>
+        </div>
+
+        <form asp-action="Edit" asp-route-id="@Model.MaTonKhoNPP" method="post">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <p class="small text-muted">Tồn kho được cập nhật từ phiếu nhập đã xác nhận và đơn mua/bán.</p>
+                    <label asp-for="SoLuongTon" class="form-label fw-medium">Số lượng tồn kho</label>
+                    <input asp-for="SoLuongTon" readonly class="form-control" type="number" min="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="GiaSi" class="form-label fw-medium">Giá sỉ chào bán (đ)</label>
+                    <input asp-for="GiaSi" class="form-control" type="number" min="0" step="1000" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ThoiGianGiaoHang" class="form-label fw-medium">Thời gian giao (ngày)</label>
+                    <input asp-for="ThoiGianGiaoHang" class="form-control" type="number" min="1" />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input asp-for="DangChaoBan" class="form-check-input" type="checkbox" style="width: 36px; height: 20px;" />
+                    <label asp-for="DangChaoBan" class="form-check-label fw-medium">Đang chào bán trên sàn B2B</label>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="bi bi-check-circle me-1"></i> Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary px-4 py-2">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

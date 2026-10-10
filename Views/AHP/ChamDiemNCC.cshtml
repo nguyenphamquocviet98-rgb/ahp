@@ -7,170 +7,230 @@
     var trongSoMap = Model.TrongSos.ToDictionary(t => t.MaTieuChi ?? 0, t => t.TrongSo ?? 0);
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-11 col-md-12">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-custom alert-custom-success mb-3">
-                <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
-            </div>
-        }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]</div>
+}
 
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert-custom alert-custom-danger mb-3">
-                <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
-            </div>
-        }
-
-        <!-- Header Chấm điểm -->
-        <div class="page-header">
-            <div class="page-header-left">
-                <div class="d-flex align-items-center">
-                    <a asp-action="KetQuaTrongSo" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline me-3" style="padding: 6px 10px;" title="Quay lại trọng số AHP">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div>
-                        <h3><i class="bi bi-star-fill text-warning"></i> Bước 2: Chấm Điểm Năng Lực Nhà Cung Cấp</h3>
-                        <p>Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> &bull; Đánh giá từng đối tác theo 4 tiêu chí đã tính trọng số AHP</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex gap-2">
-                <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
-                    <i class="bi bi-grid-3x3"></i> Bước 1: Trọng số AHP
-                </a>
-            </div>
-        </div>
-
-        <!-- Hướng dẫn chấm điểm -->
-        <div class="card-custom mb-4" style="background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%); border-color: #A7F3D0;">
-            <div class="card-body-custom">
-                <div class="d-flex align-items-start gap-3">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #059669; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1" style="color: #065F46; font-size: 14px;">
-                            Nguyên tắc chấm điểm năng lực (Thang điểm 1 đến 9):
-                        </h6>
-                        <p class="small mb-0" style="color: #047857;">
-                            Điểm càng cao thể hiện năng lực càng tốt: <strong>Giá rẻ/tiết kiệm &rarr; Điểm Giá cao</strong>, <strong>Chất lượng đạt chuẩn &rarr; Điểm CL cao</strong>, <strong>Giao hàng đúng hẹn &rarr; Điểm Giao cao</strong>. Cột <em>Điểm dự kiến (WSM)</em> sẽ tự động tính toán trực tiếp thời gian thực!
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <form asp-action="LuuChamDiemVaXepHang" method="post" id="scoreForm">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="maKyDanhGia" value="@Model.MaKyDanhGia" />
-
-            <!-- Bảng ma trận chấm điểm NCC -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div>
-                        <h5><i class="bi bi-table text-primary"></i> Bảng Nhập Điểm Đánh Giá Nhà Cung Cấp</h5>
-                        <small style="color: var(--slate-500);">Nhập điểm từ 1.0 đến 9.0 cho từng tiêu chí của đối tác</small>
-                    </div>
-                    <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillDemoScores()">
-                        <i class="bi bi-magic me-1"></i> Điền điểm đánh giá mẫu
-                    </button>
-                </div>
-
-                <div class="card-body-custom p-0">
-                    <div class="table-responsive">
-                        <table class="table-custom text-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-start" style="width: 260px;">Nhà cung cấp</th>
-                                    @foreach (var tc in tieuChis)
-                                    {
-                                        decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
-                                        <th style="min-width: 170px;">
-                                            <div style="font-weight: 700; color: var(--slate-900);">@tc.TenTieuChi</div>
-                                            <span class="status-badge status-badge-primary mt-1" style="font-size: 10px;">
-                                                Trọng số W: @w.ToString("0.000") (@((w * 100).ToString("0.0"))%)
-                                            </span>
-                                        </th>
-                                    }
-                                    <th class="text-center" style="width: 160px; background: var(--primary-light); color: var(--primary-700);">Điểm dự kiến (WSM)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var ncc in nccs)
-                                {
-                                    <tr>
-                                        <td class="text-start">
-                                            <div class="fw-bold" style="color: var(--slate-900);">@ncc.TenNhaCungCap</div>
-                                            <span class="code-badge">@(ncc.MaNhaCungCapCode ?? $"NCC{ncc.MaNhaCungCap:D3}")</span>
-                                        </td>
-                                        @foreach (var tc in tieuChis)
-                                        {
-                                            decimal curScore = 5.0m;
-                                            if (Model.DiemMap.ContainsKey(ncc.MaNhaCungCap) && Model.DiemMap[ncc.MaNhaCungCap].ContainsKey(tc.MaTieuChi))
-                                            {
-                                                curScore = Model.DiemMap[ncc.MaNhaCungCap][tc.MaTieuChi];
-                                            }
-
-                                            <td>
-                                                <input type="number" step="0.5" min="1" max="9"
-                                                       name="scores[@ncc.MaNhaCungCap][@tc.MaTieuChi]"
-                                                       id="score_@(ncc.MaNhaCungCap)_@(tc.MaTieuChi)"
-                                                       value="@curScore"
-                                                       class="form-control text-center fw-bold score-input"
-                                                       style="max-width: 100px; margin: 0 auto; border-color: var(--slate-300);"
-                                                       data-weight="@(trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0)"
-                                                       data-ncc="@ncc.MaNhaCungCap"
-                                                       oninput="calcSupplierWSM(@ncc.MaNhaCungCap)" />
-                                            </td>
-                                        }
-                                        <td style="background: var(--slate-50);">
-                                            <span class="fw-bold fs-5 font-mono text-primary" id="wsm_preview_@ncc.MaNhaCungCap">
-                                                0.00
-                                            </span>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="p-3 d-flex justify-content-end gap-2" style="border-top: 1px solid var(--border-color);">
-                        <a asp-action="Index" class="btn btn-custom btn-custom-outline px-4">Hủy</a>
-                        @if (isManagerOrAdmin)
-                        {
-                            <button type="submit" class="btn btn-custom btn-custom-emerald px-4 py-2">
-                                <i class="bi bi-trophy-fill me-1"></i> Tính Tổng Điểm WSM & Xem Bảng Xếp Hạng
-                            </button>
-                        }
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <!-- Thang điểm đánh giá -->
-        <div class="card-custom">
-            <div class="card-body-custom p-4">
-                <h6 class="fw-bold mb-3" style="color: var(--slate-900);">
-                    <i class="bi bi-info-circle text-primary"></i> Quy ước thang điểm đánh giá năng lực nhà cung cấp (1–9)
-                </h6>
-                <div class="row g-2 small" style="color: var(--slate-600);">
-                    <div class="col-md-3"><span class="status-badge status-badge-danger">1 - 2</span> : Rất kém / Không đạt yêu cầu</div>
-                    <div class="col-md-3"><span class="status-badge status-badge-warning">3 - 4</span> : Dưới trung bình / Còn hạn chế</div>
-                    <div class="col-md-3"><span class="status-badge status-badge-primary">5 - 6</span> : Trung bình / Đạt mức cơ bản</div>
-                    <div class="col-md-3"><span class="status-badge status-badge-success">7 - 9</span> : Tốt &rarr; Xuất sắc / Vượt trội</div>
-                </div>
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="KetQuaTrongSo" asp-route-id="@Model.MaKyDanhGia" class="btn btn-sm btn-custom btn-custom-outline" title="Quay lại trọng số AHP">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="mb-0">Bước 2: Chấm điểm năng lực nhà cung cấp</h3>
+                <p class="mb-0">Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> — đánh giá từng đối tác theo tiêu chí đã tính trọng số AHP</p>
             </div>
         </div>
     </div>
+    <div class="d-flex gap-2">
+        <a asp-action="MaTranSoSanh" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-grid-3x3 me-1"></i> Bước 1: Trọng số AHP
+        </a>
+    </div>
 </div>
+
+<details class="help-card">
+    <summary>
+        <i class="bi bi-question-circle text-primary"></i> Nguyên tắc chấm điểm &amp; thang điểm 1–9
+    </summary>
+    <div class="p-3">
+        <p class="mb-3" style="font-size: 13.5px; color: var(--slate-600);">
+            Điểm càng cao thể hiện năng lực càng tốt: <strong>Giá rẻ / tiết kiệm &rarr; điểm Giá cao</strong>, <strong>Chất lượng đạt chuẩn &rarr; điểm Chất lượng cao</strong>,
+            <strong>Giao hàng đúng hẹn &rarr; điểm Giao hàng cao</strong>. Cột <em>Điểm dự kiến (WSM)</em> tự động tính trực tiếp khi bạn nhập.
+        </p>
+        <div class="row g-2 small" style="color: var(--slate-600);">
+            <div class="col-md-3"><span class="code-badge">1 – 2</span> Rất kém / Không đạt yêu cầu</div>
+            <div class="col-md-3"><span class="code-badge">3 – 4</span> Dưới trung bình / Còn hạn chế</div>
+            <div class="col-md-3"><span class="code-badge">5 – 6</span> Trung bình / Đạt mức cơ bản</div>
+            <div class="col-md-3"><span class="code-badge">7 – 9</span> Tốt &rarr; Xuất sắc / Vượt trội</div>
+        </div>
+    </div>
+</details>
+
+<style>
+    .score-slider {
+        height: 6px;
+        border-radius: 3px;
+        -webkit-appearance: none;
+        background: var(--slate-200);
+        outline: none;
+        width: 100%;
+        margin-top: 8px;
+    }
+    .score-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--primary-500);
+        cursor: pointer;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .score-input {
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+</style>
+
+<form asp-action="LuuChamDiemVaXepHang" method="post" id="scoreForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="maKyDanhGia" value="@Model.MaKyDanhGia" />
+
+    <!-- Bảng ma trận chấm điểm NCC -->
+    <div class="card-custom mb-4">
+        <div class="card-header-custom">
+            <div>
+                <h5 class="mb-0"><i class="bi bi-star text-primary"></i> Bảng nhập điểm đánh giá nhà cung cấp</h5>
+                <small style="color: var(--slate-400);">Nhập điểm từ 1.0 đến 9.0 cho từng tiêu chí của đối tác</small>
+            </div>
+            <button type="button" class="btn btn-custom btn-custom-outline" onclick="fillDemoScores()">
+                <i class="bi bi-magic me-1"></i> Điền điểm mẫu
+            </button>
+        </div>
+
+        <div class="card-body-custom p-0">
+            <div class="table-responsive">
+                <table class="table-custom text-center">
+                    <thead>
+                        <tr>
+                            <th class="text-start" style="width: 250px;">Nhà cung cấp</th>
+                            @foreach (var tc in tieuChis)
+                            {
+                                decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
+                                <th style="min-width: 160px;">
+                                    <div style="font-weight: 600; color: var(--slate-800);">@tc.TenTieuChi</div>
+                                    <span class="status-badge status-badge-primary mt-1" style="font-size: 10px;">
+                                        W: @w.ToString("0.000") (@((w * 100).ToString("0.0"))%)
+                                    </span>
+                                </th>
+                            }
+                            <th class="text-center" style="width: 150px; background: var(--primary-50); color: var(--primary-700);">Điểm dự kiến (WSM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ncc in nccs)
+                        {
+                            <tr>
+                                <td class="text-start">
+                                    <div class="fw-semibold" style="color: var(--slate-800);">@ncc.TenNhaCungCap</div>
+                                    <span class="code-badge">@(ncc.MaNhaCungCapCode ?? $"NCC{ncc.MaNhaCungCap:D3}")</span>
+                                </td>
+                                @foreach (var tc in tieuChis)
+                                {
+                                    decimal curScore = 5.0m;
+                                    if (Model.DiemMap.ContainsKey(ncc.MaNhaCungCap) && Model.DiemMap[ncc.MaNhaCungCap].ContainsKey(tc.MaTieuChi))
+                                    {
+                                        curScore = Model.DiemMap[ncc.MaNhaCungCap][tc.MaTieuChi];
+                                    }
+
+                                    <td style="min-width: 120px; vertical-align: middle;">
+                                        <div class="d-flex flex-column align-items-center gap-1">
+                                            <input type="number" step="0.5" min="1" max="9"
+                                                   name="scores[@ncc.MaNhaCungCap][@tc.MaTieuChi]"
+                                                   id="score_inp_@(ncc.MaNhaCungCap)_@(tc.MaTieuChi)"
+                                                   value="@curScore"
+                                                   class="form-control form-control-sm text-center fw-bold score-input"
+                                                   style="max-width: 70px;"
+                                                   data-weight="@(trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0)"
+                                                   data-ncc="@ncc.MaNhaCungCap"
+                                                   oninput="syncFromInput('@ncc.MaNhaCungCap', '@tc.MaTieuChi'); calcSupplierWSM(@ncc.MaNhaCungCap)" />
+                                            
+                                            <span class="badge bg-light text-dark border w-100 mt-1 mb-1" id="score_lbl_@(ncc.MaNhaCungCap)_@(tc.MaTieuChi)" style="font-size: 10px; font-weight: 500;">Trung bình</span>
+
+                                            <input type="range" class="score-slider" min="1" max="9" step="0.5" value="@curScore"
+                                                   id="score_sld_@(ncc.MaNhaCungCap)_@(tc.MaTieuChi)"
+                                                   oninput="syncFromSlider('@ncc.MaNhaCungCap', '@tc.MaTieuChi'); calcSupplierWSM(@ncc.MaNhaCungCap)" />
+                                        </div>
+                                    </td>
+                                }
+                                <td style="background: var(--slate-50);">
+                                    <span class="fw-bold fs-5 font-mono text-primary" id="wsm_preview_@ncc.MaNhaCungCap">
+                                        0.00
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 d-flex justify-content-end gap-2" style="border-top: 1px solid var(--border-color);">
+                <a asp-action="Index" class="btn btn-custom btn-custom-outline">Hủy</a>
+                @if (isManagerOrAdmin)
+                {
+                    <button type="submit" class="btn btn-custom btn-custom-primary px-4">
+                        <i class="bi bi-calculator me-1"></i> Tính điểm WSM &amp; Xếp hạng
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</form>
 
 @section Scripts {
     <script>
+        function getHeatmapColor(value) {
+            // Giá trị từ 1 -> 9. 1 = Đỏ (Hue 0), 5 = Vàng (Hue 60), 9 = Xanh (Hue 120)
+            const min = 1, max = 9;
+            const ratio = (value - min) / (max - min);
+            const hue = ratio * 120; // 0 to 120
+            return `hsl(${hue}, 85%, 90%)`;
+        }
+
+        function getScoreText(val) {
+            if (val < 3) return "Rất kém";
+            if (val < 5) return "Dưới TB";
+            if (val < 7) return "Trung bình";
+            if (val < 9) return "Tốt";
+            return "Xuất sắc";
+        }
+
+        function updateHeatmapAndLabel(inp) {
+            const val = parseFloat(inp.value) || 1;
+            inp.style.backgroundColor = getHeatmapColor(val);
+            
+            // update label if exists
+            const parts = inp.id.split('_');
+            if (parts.length >= 4) {
+                const nccId = parts[2];
+                const tcId = parts[3];
+                const lbl = document.getElementById(`score_lbl_${nccId}_${tcId}`);
+                if (lbl) {
+                    lbl.innerText = getScoreText(val);
+                }
+            }
+        }
+
+        function syncFromInput(nccId, tcId) {
+            const inp = document.getElementById(`score_inp_${nccId}_${tcId}`);
+            const sld = document.getElementById(`score_sld_${nccId}_${tcId}`);
+            if (inp && sld) {
+                let val = parseFloat(inp.value);
+                if (val < 1) val = 1;
+                if (val > 9) val = 9;
+                sld.value = val;
+                updateHeatmapAndLabel(inp);
+            }
+        }
+
+        function syncFromSlider(nccId, tcId) {
+            const inp = document.getElementById(`score_inp_${nccId}_${tcId}`);
+            const sld = document.getElementById(`score_sld_${nccId}_${tcId}`);
+            if (inp && sld) {
+                const val = parseFloat(sld.value);
+                inp.value = val % 1 === 0 ? val : val.toFixed(1);
+                updateHeatmapAndLabel(inp);
+            }
+        }
+
         function calcSupplierWSM(nccId) {
-            const inputs = document.querySelectorAll(`input[data-ncc="${nccId}"]`);
+            const inputs = document.querySelectorAll(`input[data-ncc="${nccId}"].score-input`);
             let total = 0;
             inputs.forEach(inp => {
                 const score = parseFloat(inp.value) || 0;
@@ -188,6 +248,11 @@
             {
                 <text>calcSupplierWSM(@ncc.MaNhaCungCap);</text>
             }
+            
+            // Cập nhật heatmap cho tất cả ô nhập
+            document.querySelectorAll('.score-input').forEach(inp => {
+                updateHeatmapAndLabel(inp);
+            });
         }
 
         function fillDemoScores() {
@@ -202,9 +267,13 @@
             demo.forEach((d, idx) => {
                 if (idx < nccRows.length) {
                     const rowInputs = nccRows[idx].querySelectorAll('.score-input');
+                    const rowSliders = nccRows[idx].querySelectorAll('.score-slider');
                     d.scores.forEach((s, sIdx) => {
                         if (sIdx < rowInputs.length) {
-                            rowInputs[sIdx].value = s;
+                            const valStr = (s % 1 === 0) ? s : s.toFixed(1);
+                            rowInputs[sIdx].value = valStr;
+                            if(rowSliders[sIdx]) rowSliders[sIdx].value = s;
+                            updateHeatmapAndLabel(rowInputs[sIdx]);
                         }
                     });
                 }

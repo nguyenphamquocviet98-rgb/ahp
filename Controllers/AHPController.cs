@@ -40,14 +40,14 @@ namespace code.Controllers
         }
 
         // GET: AHP/CreateKy
-        [Authorize(Roles = "admin,quanly")]
+        [Authorize(Roles = "quanly,chu_npp")]
         public IActionResult CreateKy()
         {
             var model = new KyDanhGia
             {
                 TenKyDanhGia = $"Đánh giá Nhà cung cấp {DateTime.Now:MM/yyyy}",
                 NgayTao = DateTime.Now,
-                TrangThai = "khoitao"
+                TrangThai = "nhap"
             };
             return View(model);
         }
@@ -55,8 +55,8 @@ namespace code.Controllers
         // POST: AHP/CreateKy
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "admin,quanly")]
-        public async Task<IActionResult> CreateKy(KyDanhGia model)
+        [Authorize(Roles = "quanly,chu_npp")]
+        public async Task<IActionResult> CreateKy([Bind("TenKyDanhGia")] KyDanhGia model)
         {
             if (string.IsNullOrWhiteSpace(model.TenKyDanhGia))
             {
@@ -72,7 +72,7 @@ namespace code.Controllers
                 }
 
                 model.NgayTao = DateTime.Now;
-                model.TrangThai = "khoitao";
+                model.TrangThai = "nhap";
 
                 _context.KyDanhGias.Add(model);
                 await _context.SaveChangesAsync();
@@ -131,7 +131,7 @@ namespace code.Controllers
                         var rowCriteriaId = tieuChis[i].MaTieuChi;
                         var colCriteriaId = tieuChis[j].MaTieuChi;
                         var cell = existingMatrix.FirstOrDefault(m => m.MaTieuChiDong == rowCriteriaId && m.MaTieuChiCot == colCriteriaId);
-                        matrix[i][j] = cell?.GiaTri.HasValue == true ? (double)cell.GiaTri.Value : 1.0;
+                        matrix[i][j] = cell?.GiaTri.HasValue == true ? AHPService.RestoreStoredComparison((double)cell.GiaTri.Value) : 1.0;
                     }
                 }
             }
@@ -154,7 +154,7 @@ namespace code.Controllers
         // POST: AHP/LuuVaTinhToanAHP
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "admin,quanly")]
+        [Authorize(Roles = "quanly,chu_npp")]
         public async Task<IActionResult> LuuVaTinhToanAHP(int maKyDanhGia, double[][] matrix)
         {
             var ky = await _context.KyDanhGias.FindAsync(maKyDanhGia);
@@ -191,7 +191,7 @@ namespace code.Controllers
                         }
                         else
                         {
-                            mat[i, j] = 1.0;
+                            return BadRequest("Thiếu hoặc sai giá trị so sánh cặp.");
                         }
                     }
                 }
@@ -206,6 +206,12 @@ namespace code.Controllers
                 }
             }
 
+            try { AHPService.ValidateMatrix(mat); }
+            catch (ArgumentException ex) { return BadRequest(ex.Message); }
+            // Thay đổi ma trận làm mất hiệu lực toàn bộ trọng số và xếp hạng cũ.
+            _context.TrongSoTieuChis.RemoveRange(await _context.TrongSoTieuChis.Where(t => t.MaKyDanhGia == maKyDanhGia).ToListAsync());
+            _context.KetQuaXepHangs.RemoveRange(await _context.KetQuaXepHangs.Where(t => t.MaKyDanhGia == maKyDanhGia).ToListAsync());
+            ky.TrangThai = "nhap";
             // 1. Lưu vào bảng MaTranSoSanh
             var oldMatrixCells = await _context.MaTranSoSanhs.Where(m => m.MaKyDanhGia == maKyDanhGia).ToListAsync();
             if (oldMatrixCells.Any())
@@ -228,6 +234,8 @@ namespace code.Controllers
             }
 
             // 2. Chạy thuật toán AHP (Backend AHPService)
+            for (int i = 0; i < n; i++)
+                for (int j = i + 1; j < n; j++) mat[j, i] = 1.0 / mat[i, j];
             var ahpResult = _ahpService.CalculateAHP(mat);
 
             // 3. Kiểm tra tính nhất quán CR <= 0.10
@@ -258,7 +266,7 @@ namespace code.Controllers
                 });
             }
 
-            ky.TrangThai = "dat_trong_so";
+            ky.TrangThai = "nhap";
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Tính toán AHP thành công! Ma trận đạt tính nhất quán (CR = {ahpResult.CR:0.0000} <= 0.10).";
@@ -297,10 +305,12 @@ namespace code.Controllers
                 for (int j = 0; j < n; j++)
                 {
                     var cell = matrixCells.FirstOrDefault(m => m.MaTieuChiDong == tieuChis[i].MaTieuChi && m.MaTieuChiCot == tieuChis[j].MaTieuChi);
-                    mat[i, j] = cell?.GiaTri.HasValue == true ? (double)cell.GiaTri.Value : 1.0;
+                    mat[i, j] = cell?.GiaTri.HasValue == true ? AHPService.RestoreStoredComparison((double)cell.GiaTri.Value) : 1.0;
                 }
             }
 
+            for (int i = 0; i < n; i++)
+                for (int j = i + 1; j < n; j++) mat[j, i] = 1.0 / mat[i, j];
             var ahpResult = _ahpService.CalculateAHP(mat);
             var trongSos = await _context.TrongSoTieuChis
                 .Include(t => t.TieuChi)
@@ -412,7 +422,7 @@ namespace code.Controllers
         // POST: AHP/LuuChamDiemVaXepHang
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "admin,quanly")]
+        [Authorize(Roles = "quanly,chu_npp")]
         public async Task<IActionResult> LuuChamDiemVaXepHang(int maKyDanhGia, Dictionary<int, Dictionary<int, decimal>> scores)
         {
             var ky = await _context.KyDanhGias.FindAsync(maKyDanhGia);
@@ -436,6 +446,9 @@ namespace code.Controllers
             var nccs = await _context.NhaCungCaps.Where(n => n.TrangThai == true).ToListAsync();
             var tieuChis = await _context.TieuChis.OrderBy(t => t.MaTieuChi).ToListAsync();
 
+            if (trongSos.Count != tieuChis.Count || trongSos.Any(t => t.CR == null || t.CR > 0.10m))
+                return BadRequest("Trọng số chưa đầy đủ hoặc CR không đạt.");
+            var validatedScores = new Dictionary<(int, int), decimal>();
             // 1. Lưu điểm vào bảng DiemDanhGiaNCC
             var oldScores = await _context.DiemDanhGiaNCCs.Where(d => d.MaKyDanhGia == maKyDanhGia).ToListAsync();
             if (oldScores.Any())
@@ -447,7 +460,7 @@ namespace code.Controllers
             {
                 foreach (var tc in tieuChis)
                 {
-                    decimal diemValue = 5.0m;
+                    decimal diemValue;
                     string formKey = $"scores[{ncc.MaNhaCungCap}][{tc.MaTieuChi}]";
                     string? rawVal = Request.Form[formKey].FirstOrDefault();
                     if (!string.IsNullOrEmpty(rawVal) && decimal.TryParse(rawVal.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal parsedVal))
@@ -459,8 +472,9 @@ namespace code.Controllers
                         diemValue = scores[ncc.MaNhaCungCap][tc.MaTieuChi];
                     }
 
-                    // Giới hạn thang 1 - 9
-                    diemValue = Math.Clamp(diemValue, 1.0m, 9.0m);
+                    else return BadRequest("Phải chấm đủ các tiêu chí cho từng nhà cung cấp.");
+                    if (diemValue < 1 || diemValue > 9) return BadRequest("Điểm phải nằm trong thang 1–9.");
+                    validatedScores[(ncc.MaNhaCungCap, tc.MaTieuChi)] = diemValue;
 
                     _context.DiemDanhGiaNCCs.Add(new DiemDanhGiaNCC
                     {
@@ -488,8 +502,7 @@ namespace code.Controllers
                 for (int i = 0; i < tieuChis.Count; i++)
                 {
                     int tcId = tieuChis[i].MaTieuChi;
-                    decimal d = (scores != null && scores.ContainsKey(ncc.MaNhaCungCap) && scores[ncc.MaNhaCungCap].ContainsKey(tcId))
-                        ? scores[ncc.MaNhaCungCap][tcId] : 5.0m;
+                    decimal d = validatedScores[(ncc.MaNhaCungCap, tcId)];
                     nccCriteriaScores[i] = (double)d;
                 }
 
@@ -599,7 +612,7 @@ namespace code.Controllers
         // POST: AHP/DeleteKy/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "admin,quanly")]
+        [Authorize(Roles = "quanly,chu_npp")]
         public async Task<IActionResult> DeleteKy(int id)
         {
             var ky = await _context.KyDanhGias

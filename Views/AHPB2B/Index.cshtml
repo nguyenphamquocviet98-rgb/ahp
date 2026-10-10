@@ -1,0 +1,104 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "AHP Chọn Đối Tác Cung Ứng B2B";
+}
+
+<div class="card border-0 text-white mb-4 rounded-4 overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+    <div class="card-body p-4 p-md-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-info text-dark px-3 py-2 fs-6 mb-3 fw-bold">
+                    <i class="bi bi-cpu me-1"></i> AHP DECISION SUPPORT SYSTEM
+                </span>
+                <h1 class="display-6 fw-bold mb-2">AHP So Sánh & Lựa Chọn Đối Tác</h1>
+                <p class="lead text-light mb-4 opacity-90">
+                    Thuật toán Phân tích Thứ bậc (AHP) giúp bạn tự động đánh giá đa tiêu chí (Giá sỉ, Tốc độ giao hàng, Độ uy tín, Tồn kho) giữa các NPP đang chào bán trên sàn để tìm ra đối tác cung ứng tối ưu nhất.
+                </p>
+                <div class="d-flex gap-3">
+                    <span class="badge bg-white text-dark px-3 py-2"><i class="bi bi-check-circle-fill text-success me-1"></i> Đa tiêu chí Saaty</span>
+                    <span class="badge bg-white text-dark px-3 py-2"><i class="bi bi-shield-check text-primary me-1"></i> Kiểm định nhất quán CR &le; 0.1</span>
+                    <span class="badge bg-white text-dark px-3 py-2"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Đặt hàng ngay 1 chạm</span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <i class="bi bi-diagram-3-fill text-white opacity-25" style="font-size: 8rem;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0">Các mặt hàng có nhiều NPP chào bán (Đủ điều kiện so sánh)</h4>
+    <span class="text-muted small">Mặt hàng cần có từ 2 NPP trở lên để thuật toán AHP so sánh năng lực</span>
+</div>
+
+<div class="row g-4">
+    @if (Model != null)
+    {
+        @foreach (var item in Model)
+        {
+            var sp = item.SanPham as code.Models.SanPham;
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100 p-3 hover-shadow transition-all">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-light text-secondary border px-2 py-1 small mb-1">
+                                    @sp?.DanhMuc?.TenDanhMuc
+                                </span>
+                                <h5 class="card-title fw-bold text-dark mb-0">@sp?.TenSanPham</h5>
+                                <small class="text-muted">Mã: @sp?.MaSanPhamCode</small>
+                            </div>
+                            <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">
+                                <i class="bi bi-people-fill me-1"></i> @item.SoNPPBan NPP đang chào bán
+                            </span>
+                        </div>
+
+                        <!-- Thống kê so sánh nhanh -->
+                        <div class="row g-2 p-3 bg-light rounded-3 my-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Khoảng giá sỉ:</small>
+                                <span class="fw-bold text-success">
+                                    @(((decimal)item.GiaThapNhat).ToString("N0")) đ - @(((decimal)item.GiaCaoNhat).ToString("N0")) đ
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Giao hàng nhanh nhất:</small>
+                                <span class="fw-bold text-info">
+                                    <i class="bi bi-truck me-1"></i>@item.GiaoNhanhNhat ngày
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách các NPP đối đầu -->
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1">Các đối tác tham gia so sánh:</small>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var npp in item.DanhSachNPP)
+                                {
+                                    <span class="badge bg-secondary-subtle text-dark border px-2 py-1 small">
+                                        <i class="bi bi-building me-1"></i>@npp
+                                    </span>
+                                }
+                                @if (item.CoGianHangMall)
+                                {
+                                    <span class="badge bg-danger text-white px-2 py-1 small fw-bold">
+                                        <i class="bi bi-patch-check-fill me-1"></i> CÓ GIAN HÀNG MALL
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Nút kích hoạt AHP -->
+                        <div class="pt-2 border-top">
+                            <a asp-action="ThietLap" asp-route-maSanPham="@sp?.MaSanPham" class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm">
+                                <i class="bi bi-lightning-charge me-1"></i> Chạy AHP Tìm NPP Tối Ưu Nhất
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

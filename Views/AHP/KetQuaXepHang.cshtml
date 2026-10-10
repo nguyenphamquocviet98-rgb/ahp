@@ -1,236 +1,108 @@
 @model code.Models.ViewModels.KetQuaXepHangViewModel
 @{
     ViewData["Title"] = "Kết quả xếp hạng & Đề xuất Nhà cung cấp - " + Model.TenKyDanhGia;
-    var deXuat = Model.NhaCungCapDeXuat?.NhaCungCap;
     var tieuChis = Model.DanhSachTieuChi;
     var trongSoMap = Model.TrongSos.ToDictionary(t => t.MaTieuChi ?? 0, t => t.TrongSo ?? 0);
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-11 col-md-12">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
-        }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]</div>
+}
 
-        <!-- Page Header Toolbar -->
-        <div class="page-header">
-            <div class="page-header-left">
-                <div class="d-flex align-items-center">
-                    <a asp-action="Index" class="btn btn-custom btn-custom-outline me-3" style="padding: 7px 11px;" title="Quay lại danh sách kỳ">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div>
-                        <h3><i class="bi bi-trophy-fill text-warning"></i> Xếp Hạng & Đề Xuất Đối Tác Cung Ứng</h3>
-                        <p>Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> &bull; Tổng hợp ma trận trọng số AHP & thang điểm WSM</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-custom btn-custom-outline" onclick="window.print()">
-                    <i class="bi bi-printer me-1"></i> In báo cáo AHP
-                </button>
-                <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
-                    <i class="bi bi-pencil me-1"></i> Chấm điểm lại
-                </a>
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline" title="Quay lại danh sách kỳ">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="mb-0">Xếp hạng &amp; Đề xuất đối tác cung ứng</h3>
+                <p class="mb-0">Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> — tổng hợp trọng số AHP &amp; thang điểm WSM</p>
             </div>
         </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-custom btn-custom-outline shadow-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> In / Xuất PDF Biên Bản AHP
+        </button>
+        <a asp-action="ChamDiemNCC" asp-route-id="@Model.MaKyDanhGia" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-pencil me-1"></i> Chấm điểm lại
+        </a>
+    </div>
+</div>
 
-        <!-- Executive Recommendation Hero Card -->
-        @if (Model.NhaCungCapDeXuat != null && deXuat != null)
-        {
-            <div class="ahp-executive-card mb-4">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <div class="ahp-crown-badge mb-2">
-                            <i class="bi bi-award-fill"></i> ĐỐI TÁC ĐỀ XUẤT NHẬP HÀNG TỐI ƯU #1 (AHP + WSM)
-                        </div>
-                        <div class="ahp-supplier-title">
-                            @deXuat.TenNhaCungCap
-                            <span class="status-badge status-badge-success ms-2">Hạng 1 Tuyệt đối</span>
-                        </div>
-                        <div class="ahp-info-chips">
-                            <div class="ahp-info-chip">
-                                <i class="bi bi-upc-scan"></i> Mã: <strong>@(deXuat.MaNhaCungCapCode ?? $"NCC{deXuat.MaNhaCungCap:D3}")</strong>
-                            </div>
-                            <div class="ahp-info-chip">
-                                <i class="bi bi-person"></i> @(deXuat.NguoiLienHe ?? "Liên hệ: —")
-                            </div>
-                            <div class="ahp-info-chip">
-                                <i class="bi bi-telephone"></i> @(deXuat.SoDienThoai ?? "SĐT: —")
-                            </div>
-                            <div class="ahp-info-chip">
-                                <i class="bi bi-geo-alt"></i> @(deXuat.DiaChi ?? "Địa chỉ: —")
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-emerald">
-                                <i class="bi bi-cart-plus-fill me-1"></i> Lập phiếu nhập từ đối tác này ngay
-                            </a>
-                            <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@deXuat.MaNhaCungCap" class="btn btn-custom btn-custom-outline" style="color: #FFF; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);">
-                                Xem hồ sơ đối tác
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 text-lg-end text-center mt-3 mt-lg-0">
-                        <div class="ahp-score-display d-inline-block">
-                            <div style="font-size: 11px; font-weight: 700; color: #FDE68A; text-transform: uppercase; letter-spacing: 0.05em;">Điểm tổng hợp WSM</div>
-                            <div class="ahp-score-big mt-1">
-                                @(Model.NhaCungCapDeXuat.DiemTong?.ToString("0.00") ?? "0.00")
-                                <span style="font-size: 14px; color: var(--slate-300); font-weight: 500;">/ 9.00</span>
-                            </div>
-                            <div class="ahp-score-sub">Mô hình phân tích thứ bậc Saaty</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-
-        <!-- Radar Analysis & Trọng Số Tiêu Chí -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card-custom h-100">
-                    <div class="card-header-custom">
-                        <h5><i class="bi bi-radar text-primary"></i> Biểu đồ Radar So sánh Đa chiều</h5>
-                        <span class="status-badge status-badge-primary">Top 5 NCC</span>
-                    </div>
-                    <div class="card-body-custom d-flex justify-content-center align-items-center" style="min-height: 280px;">
-                        <canvas id="radarChart" style="max-height: 260px; width: 100%;"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card-custom h-100">
-                    <div class="card-header-custom">
-                        <h5><i class="bi bi-pie-chart-fill text-indigo"></i> Trọng số Tiêu chí AHP ($W_i$)</h5>
-                        <span class="status-badge status-badge-success">Đã chuẩn hóa</span>
-                    </div>
-                    <div class="card-body-custom p-0">
-                        <div class="table-responsive">
-                            <table class="table-custom mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Tiêu chí</th>
-                                        <th class="text-center">Ký hiệu</th>
-                                        <th class="text-end">Trọng số ($W_i$)</th>
-                                        <th class="text-end">Tỷ trọng</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var tc in tieuChis)
-                                    {
-                                        decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
-                                        <tr>
-                                            <td class="fw-semibold text-dark">
-                                                @tc.TenTieuChi
-                                                <span class="badge @(tc.LoaiTieuChi == "cost" ? "bg-warning-subtle text-warning-emphasis" : "bg-success-subtle text-success-emphasis") ms-1" style="font-size: 10px;">
-                                                    @(tc.LoaiTieuChi == "cost" ? "Chi phí" : "Lợi ích")
-                                                </span>
-                                            </td>
-                                            <td class="text-center font-mono text-muted">C@(tc.MaTieuChi)</td>
-                                            <td class="text-end font-mono fw-bold text-primary">@w.ToString("0.0000")</td>
-                                            <td class="text-end font-mono fw-semibold text-dark">@((w * 100).ToString("0.0"))%</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- KHỐI IN ẤN BIÊN BẢN CHÍNH THỨC (Chỉ hiển thị khi In hoặc Xuất PDF) -->
+<div class="d-none d-print-block print-official-header mb-4">
+    <div class="row align-items-center text-center pb-3 border-bottom border-dark">
+        <div class="col-5 text-start">
+            <div class="fw-bold text-uppercase" style="font-size: 13px;">HỘI ĐỒNG ĐÁNH GIÁ NHÀ CUNG CẤP</div>
+            <div class="small">PHÒNG THU MUA &amp; QUẢN LÝ KHO VẬN</div>
+            <div class="small text-muted font-mono">Số: @Model.MaKyDanhGia/BB-AHP-KHO/@DateTime.Now.Year</div>
         </div>
+        <div class="col-7 text-end">
+            <div class="fw-bold text-uppercase" style="font-size: 13px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+            <div class="fw-bold small">Độc lập - Tự do - Hạnh phúc</div>
+            <div class="small text-muted fst-italic">TP. Hồ Chí Minh, ngày @DateTime.Now.Day tháng @DateTime.Now.Month năm @DateTime.Now.Year</div>
+        </div>
+    </div>
 
-        <!-- Bảng Xếp Hạng Toàn Diện -->
-        <div class="card-custom mb-4">
+    <div class="text-center my-4">
+        <h4 class="fw-bold text-uppercase mb-1">BIÊN BẢN XẾP HẠNG &amp; ĐỀ XUẤT ĐỐI TÁC CUNG ỨNG</h4>
+        <p class="mb-1"><strong>MÔ HÌNH PHÂN TÍCH THỨ BẬC AHP &amp; PHƯƠNG PHÁP WSM</strong></p>
+        <div class="small text-muted">Kỳ đánh giá: <strong>@Model.TenKyDanhGia</strong> | Thời điểm kết xuất: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+    </div>
+</div>
+
+<!-- Nhà cung cấp đề xuất #1 -->
+@if (Model.NhaCungCapDeXuat != null)
+{
+    <div class="mb-4">
+        <partial name="_AhpWinnerCard" model="Model.NhaCungCapDeXuat" />
+    </div>
+}
+
+<!-- Biểu đồ Radar & Trọng số tiêu chí -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card-custom h-100">
             <div class="card-header-custom">
-                <h5><i class="bi bi-table text-primary"></i> Bảng Tổng Hợp Điểm Số & Thứ Hạng Đối Tác</h5>
-                <span class="status-badge status-badge-secondary">Toàn diện</span>
+                <h5><i class="bi bi-radar text-primary"></i> Radar so sánh đa chiều</h5>
+            </div>
+            <div class="card-body-custom d-flex justify-content-center align-items-center" style="min-height: 280px;">
+                <canvas id="radarChart" style="max-height: 260px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-pie-chart text-primary"></i> Trọng số tiêu chí AHP</h5>
             </div>
             <div class="card-body-custom p-0">
                 <div class="table-responsive">
-                    <table class="table-custom text-center mb-0">
+                    <table class="table-custom">
                         <thead>
                             <tr>
-                                <th style="width: 90px;">Thứ hạng</th>
-                                <th class="text-start" style="min-width: 200px;">Nhà cung cấp</th>
-                                @foreach (var tc in tieuChis)
-                                {
-                                    decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
-                                    <th>
-                                        <div style="color: var(--slate-800); font-weight: 700;">@tc.TenTieuChi</div>
-                                        <small style="color: var(--slate-500); font-weight: 500;">(W: @w.ToString("0.000"))</small>
-                                    </th>
-                                }
-                                <th style="width: 150px;">Điểm WSM</th>
-                                <th style="width: 130px;">Trạng thái</th>
-                                <th style="width: 90px;">Thao tác</th>
+                                <th>Tiêu chí</th>
+                                <th class="text-center">Ký hiệu</th>
+                                <th class="text-end">Trọng số (Wi)</th>
+                                <th class="text-end">Tỷ trọng</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model.BangXepHang)
+                            @foreach (var tc in tieuChis)
                             {
-                                var ncc = item.NhaCungCap;
-                                int nccId = item.MaNhaCungCap ?? 0;
-                                bool isTop1 = item.XepHang == 1;
-
-                                <tr style="@(isTop1 ? "background-color: #FEF3C7 !important; font-weight: 600;" : "")">
-                                    <td>
-                                        @if (isTop1)
-                                        {
-                                            <span class="status-badge status-badge-warning fw-bold" style="font-size: 12px;">
-                                                <i class="bi bi-trophy-fill text-warning"></i> #1
-                                            </span>
-                                        }
-                                        else if (item.XepHang == 2)
-                                        {
-                                            <span class="status-badge status-badge-secondary fw-bold">#2</span>
-                                        }
-                                        else if (item.XepHang == 3)
-                                        {
-                                            <span class="status-badge status-badge-secondary fw-bold">#3</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="status-badge status-badge-secondary">#@item.XepHang</span>
-                                        }
+                                decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
+                                <tr>
+                                    <td class="fw-semibold" style="color: var(--slate-800);">
+                                        @tc.TenTieuChi
+                                        <span style="color: var(--slate-400); font-size: 12px;">· @(tc.LoaiTieuChi == "cost" ? "Chi phí" : "Lợi ích")</span>
                                     </td>
-                                    <td class="text-start">
-                                        <div class="fw-bold" style="color: var(--slate-900);">@(ncc?.TenNhaCungCap ?? "N/A")</div>
-                                        <span class="code-badge">@(ncc?.MaNhaCungCapCode ?? $"NCC{nccId:D3}")</span>
-                                    </td>
-                                    @foreach (var tc in tieuChis)
-                                    {
-                                        decimal d = 0;
-                                        if (Model.DiemMap.ContainsKey(nccId) && Model.DiemMap[nccId].ContainsKey(tc.MaTieuChi))
-                                        {
-                                            d = Model.DiemMap[nccId][tc.MaTieuChi];
-                                        }
-                                        <td class="font-mono text-secondary">
-                                            @d.ToString("0.0")
-                                        </td>
-                                    }
-                                    <td class="font-mono fw-bold fs-6" style="color: @(isTop1 ? "#B45309" : "var(--slate-900)");">
-                                        @(item.DiemTong?.ToString("0.00") ?? "0.00")
-                                    </td>
-                                    <td>
-                                        @if (item.DeXuat == true)
-                                        {
-                                            <span class="status-badge status-badge-success">
-                                                <i class="bi bi-check-circle-fill"></i> Đề xuất chọn
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted" style="font-size: 12px;">Dự phòng</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@nccId" class="btn btn-sm btn-custom btn-custom-outline" title="Xem hồ sơ đối tác">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                    </td>
+                                    <td class="text-center font-mono" style="color: var(--slate-500);">C@(tc.MaTieuChi)</td>
+                                    <td class="text-end font-mono fw-semibold text-primary">@w.ToString("0.0000")</td>
+                                    <td class="text-end font-mono" style="color: var(--slate-800);">@((w * 100).ToString("0.0"))%</td>
                                 </tr>
                             }
                         </tbody>
@@ -240,6 +112,139 @@
         </div>
     </div>
 </div>
+
+<!-- Bảng xếp hạng tổng hợp -->
+<div class="card-custom mb-4">
+    <div class="card-header-custom">
+        <h5><i class="bi bi-table text-primary"></i> Bảng tổng hợp điểm số &amp; thứ hạng đối tác</h5>
+    </div>
+    <div class="card-body-custom p-0">
+        <div class="table-responsive">
+            <table class="table-custom text-center">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Hạng</th>
+                        <th class="text-start" style="min-width: 200px;">Nhà cung cấp</th>
+                        @foreach (var tc in tieuChis)
+                        {
+                            decimal w = trongSoMap.ContainsKey(tc.MaTieuChi) ? trongSoMap[tc.MaTieuChi] : 0;
+                            <th>
+                                <div style="color: var(--slate-800); font-weight: 600;">@tc.TenTieuChi</div>
+                                <small style="color: var(--slate-400); font-weight: 500;">(W: @w.ToString("0.000"))</small>
+                            </th>
+                        }
+                        <th style="width: 120px;">Điểm WSM</th>
+                        <th style="width: 130px;">Đề xuất</th>
+                        <th style="width: 80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.BangXepHang)
+                    {
+                        var ncc = item.NhaCungCap;
+                        int nccId = item.MaNhaCungCap ?? 0;
+                        bool isTop1 = item.XepHang == 1;
+
+                        <tr style="@(isTop1 ? "background: var(--amber-50);" : "")">
+                            <td>
+                                @if (isTop1)
+                                {
+                                    <span class="status-badge status-badge-warning"><i class="bi bi-trophy"></i> #1</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold" style="color: var(--slate-600);">#@item.XepHang</span>
+                                }
+                            </td>
+                            <td class="text-start">
+                                <div class="fw-semibold" style="color: var(--slate-800);">@(ncc?.TenNhaCungCap ?? "N/A")</div>
+                                <span class="code-badge">@(ncc?.MaNhaCungCapCode ?? $"NCC{nccId:D3}")</span>
+                            </td>
+                            @foreach (var tc in tieuChis)
+                            {
+                                decimal d = 0;
+                                if (Model.DiemMap.ContainsKey(nccId) && Model.DiemMap[nccId].ContainsKey(tc.MaTieuChi))
+                                {
+                                    d = Model.DiemMap[nccId][tc.MaTieuChi];
+                                }
+                                <td class="font-mono" style="color: var(--slate-600);">@d.ToString("0.0")</td>
+                            }
+                            <td class="font-mono fw-bold" style="font-size: 15px; color: @(isTop1 ? "var(--amber-700)" : "var(--slate-900)");">
+                                @(item.DiemTong?.ToString("0.00") ?? "0.00")
+                            </td>
+                            <td>
+                                @if (item.DeXuat == true)
+                                {
+                                    <span class="status-badge status-badge-success">Đề xuất chọn</span>
+                                }
+                                else
+                                {
+                                    <span style="color: var(--slate-400); font-size: 12.5px;">Dự phòng</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-controller="NhaCungCap" asp-action="Details" asp-route-id="@nccId" class="btn btn-sm btn-outline-secondary" title="Xem hồ sơ đối tác">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- CHỮ KÝ 3 BÊN KHI IN ẤN BIÊN BẢN (Print Only) -->
+<div class="d-none d-print-block print-signatures mt-5 pt-4">
+    <div class="row text-center">
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Người Lập Báo Cáo</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Ký và ghi rõ họ tên)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">@User.Identity?.Name</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Trưởng Ban Đánh Giá AHP</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Xác nhận ma trận và tỷ số nhất quán)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">Tổ Đánh Giá Kỹ Thuật</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold text-uppercase small">Giám Đốc Phê Duyệt</div>
+            <div class="fst-italic text-muted" style="font-size: 11px;">(Ký tên và phê duyệt quyết định nhập hàng)</div>
+            <div style="height: 75px;"></div>
+            <div class="fw-bold">Ban Giám Đốc</div>
+        </div>
+    </div>
+</div>
+
+<style>
+@@media print {
+    .sidebar, .top-header, .page-header .d-flex, #quickSwitcher, .page-footer, .btn, .breadcrumb, form, .public-navbar, .public-footer {
+        display: none !important;
+    }
+    .main-content, .container, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+    }
+    .card, .card-custom {
+        border: 1px solid #999 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    .text-white {
+        color: #000000 !important;
+    }
+    .bg-gradient-dark, .bg-primary, .card-header, .card-header-custom {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+    }
+}
+</style>
 
 @section Scripts {
     @{
@@ -291,13 +296,13 @@
                                 grid: { color: '#E2E8F0' },
                                 angleLines: { color: '#E2E8F0' },
                                 ticks: { stepSize: 2, font: { family: 'JetBrains Mono', size: 10 }, backdropColor: 'transparent' },
-                                pointLabels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, color: '#1E293B' }
+                                pointLabels: { font: { family: "'Be Vietnam Pro', 'Inter', sans-serif", size: 12, weight: '600' }, color: '#334155' }
                             }
                         },
                         plugins: {
                             legend: {
                                 position: 'bottom',
-                                labels: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' }, boxWidth: 12, padding: 10 }
+                                labels: { font: { family: "'Be Vietnam Pro', 'Inter', sans-serif", size: 11 }, boxWidth: 12, padding: 10 }
                             }
                         }
                     }

@@ -1,199 +1,302 @@
 @model code.Models.NhaCungCap
 @{
     ViewData["Title"] = "Chi tiết nhà cung cấp - " + Model.TenNhaCungCap;
-    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
+    var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly") || User.IsInRole("admin_san") || User.IsInRole("chu_npp");
+    var latestAHP = Model.KetQuaXepHangs?
+        .OrderByDescending(k => k.KyDanhGia != null ? k.KyDanhGia.NgayTao : DateTime.MinValue)
+        .ThenByDescending(k => k.MaKyDanhGia)
+        .FirstOrDefault();
+    var latestScores = latestAHP != null
+        ? Model.DiemDanhGiaNCCs?.Where(d => d.MaKyDanhGia == latestAHP.MaKyDanhGia).ToList()
+        : null;
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-9 col-md-11">
-        <!-- Card Thông tin NCC -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center">
-                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline" title="Quay lại danh sách">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h3 class="mb-0">@Model.TenNhaCungCap</h3>
+                    @if (latestAHP != null)
+                    {
+                        @if (latestAHP.XepHang == 1 || latestAHP.DeXuat == true)
+                        {
+                            <span class="badge" style="background-color: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 12.5px; font-weight: 700;">
+                                <i class="bi bi-trophy-fill text-warning me-1"></i> TOP 1 ĐỀ XUẤT AHP
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge" style="background-color: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-size: 12.5px;">
+                                <i class="bi bi-diagram-3-fill me-1"></i> Hạng @latestAHP.XepHang AHP (@(latestAHP.DiemTong?.ToString("0.00")) điểm)
+                            </span>
+                        }
+                    }
+                </div>
+                <p class="mb-0 mt-1"><span class="code-badge">@(Model.MaNhaCungCapCode ?? $"NCC{Model.MaNhaCungCap:D3}")</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a asp-controller="AHP" asp-action="Index" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-diagram-3 text-primary me-1"></i> Lịch sử AHP
+        </a>
+        <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-cart-plus me-1"></i> Lập phiếu nhập
+        </a>
+        @if (isManagerOrAdmin)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.MaNhaCungCap" class="btn btn-custom btn-custom-primary">
+                <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <!-- Thông tin NCC -->
+        <div class="card-custom h-100">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-buildings text-primary"></i> Thông tin đối tác</h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="text-center mb-3">
                     @if (!string.IsNullOrEmpty(Model.HinhAnh))
                     {
-                        <img src="@Model.HinhAnh" alt="@Model.TenNhaCungCap" class="supplier-detail-media me-3" onerror="this.onerror=null; this.src='/favicon.ico';" />
+                        <img src="@Model.HinhAnh" alt="@Model.TenNhaCungCap" class="table-supplier-logo" style="width: 64px; height: 64px;" onerror="this.onerror=null; this.src='/images/placeholder-supplier.svg';" />
                     }
                     else
                     {
                         var initial = !string.IsNullOrWhiteSpace(Model.TenNhaCungCap) ? Model.TenNhaCungCap.Trim().Substring(0, 1).ToUpper() : "N";
-                        <div class="supplier-detail-media me-3 d-flex align-items-center justify-content-center bg-primary-subtle text-primary fs-2 fw-bold">
-                            @initial
-                        </div>
+                        <div class="table-supplier-avatar-placeholder mx-auto" style="width: 64px; height: 64px; font-size: 24px;">@initial</div>
                     }
+                </div>
+                <div class="d-flex flex-column gap-2" style="font-size: 14px;">
+                    <div><span style="color: var(--slate-400);">Người liên hệ:</span> <strong style="color: var(--slate-800);">@(Model.NguoiLienHe ?? "—")</strong></div>
                     <div>
-                        <h4 class="fw-bold text-dark mb-0">@Model.TenNhaCungCap</h4>
-                        <span class="badge bg-light text-dark font-monospace border mt-1">
-                            Mã: @(Model.MaNhaCungCapCode ?? $"NCC{Model.MaNhaCungCap:D3}")
-                        </span>
-                    </div>
-                </div>
-                @if (isManagerOrAdmin)
-                {
-                    <a asp-action="Edit" asp-route-id="@Model.MaNhaCungCap" class="btn btn-primary rounded-3 px-3">
-                        <i class="bi bi-pencil me-1"></i> Chỉnh sửa
-                    </a>
-                }
-            </div>
-
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded-3 h-100">
-                        <span class="text-muted small d-block">Người liên hệ:</span>
-                        <strong class="text-dark">@(Model.NguoiLienHe ?? "—")</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded-3 h-100">
-                        <span class="text-muted small d-block">Số điện thoại:</span>
-                        <strong class="text-dark">@(Model.SoDienThoai ?? "—")</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded-3 h-100">
-                        <span class="text-muted small d-block">Email:</span>
-                        <strong class="text-dark">@(Model.Email ?? "—")</strong>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="p-3 bg-light rounded-3 h-100">
-                        <span class="text-muted small d-block">Địa chỉ:</span>
-                        <strong class="text-dark">@(Model.DiaChi ?? "—")</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 bg-light rounded-3 h-100">
-                        <span class="text-muted small d-block">Trạng thái hợp tác:</span>
-                        @if (Model.TrangThai == true)
+                        <span style="color: var(--slate-400);">Điện thoại:</span>
+                        @if (!string.IsNullOrEmpty(Model.SoDienThoai))
                         {
-                            <span class="badge bg-success-subtle text-success fs-6">Đang hợp tác</span>
+                            <a href="tel:@Model.SoDienThoai" class="fw-semibold">@Model.SoDienThoai</a>
                         }
                         else
                         {
-                            <span class="badge bg-secondary-subtle text-secondary fs-6">Tạm dừng</span>
+                            <span>—</span>
+                        }
+                    </div>
+                    <div>
+                        <span style="color: var(--slate-400);">Email:</span>
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <a href="mailto:@Model.Email" class="fw-semibold" style="word-break: break-all;">@Model.Email</a>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </div>
+                    <div>
+                        <span style="color: var(--slate-400);">Địa chỉ:</span>
+                        <strong style="color: var(--slate-800);">@(Model.DiaChi ?? "—")</strong>
+                    </div>
+                    <div class="mt-1">
+                        @if (Model.TrangThai == true)
+                        {
+                            <span class="status-badge status-badge-success">Đang hợp tác</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-badge-secondary">Tạm dừng</span>
                         }
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Lịch sử Phiếu nhập từ NCC này -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-            <h5 class="fw-bold text-dark mb-3">
-                <i class="bi bi-receipt text-primary me-2"></i>Lịch sử phiếu nhập từ đối tác này
-            </h5>
-            @if (Model.PhieuNhaps != null && Model.PhieuNhaps.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light small text-uppercase text-muted">
-                            <tr>
-                                <th>Mã phiếu</th>
-                                <th>Ngày nhập</th>
-                                <th class="text-center">Số sản phẩm</th>
-                                <th class="text-end">Tổng tiền</th>
-                                <th class="text-center">Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var pn in Model.PhieuNhaps.OrderByDescending(p => p.NgayNhap))
-                            {
-                                var tongTien = (pn.TongTien.HasValue && pn.TongTien.Value > 0)
-                                    ? pn.TongTien.Value
-                                    : (pn.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+    <div class="col-lg-8">
+        <!-- Lịch sử phiếu nhập -->
+        <div class="card-custom mb-3">
+            <div class="card-header-custom">
+                <h5><i class="bi bi-receipt text-primary"></i> Lịch sử phiếu nhập</h5>
+            </div>
+            <div class="card-body-custom p-0">
+                @if (Model.PhieuNhaps != null && Model.PhieuNhaps.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <span class="font-monospace text-primary fw-semibold">
-                                            @(pn.MaPhieuNhapCode ?? $"PN{pn.MaPhieuNhap:D4}")
-                                        </span>
-                                    </td>
-                                    <td class="small text-muted">
-                                        @(pn.NgayNhap?.ToString("dd/MM/yyyy") ?? pn.NgayTao?.ToString("dd/MM/yyyy") ?? "N/A")
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-light text-dark border">
-                                            @(pn.ChiTietPhieuNhaps?.Count ?? 0) mặt hàng
-                                        </span>
-                                    </td>
-                                    <td class="text-end fw-bold text-dark">
-                                        @(tongTien.ToString("N0")) đ
-                                    </td>
-                                    <td class="text-center">
-                                        @if (pn.TrangThai == "xacnhan")
-                                        {
-                                            <span class="badge bg-success-subtle text-success">Đã xác nhận</span>
-                                        }
-                                        else if (pn.TrangThai == "huy")
-                                        {
-                                            <span class="badge bg-danger-subtle text-danger">Đã hủy</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning-subtle text-warning">Chờ xử lý</span>
-                                        }
-                                    </td>
+                                    <th>Mã phiếu</th>
+                                    <th>Ngày nhập</th>
+                                    <th class="text-center">Số mặt hàng</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                    <th class="text-center">Trạng thái</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-inbox fs-2 d-block mb-1"></i>
-                    Chưa có phiếu nhập hàng nào từ nhà cung cấp này.
-                </div>
-            }
+                            </thead>
+                            <tbody>
+                                @foreach (var pn in Model.PhieuNhaps.OrderByDescending(p => p.NgayNhap))
+                                {
+                                    var tongTien = (pn.TongTien.HasValue && pn.TongTien.Value > 0)
+                                        ? pn.TongTien.Value
+                                        : (pn.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="PhieuNhap" asp-action="Details" asp-route-id="@pn.MaPhieuNhap" class="code-badge text-decoration-none">
+                                                @(pn.MaPhieuNhapCode ?? $"PN{pn.MaPhieuNhap:D4}")
+                                            </a>
+                                        </td>
+                                        <td style="color: var(--slate-500);">
+                                            @(pn.NgayNhap?.ToString("dd/MM/yyyy") ?? pn.NgayTao?.ToString("dd/MM/yyyy") ?? "N/A")
+                                        </td>
+                                        <td class="text-center" style="color: var(--slate-600);">@(pn.ChiTietPhieuNhaps?.Count ?? 0)</td>
+                                        <td class="text-end font-mono fw-semibold" style="color: var(--slate-900);">@(tongTien.ToString("N0")) đ</td>
+                                        <td class="text-center">
+                                            @if (pn.TrangThai == "xacnhan")
+                                            {
+                                                <span class="status-badge status-badge-success">Đã xác nhận</span>
+                                            }
+                                            else if (pn.TrangThai == "huy")
+                                            {
+                                                <span class="status-badge status-badge-danger">Đã hủy</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-badge-warning">Chờ xử lý</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Chưa có phiếu nhập hàng nào từ nhà cung cấp này.</p>
+                    </div>
+                }
+            </div>
         </div>
 
-        <!-- Lịch sử Đánh giá AHP -->
+        <!-- Phân tích điểm số theo tiêu chí AHP (Kỳ gần nhất) -->
+        @if (latestScores != null && latestScores.Any())
+        {
+            <div class="card-custom mb-3">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <h5>
+                        <i class="bi bi-bar-chart-steps text-primary"></i> 
+                        Điểm số tiêu chí AHP 
+                        <span class="fw-normal text-muted" style="font-size: 13px;">(@(latestAHP?.KyDanhGia?.TenKyDanhGia ?? "Kỳ gần nhất"))</span>
+                    </h5>
+                    @if (latestAHP != null)
+                    {
+                        <a asp-controller="AHP" asp-action="KetQuaXepHang" asp-route-id="@latestAHP.MaKyDanhGia" class="btn btn-sm btn-link text-decoration-none p-0" title="Xem báo cáo AHP chi tiết">
+                            Báo cáo chi tiết kỳ này <i class="bi bi-arrow-right"></i>
+                        </a>
+                    }
+                </div>
+                <div class="card-body-custom">
+                    <div class="row g-3">
+                        @foreach (var sc in latestScores)
+                        {
+                            var scoreVal = sc.Diem ?? 0;
+                            var pct = Math.Min(100, Math.Max(0, (double)scoreVal * 10));
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border" style="background-color: #FAFBFD;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge" style="background-color: #E2E8F0; color: #334155; font-size: 11px;">
+                                                C@(sc.TieuChi?.MaTieuChi ?? sc.MaTieuChi)
+                                            </span>
+                                            <span class="fw-semibold text-truncate" style="font-size: 13.5px; color: var(--slate-800); max-width: 170px;" title="@sc.TieuChi?.TenTieuChi">
+                                                @(sc.TieuChi?.TenTieuChi ?? "Tiêu chí")
+                                            </span>
+                                        </div>
+                                        <span class="font-mono fw-bold text-primary" style="font-size: 14px;">
+                                            @scoreVal.ToString("0.0") <span class="text-muted fw-normal" style="font-size: 11px;">/ 10</span>
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 7px; background-color: #E2E8F0; border-radius: 4px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: @(pct)%; border-radius: 4px;" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Kết quả AHP qua các kỳ -->
         @if (Model.KetQuaXepHangs != null && Model.KetQuaXepHangs.Any())
         {
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                <h5 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-trophy text-warning me-2"></i>Kết quả đánh giá xếp hạng AHP
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light small text-uppercase text-muted">
-                            <tr>
-                                <th>Kỳ đánh giá</th>
-                                <th class="text-center">Điểm tổng hợp</th>
-                                <th class="text-center">Thứ hạng</th>
-                                <th class="text-center">Đề xuất</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var kq in Model.KetQuaXepHangs.OrderByDescending(k => k.MaKyDanhGia))
-                            {
+            <div class="card-custom">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-trophy text-warning"></i> Kết quả đánh giá AHP qua các kỳ</h5>
+                    <a asp-controller="AHP" asp-action="Index" class="btn btn-sm btn-link text-decoration-none p-0">
+                        Xem tất cả các kỳ <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body-custom p-0">
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
                                 <tr>
-                                    <td class="fw-semibold">@(kq.KyDanhGia?.TenKyDanhGia ?? $"Kỳ #{kq.MaKyDanhGia}")</td>
-                                    <td class="text-center fw-bold text-primary">
-                                        @(kq.DiemTong?.ToString("0.00") ?? "N/A")
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge @(kq.XepHang == 1 ? "bg-warning text-dark" : "bg-light text-dark border") px-3">
-                                            Hạng @(kq.XepHang?.ToString() ?? "-")
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        @if (kq.DeXuat == true)
-                                        {
-                                            <span class="badge bg-success-subtle text-success">Được đề xuất</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted small">—</span>
-                                        }
-                                    </td>
+                                    <th>Kỳ đánh giá</th>
+                                    <th class="text-end">Điểm tổng hợp</th>
+                                    <th class="text-center">Thứ hạng</th>
+                                    <th class="text-center">Đề xuất</th>
+                                    <th class="text-end" style="width: 100px;">Chi tiết</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var kq in Model.KetQuaXepHangs.OrderByDescending(k => k.MaKyDanhGia))
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="AHP" asp-action="KetQuaXepHang" asp-route-id="@kq.MaKyDanhGia" class="fw-semibold text-decoration-none" style="color: var(--slate-800);" title="Bấm xem ma trận & xếp hạng">
+                                                @(kq.KyDanhGia?.TenKyDanhGia ?? $"Kỳ #{kq.MaKyDanhGia}")
+                                                <i class="bi bi-box-arrow-up-right small text-primary ms-1"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-end font-mono fw-semibold text-primary">@(kq.DiemTong?.ToString("0.00") ?? "N/A")</td>
+                                        <td class="text-center">
+                                            @if (kq.XepHang == 1)
+                                            {
+                                                <span class="status-badge status-badge-warning">Hạng 1</span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color: var(--slate-600);">Hạng @(kq.XepHang?.ToString() ?? "-")</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (kq.DeXuat == true)
+                                            {
+                                                <span class="status-badge status-badge-success">Được đề xuất</span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color: var(--slate-400);">—</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-controller="AHP" asp-action="KetQuaXepHang" asp-route-id="@kq.MaKyDanhGia" class="btn btn-sm btn-outline-primary" title="Xem chi tiết kỳ AHP này">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         }

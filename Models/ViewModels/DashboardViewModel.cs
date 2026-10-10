@@ -17,6 +17,13 @@ namespace code.Models.ViewModels
         public bool DeXuat { get; set; }
     }
 
+    public class ChiPhiTheoThangDto
+    {
+        public string ThangNam { get; set; } = string.Empty; // e.g. "T03/2026"
+        public decimal TongTien { get; set; }
+        public int SoPhieuNhap { get; set; }
+    }
+
     public class DashboardViewModel
     {
         public int TongSanPham { get; set; }
@@ -29,8 +36,13 @@ namespace code.Models.ViewModels
         public List<PhieuNhap> PhieuNhapMoiNhat { get; set; } = new List<PhieuNhap>();
         public List<TonKho> DanhSachTonKho { get; set; } = new List<TonKho>();
 
-        // Dữ liệu thống kê biểu đồ động lấy 100% từ cơ sở dữ liệu SQL
+        // Cảnh báo tồn kho
+        public int SoMatHangCanhBao { get; set; }
+        public List<TonKho> DanhSachCanhBaoTonKho { get; set; } = new List<TonKho>();
+
+        // Dữ liệu thống kê biểu đồ động từ SQL Server
         public List<DanhMucThongKeDto> ThongKeDanhMuc { get; set; } = new List<DanhMucThongKeDto>();
         public List<NhaCungCapDiemDto> ThongKeNhaCungCapAHP { get; set; } = new List<NhaCungCapDiemDto>();
+        public List<ChiPhiTheoThangDto> ThongKeChiPhiTheoThang { get; set; } = new List<ChiPhiTheoThangDto>();
     }
 }

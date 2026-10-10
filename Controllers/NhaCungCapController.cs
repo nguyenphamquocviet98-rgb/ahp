@@ -26,6 +26,8 @@ namespace code.Controllers
         {
             var query = _context.NhaCungCaps
                 .Include(n => n.PhieuNhaps)
+                .Include(n => n.KetQuaXepHangs)
+                    .ThenInclude(k => k.KyDanhGia)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))

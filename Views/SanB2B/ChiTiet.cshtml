@@ -1,0 +1,384 @@
+@model code.Models.TonKhoNPP
+@{
+    ViewData["Title"] = $"{Model.SanPham?.TenSanPham} - Chi Tiết Nguồn Hàng B2B";
+    var sp = Model.SanPham;
+    var dn = Model.DoanhNghiep;
+    decimal giaGoc = sp?.GiaMacDinh ?? (Model.GiaSi * 1.15m);
+    var discountPercent = giaGoc > Model.GiaSi ? Math.Round((1 - (Model.GiaSi / giaGoc)) * 100) : 0;
+    int currentDNId = ViewBag.CurrentMaDoanhNghiep ?? 0;
+    bool isOwnProduct = dn != null && currentDNId > 0 && dn.MaDoanhNghiep == currentDNId;
+    var cungDanhMuc = ViewBag.CungDanhMuc as List<code.Models.TonKhoNPP> ?? new List<code.Models.TonKhoNPP>();
+    bool isAuthenticated = User.Identity != null && User.Identity.IsAuthenticated;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="SanB2B" asp-action="Index" class="text-decoration-none text-muted">Sàn Chợ Sỉ B2B</a></li>
+            @if (sp?.DanhMuc != null)
+            {
+                <li class="breadcrumb-item"><a asp-controller="SanB2B" asp-action="Index" asp-route-maDanhMuc="@sp.DanhMuc.MaDanhMuc" class="text-decoration-none text-muted">@sp.DanhMuc.TenDanhMuc</a></li>
+            }
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">@sp?.TenSanPham</li>
+        </ol>
+    </nav>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-exclamation-octagon-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-5">
+        <!-- Cột Trái: Hình ảnh & Thông số hàng hóa -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="position-relative bg-light text-center p-4 d-flex align-items-center justify-content-center" style="min-height: 340px;">
+                    @if (discountPercent > 0)
+                    {
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill fw-bold fs-6">
+                            -@discountPercent% GIÁ SỈ
+                        </span>
+                    }
+                    @if (dn != null && dn.LaGianHangMall)
+                    {
+                        <span class="badge bg-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill fw-bold text-warning border">
+                            <i class="bi bi-patch-check-fill me-1"></i> MALL CHÍNH HÃNG
+                        </span>
+                    }
+
+                    @if (!string.IsNullOrEmpty(sp?.AnhSanPham))
+                    {
+                        <img src="@sp.AnhSanPham" alt="@sp?.TenSanPham" class="img-fluid rounded-3"
+                             style="max-height: 300px; object-fit: contain;"
+                             onerror="this.onerror=null; this.src='/images/placeholder-product.svg';" />
+                    }
+                    else
+                    {
+                        <img src="~/images/placeholder-product.svg" alt="Sản phẩm" class="img-fluid rounded-3 p-4" style="max-height: 260px;" />
+                    }
+                </div>
+
+                <div class="card-body p-4 border-top">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Quy Cách & Tiêu Chuẩn Hàng Hóa</h6>
+                    <div class="row g-2 small">
+                        <div class="col-6 text-muted">Mã SKU / Barcode:</div>
+                        <div class="col-6 fw-semibold text-dark font-mono">@(sp?.MaSanPhamCode ?? $"SP-{Model.MaSanPham:D4}")</div>
+
+                        <div class="col-6 text-muted">Ngành hàng:</div>
+                        <div class="col-6 fw-semibold text-dark">@(sp?.DanhMuc?.TenDanhMuc ?? "Hàng tiêu dùng")</div>
+
+                        <div class="col-6 text-muted">Đơn vị đóng gói:</div>
+                        <div class="col-6 fw-semibold text-dark">@(sp?.DonViTinh?.TenDonVi ?? "Thùng")</div>
+
+                        <div class="col-6 text-muted">Tồn kho sẵn sàng:</div>
+                        <div class="col-6 fw-bold text-success">@Model.SoLuongTon @(sp?.DonViTinh?.TenDonVi ?? "đv")</div>
+
+                        <div class="col-6 text-muted">Thời gian xuất kho:</div>
+                        <div class="col-6 fw-semibold text-dark">Cam kết trong @Model.ThoiGianGiaoHang ngày</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cam kết của Sàn B2B -->
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-light">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <i class="bi bi-shield-check text-success fs-3"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Đảm Bảo Giao Dịch B2B</h6>
+                        <small class="text-muted">Được bảo hộ chất lượng & dòng tiền bởi Sàn B2B</small>
+                    </div>
+                </div>
+                <ul class="list-unstyled small text-muted mb-0 ps-4 d-flex flex-column gap-1">
+                    <li><i class="bi bi-check2 text-primary me-1"></i>Hóa đơn VAT và chứng từ nguồn gốc đầy đủ</li>
+                    <li><i class="bi bi-check2 text-primary me-1"></i>Kiểm tra hàng trước khi ký nhận biên bản bàn giao</li>
+                    <li><i class="bi bi-check2 text-primary me-1"></i>Đổi trả trong 48h nếu phát hiện lỗi đóng gói hoặc hết hạn</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Thông tin giá buôn, Nhà phân phối và Form đặt hàng -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <!-- Tiêu đề & Ngành hàng -->
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-semibold">
+                        @(sp?.DanhMuc?.TenDanhMuc ?? "Nguồn Hàng Sỉ")
+                    </span>
+                    <span class="badge bg-light text-muted border px-2 py-1 rounded-pill">
+                        Sẵn sàng xuất kho
+                    </span>
+                </div>
+                <h2 class="fw-bold text-dark mb-2">@sp?.TenSanPham</h2>
+                <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                    <span>Mã SKU: <strong class="text-dark font-mono">@(sp?.MaSanPhamCode ?? $"SP-{Model.MaSanPham}")</strong></span>
+                    <span>&bull;</span>
+                    <span>Đã bán sỉ: <strong class="text-dark">1,250+ @(sp?.DonViTinh?.TenDonVi ?? "đv")</strong></span>
+                    <span>&bull;</span>
+                    <span class="text-warning"><i class="bi bi-star-fill me-1"></i>4.9/5.0</span>
+                </div>
+
+                <!-- Bảng Giá Sỉ B2B -->
+                <div class="p-4 rounded-4 bg-light border mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-sm-7">
+                            <small class="text-muted d-block text-uppercase fw-semibold mb-1" style="font-size: 11.5px; letter-spacing: 0.5px;">
+                                Đơn Giá Sỉ B2B Dành Cho NPP & Đại Lý:
+                            </small>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <span class="display-6 fw-bold text-danger">@Model.GiaSi.ToString("N0")</span>
+                                <span class="fs-5 text-muted">VNĐ / @(sp?.DonViTinh?.TenDonVi ?? "Thùng")</span>
+                            </div>
+                            @if (giaGoc > Model.GiaSi)
+                            {
+                                <div class="mt-1 small text-muted">
+                                    Giá niêm yết bán lẻ: <span class="text-decoration-line-through">@giaGoc.ToString("N0") VNĐ</span>
+                                    <span class="badge bg-success-subtle text-success ms-2">Tiết kiệm @((giaGoc - Model.GiaSi).ToString("N0")) đ/đv</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-sm-5 text-sm-end mt-3 mt-sm-0">
+                            <div class="p-2 rounded-3 bg-white border d-inline-block text-start">
+                                <small class="text-muted d-block" style="font-size: 11px;">Mức chiết khấu:</small>
+                                <strong class="text-primary fs-5">@(discountPercent > 0 ? $"{discountPercent}%" : "Tận gốc")</strong>
+                                <small class="text-muted d-block" style="font-size: 11px;">(Đã bao gồm VAT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin Nhà Phân Phối / Đối tác cung ứng -->
+                <div class="card border rounded-3 p-3 mb-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="supplier-avatar-box rounded-3 bg-light border d-flex align-items-center justify-content-center shadow-xs" style="width: 50px; height: 50px;">
+                                @if (!string.IsNullOrEmpty(dn?.Logo))
+                                {
+                                    <img src="@dn.Logo" alt="@dn?.TenDoanhNghiep" class="img-fluid rounded-3 p-1" style="max-height: 44px;" />
+                                }
+                                else
+                                {
+                                    <span class="fw-bold fs-4 text-primary">@(dn?.TenDoanhNghiep != null && dn.TenDoanhNghiep.Length > 0 ? dn.TenDoanhNghiep.Substring(0, 1) : "N")</span>
+                                }
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="fw-bold mb-0 text-dark">@(dn?.TenDoanhNghiep ?? "Tổng kho phân phối")</h6>
+                                    @if (dn != null && dn.LaGianHangMall)
+                                    {
+                                        <span class="badge bg-danger text-white px-2 py-0" style="font-size: 10px;">MALL</span>
+                                    }
+                                </div>
+                                <small class="text-muted"><i class="bi bi-geo-alt me-1 text-primary"></i>@(dn?.DiaChi ?? "TP. Hồ Chí Minh")</small>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 fw-bold">
+                                ⭐ @(dn?.DiemUyTin.ToString("0.0") ?? "9.5") / 10
+                            </span>
+                            <small class="d-block text-muted" style="font-size: 11px;">Độ tin cậy AHP</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 pt-2 border-top small text-muted">
+                        <div class="col-6">
+                            <i class="bi bi-telephone text-primary me-1"></i>Hotline sỉ: <strong>@(dn?.SoDienThoai ?? "1900 6868")</strong>
+                        </div>
+                        <div class="col-6 text-end">
+                            <a asp-controller="SanB2B" asp-action="Index" asp-route-search="@dn?.TenDoanhNghiep" class="text-decoration-none text-primary fw-semibold">
+                                Xem tất cả nguồn hàng &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner Trợ Lý AHP Chọn Nguồn Cung Tối Ưu -->
+                <div class="card border-0 rounded-4 p-3 mb-4 text-white shadow-sm"
+                     style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e40af 100%);">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-white bg-opacity-20 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-diagram-3-fill fs-4 text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-white">Mô Hình AHP Phân Tích Nguồn Cung</h6>
+                                <small class="text-white-50">So sánh đa tiêu chí (Giá buôn, Uy tín, Thời gian giao) giữa các tổng kho</small>
+                            </div>
+                        </div>
+                        <a asp-controller="AHPB2B" asp-action="ThietLap" asp-route-maSanPham="@Model.MaSanPham"
+                           class="btn btn-warning btn-sm rounded-pill fw-bold px-3 py-2 text-dark shadow-sm">
+                            <i class="bi bi-cpu-fill me-1"></i> So Sánh Bằng AHP
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Form Đặt Hàng Sỉ B2B -->
+                <div class="card border border-primary border-opacity-25 rounded-4 p-4 bg-primary-subtle bg-opacity-10">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cart-check text-primary me-2"></i>Lập Đơn Đặt Hàng Sỉ B2B</h5>
+
+                    @if (isOwnProduct)
+                    {
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Đây là mặt hàng đang chào bán từ chính kho của doanh nghiệp bạn.
+                        </div>
+                    }
+                    else if (isAuthenticated)
+                    {
+                        <form asp-action="DatHangNhanh" method="post" id="formOrder">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="maTonKhoNPP" value="@Model.MaTonKhoNPP" />
+                                <input type="hidden" name="giaDuKien" value="@Model.GiaSi" />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold text-dark small">Số lượng đặt mua (@(sp?.DonViTinh?.TenDonVi ?? "đv")):</label>
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(-10)">-10</button>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(-1)">-1</button>
+                                        <input type="number" id="orderQty" name="soLuong" class="form-control text-center fw-bold fs-5"
+                                               value="10" min="1" max="@Model.SoLuongTon" onchange="calculateTotal()" />
+                                        <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(1)">+1</button>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(10)">+10</button>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 11px;">Tối đa trong kho: @Model.SoLuongTon</small>
+                                </div>
+
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold text-dark small">Ghi chú giao hàng & thỏa thuận:</label>
+                                    <input type="text" name="ghiChu" class="form-control" placeholder="Ví dụ: Giao trước 17h, xuất hóa đơn công ty..." />
+                                </div>
+                            </div>
+
+                            <!-- Tính toán tổng tiền -->
+                            <div class="p-3 bg-white rounded-3 border d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <small class="text-muted d-block">Thành tiền dự kiến:</small>
+                                    <span class="fs-4 fw-bold text-danger font-mono" id="totalAmount">
+                                        @((Model.GiaSi * 10).ToString("N0")) VNĐ
+                                    </span>
+                                </div>
+                                <div class="text-end small text-muted">
+                                    <span>Giao hàng: <strong class="text-dark">~@Model.ThoiGianGiaoHang ngày</strong></span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm py-3">
+                                <i class="bi bi-cart-check-fill me-2"></i> Xác Nhận Đặt Đơn Hàng Sỉ
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <!-- Khi khách chưa đăng nhập -->
+                        <div class="text-center py-3">
+                            <i class="bi bi-lock-fill fs-2 text-primary d-block mb-2"></i>
+                            <h6 class="fw-bold text-dark mb-1">Đăng Nhập Để Lập Đơn Hàng B2B</h6>
+                            <p class="text-muted small mb-3">
+                                Bạn cần đăng nhập tài khoản Nhà Phân Phối để xác thực quyền đặt sỉ và đồng bộ công nợ.
+                            </p>
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/SanB2B/ChiTiet/@Model.MaTonKhoNPP"
+                                   class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập đặt hàng
+                                </a>
+                                <a href="/Account/Login" class="btn btn-warning text-dark px-4 py-2 rounded-pill fw-bold shadow-sm">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> 1-Click Đăng nhập Demo
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SẢN PHẨM CÙNG NGÀNH HÀNG -->
+    @if (cungDanhMuc.Any())
+    {
+        <div class="border-top pt-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Nguồn Hàng Cùng Ngành @(sp?.DanhMuc?.TenDanhMuc ?? "")</h4>
+                    <p class="text-muted mb-0">Các mặt hàng chào buôn tương tự từ các tổng kho đối tác</p>
+                </div>
+                <a asp-controller="SanB2B" asp-action="Index" asp-route-maDanhMuc="@sp?.DanhMuc?.MaDanhMuc" class="btn btn-outline-primary rounded-pill px-3 btn-sm">
+                    Xem thêm &rarr;
+                </a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var item in cungDanhMuc)
+                {
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card h-100 border rounded-4 product-b2b-card shadow-xs overflow-hidden">
+                            <div class="p-3 text-center bg-light" style="height: 140px;">
+                                @if (!string.IsNullOrEmpty(item.SanPham?.AnhSanPham))
+                                {
+                                    <img src="@item.SanPham.AnhSanPham" alt="@item.SanPham?.TenSanPham" class="img-fluid" style="max-height: 120px; object-fit: contain;" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-box-seam display-4 text-primary opacity-50"></i>
+                                }
+                            </div>
+                            <div class="card-body p-3 d-flex flex-column">
+                                <h6 class="fw-bold text-dark mb-1 text-truncate" title="@item.SanPham?.TenSanPham">@item.SanPham?.TenSanPham</h6>
+                                <small class="text-muted mb-2"><i class="bi bi-building me-1"></i>@item.DoanhNghiep?.TenDoanhNghiep</small>
+                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-baseline">
+                                    <span class="fw-bold text-danger fs-5">@item.GiaSi.ToString("N0") <small class="fs-6 text-muted">đ</small></span>
+                                    <a asp-controller="SanB2B" asp-action="ChiTiet" asp-route-id="@item.MaTonKhoNPP" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        Chi tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const unitPrice = @Model.GiaSi;
+        const maxStock = @Model.SoLuongTon;
+
+        function adjustQty(delta) {
+            const input = document.getElementById('orderQty');
+            if (!input) return;
+            let current = parseInt(input.value) || 1;
+            let next = current + delta;
+            if (next < 1) next = 1;
+            if (next > maxStock) next = maxStock;
+            input.value = next;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const input = document.getElementById('orderQty');
+            const totalDisplay = document.getElementById('totalAmount');
+            if (!input || !totalDisplay) return;
+
+            let qty = parseInt(input.value) || 1;
+            if (qty < 1) qty = 1;
+            if (qty > maxStock) qty = maxStock;
+            input.value = qty;
+
+            const total = qty * unitPrice;
+            totalDisplay.innerText = total.toLocaleString('vi-VN') + ' VNĐ';
+        }
+    </script>
+}

@@ -1,0 +1,385 @@
+@model code.Models.DonHangB2B
+
+@{
+    ViewData["Title"] = "Chi tiết Đơn hàng B2B - " + Model.MaDonHangCode;
+    int currentDNId = ViewBag.CurrentDNId ?? 0;
+    bool isSeller = currentDNId > 0 && Model.MaNPPBan == currentDNId;
+    bool isBuyer = currentDNId > 0 && Model.MaNPPMua == currentDNId;
+    bool isAdmin = User.IsInRole("admin_san") || User.IsInRole("admin");
+    bool isManager = User.IsInRole("chu_npp") || User.IsInRole("quanly");
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item">
+                    @if (isSeller)
+                    {
+                        <a asp-action="DonBan">Đơn Bán Của Tôi</a>
+                    }
+                    else
+                    {
+                        <a asp-action="DonMua">Đơn Mua Của Tôi</a>
+                    }
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.MaDonHangCode</li>
+            </ol>
+        </nav>
+        <h2 class="page-title d-flex align-items-center gap-2">
+            <span>Đơn hàng: @Model.MaDonHangCode</span>
+            @switch (Model.TrangThai)
+            {
+                case "cho_duyet":
+                    <span class="badge bg-warning text-dark px-3 py-1 fs-6">Chờ duyệt</span>
+                    break;
+                case "da_duyet":
+                    <span class="badge bg-info text-white px-3 py-1 fs-6">Đã duyệt (Chờ giao)</span>
+                    break;
+                case "dang_giao":
+                    <span class="badge bg-primary px-3 py-1 fs-6">Đang giao hàng</span>
+                    break;
+                case "hoan_thanh":
+                    <span class="badge bg-success px-3 py-1 fs-6">Hoàn thành</span>
+                    break;
+                case "huy":
+                    <span class="badge bg-secondary px-3 py-1 fs-6">Đã hủy</span>
+                    break;
+            }
+        </h2>
+    </div>
+    <div class="d-flex gap-2">
+        @if (isSeller)
+        {
+            <a asp-action="DonBan" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Về danh sách đơn bán
+            </a>
+        }
+        else
+        {
+            <a asp-action="DonMua" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Về danh sách đơn mua
+            </a>
+        }
+    </div>
+</div>
+
+<!-- Tiến trình vòng đời đơn hàng (Order Lifecycle Stepper) -->
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-4">
+        <h6 class="fw-bold text-muted mb-4"><i class="bi bi-clock-history me-2"></i>Tiến trình xử lý đơn hàng B2B</h6>
+        
+        @{
+            int step = Model.TrangThai switch
+            {
+                "cho_duyet" => 1,
+                "da_duyet" => 2,
+                "dang_giao" => 3,
+                "hoan_thanh" => 4,
+                _ => 0
+            };
+        }
+
+        @if (Model.TrangThai == "huy")
+        {
+            <div class="alert alert-danger mb-0">
+                <i class="bi bi-x-circle-fill me-2"></i><strong>Đơn hàng này đã bị hủy.</strong>
+                <div>@(Model.GhiChu ?? "Không có lý do chi tiết.")</div>
+            </div>
+        }
+        else
+        {
+            <div class="row text-center position-relative">
+                <div class="col-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold @(step >= 1 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 48px; height: 48px;">
+                        @(step > 1 ? "✓" : "1")
+                    </div>
+                    <div class="fw-bold mt-2 small">1. Đã đặt hàng</div>
+                    <small class="text-muted d-block">@Model.NgayDatHang?.ToString("dd/MM HH:mm")</small>
+                </div>
+                <div class="col-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold @(step >= 2 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 48px; height: 48px;">
+                        @(step > 2 ? "✓" : "2")
+                    </div>
+                    <div class="fw-bold mt-2 small">2. Bên Bán duyệt</div>
+                    <small class="text-muted d-block">@(step >= 2 ? "Đã trừ kho bán" : "Chờ duyệt")</small>
+                </div>
+                <div class="col-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold @(step >= 3 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 48px; height: 48px;">
+                        @(step > 3 ? "✓" : "3")
+                    </div>
+                    <div class="fw-bold mt-2 small">3. Đang giao hàng</div>
+                    <small class="text-muted d-block">@(step >= 3 ? "Đang vận chuyển" : "Chờ vận chuyển")</small>
+                </div>
+                <div class="col-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold @(step >= 4 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 48px; height: 48px;">
+                        @(step >= 4 ? "✓" : "4")
+                    </div>
+                    <div class="fw-bold mt-2 small">4. Hoàn thành</div>
+                    <small class="text-muted d-block">@(step >= 4 ? "Đã cộng kho mua" : "Chờ nhận hàng")</small>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Cột trái: Thông tin các bên giao dịch & Thao tác -->
+    <div class="col-lg-4">
+        <!-- Đối tác bán -->
+        <div class="card shadow-sm border-0 rounded-3 mb-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-box-arrow-up-right me-2"></i>Bên Bán (NPP Cung Ứng)</h6>
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold mb-1">
+                    @Model.NPPBan?.TenDoanhNghiep
+                    @if (Model.NPPBan != null && Model.NPPBan.LaGianHangMall)
+                    {
+                        <span class="badge bg-danger ms-1 small">MALL</span>
+                    }
+                </h5>
+                <p class="text-muted small mb-2">⭐ Uy tín: @Model.NPPBan?.DiemUyTin / 10</p>
+                <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>@(Model.NPPBan?.DiaChi ?? "---")</div>
+                <div class="small text-muted mb-1"><i class="bi bi-telephone me-1"></i>@(Model.NPPBan?.SoDienThoai ?? "---")</div>
+                <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@(Model.NPPBan?.Email ?? "---")</div>
+            </div>
+        </div>
+
+        <!-- Đối tác mua -->
+        <div class="card shadow-sm border-0 rounded-3 mb-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-box-arrow-in-down-left me-2"></i>Bên Mua (NPP Đặt Hàng)</h6>
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold mb-1">@Model.NPPMua?.TenDoanhNghiep</h5>
+                <p class="text-muted small mb-2">Người tạo đơn: @Model.NguoiDat?.TenDangNhap</p>
+                <div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>@(Model.NPPMua?.DiaChi ?? "---")</div>
+                <div class="small text-muted mb-1"><i class="bi bi-telephone me-1"></i>@(Model.NPPMua?.SoDienThoai ?? "---")</div>
+                <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@(Model.NPPMua?.Email ?? "---")</div>
+            </div>
+        </div>
+
+        <!-- Khung thao tác theo vai trò -->
+        <div class="card shadow-sm border-0 rounded-3 bg-light">
+            <div class="card-body p-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-2"></i>Thao tác xử lý đơn</h6>
+
+                @if (isSeller)
+                {
+                    @if (Model.TrangThai == "cho_duyet" && isManager)
+                    {
+                        <form asp-action="DuyetDon" method="post" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.MaDonHang" />
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                                <i class="bi bi-check2-circle me-1"></i> Duyệt đơn (Trừ kho bán)
+                            </button>
+                        </form>
+                    }
+                    @if (Model.TrangThai == "da_duyet")
+                    {
+                        <form asp-action="GiaoHang" method="post" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.MaDonHang" />
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                                <i class="bi bi-truck me-1"></i> Bắt đầu giao hàng
+                            </button>
+                        </form>
+                    }
+                }
+
+                @if (isBuyer)
+                {
+                    @if (Model.TrangThai == "dang_giao")
+                    {
+                        <form asp-action="XacNhanNhanHang" method="post" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.MaDonHang" />
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold" onclick="return confirm('Bạn xác nhận đã nhận đủ hàng? Hệ thống sẽ tự động cộng số lượng vào kho của bạn.')">
+                                <i class="bi bi-box2-heart me-1"></i> Đã nhận được hàng (Cộng vào kho)
+                            </button>
+                        </form>
+                    }
+                }
+
+                @if (isManager && (isSeller || isBuyer) && (Model.TrangThai == "cho_duyet" || Model.TrangThai == "da_duyet"))
+                {
+                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalHuyDon">
+                        <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+                    </button>
+                }
+                else if (Model.TrangThai == "hoan_thanh")
+                {
+                    <div class="alert alert-success mb-0 text-center py-2 small fw-bold">
+                        <i class="bi bi-check-all me-1"></i> Giao dịch B2B thành công
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Bảng chi tiết mặt hàng -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-list-check me-2"></i>Danh sách mặt hàng đặt mua</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã SP</th>
+                            <th>Tên sản phẩm</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Đơn giá sỉ</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int stt = 1; }
+                        @foreach (var item in Model.ChiTietDonHangs)
+                        {
+                            <tr>
+                                <td>@(stt++)</td>
+                                <td class="fw-medium text-muted">@item.SanPham?.MaSanPhamCode</td>
+                                <td class="fw-bold">@item.SanPham?.TenSanPham</td>
+                                <td class="text-center fw-bold text-primary">
+                                    @item.SoLuong @(item.SanPham?.DonViTinh?.TenDonVi ?? "đv")
+                                </td>
+                                <td class="text-end">@item.DonGia.ToString("N0") đ</td>
+                                <td class="text-end fw-bold text-success">
+                                    @((item.SoLuong * item.DonGia).ToString("N0")) đ
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold fs-6">TỔNG GIÁ TRỊ ĐƠN HÀNG:</td>
+                            <td class="text-end fw-bold text-danger fs-5">@Model.TongTien.ToString("N0") đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.GhiChu))
+        {
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0 text-muted"><i class="bi bi-chat-left-text me-2"></i>Ghi chú đơn hàng</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-secondary">@Model.GhiChu</p>
+                </div>
+            </div>
+        }
+
+        <!-- Khu vực Đánh giá chất lượng sau khi giao dịch hoàn thành -->
+        @if (Model.TrangThai == "hoan_thanh")
+        {
+            var dg = ViewBag.DanhGia as code.Models.DanhGiaNPP;
+            if (dg != null)
+            {
+                <div class="card shadow-sm border-0 rounded-4 mb-4 border-start border-4 border-warning">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-star-fill me-1"></i>Đánh giá của Bên Mua về Đối tác</h6>
+                            <span class="text-muted small">@dg.NgayDanhGia?.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="fs-4 text-warning mb-2">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                if (s <= dg.SoSao)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            }
+                            <span class="fs-6 text-dark fw-bold ms-2">@dg.SoSao / 5 sao</span>
+                        </div>
+                        <p class="mb-0 text-secondary fst-italic">"@dg.NoiDung"</p>
+                    </div>
+                </div>
+            }
+            else if (isBuyer)
+            {
+                <div class="card shadow-sm border-0 rounded-4 mb-4 bg-light">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-primary mb-1"><i class="bi bi-star-half me-2"></i>Đánh giá chất lượng dịch vụ của Đối tác</h6>
+                        <p class="small text-muted mb-3">Đánh giá của bạn sẽ tự động cập nhật Điểm Uy Tín của đối tác trong thuật toán AHP!</p>
+                        <form asp-action="GuiDanhGia" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="maDonHang" value="@Model.MaDonHang" />
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Mức độ hài lòng:</label>
+                                <select name="soSao" class="form-select fw-bold text-warning" style="max-width: 280px;">
+                                    <option value="5" selected>⭐⭐⭐⭐⭐ 5 sao - Rất tuyệt vời</option>
+                                    <option value="4">⭐⭐⭐⭐ 4 sao - Tốt, hài lòng</option>
+                                    <option value="3">⭐⭐⭐ 3 sao - Bình thường</option>
+                                    <option value="2">⭐⭐ 2 sao - Chưa hài lòng</option>
+                                    <option value="1">⭐ 1 sao - Kém</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Nhận xét chi tiết:</label>
+                                <textarea name="noiDung" class="form-control" rows="2" placeholder="Chia sẻ trải nghiệm đóng gói, chất lượng hàng, giao hàng từ đối tác này..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-warning fw-bold px-4 rounded-3 shadow-sm">
+                                <i class="bi bi-send-check me-1"></i> Gửi đánh giá đối tác
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Modal Hủy Đơn -->
+<div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Xác nhận Hủy Đơn Hàng B2B</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="HuyDon" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                <div class="modal-body py-3">
+                    <p class="text-muted mb-3">
+                        Bạn có chắc chắn muốn hủy đơn hàng <strong>@Model.MaDonHangCode</strong> không? 
+                        Nếu đơn đã được duyệt, số lượng hàng sẽ được tự động hoàn lại kho bên bán.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lý do hủy đơn:</label>
+                        <input type="text" name="lyDo" class="form-control" placeholder="Nhập lý do hủy..." required />
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card my-3"><div class="card-body">
+<h6>Nhật ký xử lý đơn</h6>
+@foreach (var entry in code.Services.OrderAudit.Read(Model.LichSuXuLyJson))
+{
+    <p class="mb-1">@entry.Time.ToString("dd/MM/yyyy HH:mm:ss") — @entry.UserName (#@entry.UserId): @entry.Status</p>
+}
+@if (Model.TrangThai == "hoan_thanh")
+{
+    <p>Đơn đã nhận hàng và ghi tăng kho. Chứng từ này là căn cứ nhập hàng B2B; không lập thêm phiếu nhập cho cùng lô hàng.</p>
+    <button class="btn btn-outline-secondary d-print-none" onclick="window.print()">In chứng từ nhận hàng</button>
+}
+</div></div>

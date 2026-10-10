@@ -1,6 +1,6 @@
 @model IEnumerable<code.Models.PhieuNhap>
 @{
-    ViewData["Title"] = "Quản lý Phiếu nhập hàng";
+    ViewData["Title"] = "Phiếu nhập hàng";
     var isManagerOrAdmin = User.IsInRole("admin") || User.IsInRole("quanly");
     var search = ViewData["Search"] as string;
     var selectedTrangThai = ViewData["SelectedTrangThai"] as string;
@@ -8,10 +8,13 @@
 
 <div class="page-header">
     <div class="page-header-left">
-        <h3><i class="bi bi-receipt" style="color: var(--primary);"></i> Danh sách Phiếu nhập hàng</h3>
+        <h3>Phiếu nhập hàng</h3>
         <p>Quản lý các đợt nhập hàng từ nhà cung cấp, kiểm tra thành tiền và cập nhật kho</p>
     </div>
-    <div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportExcel" asp-route-search="@search" asp-route-trangThai="@selectedTrangThai" class="btn btn-custom btn-custom-outline">
+            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel
+        </a>
         <a asp-action="Create" class="btn btn-custom btn-custom-primary">
             <i class="bi bi-plus-circle"></i> Lập phiếu nhập mới
         </a>
@@ -20,11 +23,11 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]</div>
+    <div class="alert-custom alert-custom-success mb-3"><i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]</div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]</div>
+    <div class="alert-custom alert-custom-danger mb-3"><i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]</div>
 }
 
 <!-- Bộ lọc & Tìm kiếm -->
@@ -54,14 +57,14 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th style="width: 120px;">Mã phiếu</th>
+                    <th style="width: 110px;">Mã phiếu</th>
                     <th>Nhà cung cấp</th>
                     <th>Người tạo</th>
                     <th>Ngày nhập</th>
-                    <th class="text-center" style="width: 120px;">Mặt hàng</th>
+                    <th class="text-center">Mặt hàng</th>
                     <th class="text-end">Tổng tiền</th>
-                    <th class="text-center" style="width: 140px;">Trạng thái</th>
-                    <th class="text-end" style="width: 160px;">Thao tác</th>
+                    <th class="text-center">Trạng thái</th>
+                    <th class="text-end" style="width: 140px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,55 +75,50 @@
                         var tongTien = (item.TongTien.HasValue && item.TongTien.Value > 0)
                             ? item.TongTien.Value
                             : (item.ChiTietPhieuNhaps?.Sum(c => c.ThanhTien ?? (c.SoLuong * c.DonGia) ?? 0) ?? 0);
+                        var maPhieu = item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}";
                         <tr>
                             <td>
                                 <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="code-badge text-decoration-none">
-                                    @(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")
+                                    @maPhieu
                                 </a>
                             </td>
-                            <td>
-                                <strong style="color: var(--slate-900);">@(item.NhaCungCap?.TenNhaCungCap ?? "N/A")</strong>
-                            </td>
-                            <td>
-                                <small style="color: var(--slate-500);"><i class="bi bi-person me-1"></i>@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</small>
-                            </td>
-                            <td style="color: var(--slate-500); font-size: 13px;">
+                            <td class="fw-semibold" style="color: var(--slate-800);">@(item.NhaCungCap?.TenNhaCungCap ?? "N/A")</td>
+                            <td style="color: var(--slate-500);">@(item.NguoiDung?.TenDangNhap ?? "Hệ thống")</td>
+                            <td style="color: var(--slate-500);">
                                 @(item.NgayNhap?.ToString("dd/MM/yyyy") ?? item.NgayTao?.ToString("dd/MM/yyyy") ?? "—")
                             </td>
-                            <td class="text-center">
-                                <span class="status-badge status-badge-secondary">
-                                    @(item.ChiTietPhieuNhaps?.Count ?? 0) sản phẩm
-                                </span>
+                            <td class="text-center" style="color: var(--slate-600);">
+                                @(item.ChiTietPhieuNhaps?.Count ?? 0) mặt hàng
                             </td>
-                            <td class="text-end font-mono fw-bold fs-6" style="color: var(--slate-900);">
+                            <td class="text-end font-mono fw-semibold" style="color: var(--slate-900);">
                                 @(tongTien.ToString("N0")) đ
                             </td>
                             <td class="text-center">
                                 @if (item.TrangThai == "xacnhan")
                                 {
-                                    <span class="status-badge status-badge-success"><i class="bi bi-check-circle"></i> Đã xác nhận</span>
+                                    <span class="status-badge status-badge-success">Đã xác nhận</span>
                                 }
                                 else if (item.TrangThai == "huy")
                                 {
-                                    <span class="status-badge status-badge-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>
+                                    <span class="status-badge status-badge-danger">Đã hủy</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge-warning"><i class="bi bi-clock"></i> Chờ xử lý</span>
+                                    <span class="status-badge status-badge-warning">Chờ xử lý</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <div class="action-btn-group">
-                                    <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-info" title="Xem chi tiết & Quản lý mặt hàng">
+                                    <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-primary" title="Xem chi tiết & quản lý mặt hàng">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     @if (isManagerOrAdmin)
                                     {
-                                        <a asp-action="Edit" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-primary" title="Sửa thông tin">
+                                        <a asp-action="Edit" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-outline-secondary" title="Sửa thông tin">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa phiếu"
-                                                onclick="confirmDelete(@item.MaPhieuNhap, '@(item.MaPhieuNhapCode ?? $"PN{item.MaPhieuNhap:D4}")')">
+                                                onclick="confirmDelete(@item.MaPhieuNhap, '@maPhieu')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     }
@@ -142,36 +140,4 @@
     </div>
 </div>
 
-<!-- Modal xác nhận xóa -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" style="color: var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa phiếu nhập</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-1">Bạn có chắc chắn muốn xóa phiếu nhập: <strong id="deleteReceiptCode"></strong>?</p>
-                <small style="color: var(--slate-500);">Lưu ý: Toàn bộ chi tiết mặt hàng trong phiếu này cũng sẽ bị xóa bỏ.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-custom btn-custom-outline" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post" asp-action="Delete">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" id="deleteReceiptId" />
-                    <button type="submit" class="btn btn-custom btn-custom-danger">Xác nhận xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        function confirmDelete(id, code) {
-            document.getElementById('deleteReceiptId').value = id;
-            document.getElementById('deleteReceiptCode').innerText = code;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
-        }
-    </script>
-}
+<partial name="_DeleteModal" view-data='new ViewDataDictionary(ViewData) { ["DeleteNote"] = "Toàn bộ chi tiết mặt hàng trong phiếu này cũng sẽ bị xóa bỏ." }' />

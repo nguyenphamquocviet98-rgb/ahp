@@ -1,150 +1,204 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @using System.Security.Claims
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Quản Lý Nhập Hàng & AHP</title>
+    <title>@ViewData["Title"] - Quản lý nhập hàng & AHP</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="~/favicon.ico" />
+    <!-- Google Fonts: Be Vietnam Pro & Inter tiếng Việt hoàn hảo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
-        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "nhanvien";
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "nhanvien_npp";
         var username = User.Identity.Name ?? "Người dùng";
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        var maDoanhNghiep = User.FindFirst("MaDoanhNghiep")?.Value ?? "0";
+        var tenDoanhNghiep = User.FindFirst("TenDoanhNghiep")?.Value ?? "";
+        
+        var isAdminSan = role == "admin_san" || role == "admin";
+        var isChuNPP = role == "chu_npp" || role == "quanly";
+        var isNhanVienNPP = role == "nhanvien_npp" || role == "nhanvien";
+        var isNPP = isChuNPP || isNhanVienNPP;
 
-        <!-- Sidebar Overlay (mobile) -->
+        var roleDisplay = isAdminSan ? "Admin Sàn" : isChuNPP ? "Chủ NPP" : "Nhân viên NPP";
+        var roleBadgeClass = isAdminSan ? "badge-admin" : isChuNPP ? "badge-quanly" : "badge-nhanvien";
+
+        <!-- Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-        <!-- SIDEBAR (LUXURY DEEP SLATE) -->
+        <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <i class="bi bi-stack"></i>
+                    <img src="~/favicon.svg" alt="B2B Logo" />
                 </div>
                 <div class="sidebar-brand-text">
-                    <div class="sidebar-title">
-                        <span>Nhập Hàng <span class="text-brand-accent">AHP</span></span>
+                    <div class="sidebar-title">Nhập hàng & AHP</div>
+                    <div class="sidebar-subtitle">
+                        @if (isAdminSan)
+                        {
+                            <text>Quản trị Sàn B2B</text>
+                        }
+                        else if (!string.IsNullOrEmpty(tenDoanhNghiep))
+                        {
+                            @tenDoanhNghiep
+                        }
+                        else
+                        {
+                            <text>Doanh Nghiệp NPP</text>
+                        }
                     </div>
-                    <div class="sidebar-subtitle">Quản lý nhập hàng & AHP</div>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
-                <!-- TỔNG QUAN -->
-                <div class="sidebar-group">
-                    <div class="sidebar-group-label">
-                        <i class="bi bi-grid-fill me-1"></i> Tổng quan
-                    </div>
-                    <a asp-controller="Home" asp-action="Index"
-                       class="sidebar-link @(currentController == "Home" ? "active" : "")">
-                        <i class="bi bi-house-door-fill"></i>
-                        <span>Trang chủ</span>
-                    </a>
-                </div>
-
-                <!-- HÀNG HÓA & ĐỐI TÁC -->
-                <div class="sidebar-group">
-                    <div class="sidebar-group-label">
-                        <i class="bi bi-box-seam-fill me-1"></i> Hàng hóa & Đối tác
-                    </div>
-                    <a asp-controller="SanPham" asp-action="Index"
-                       class="sidebar-link @(currentController == "SanPham" ? "active" : "")">
-                        <i class="bi bi-box-seam"></i>
-                        <span>Sản phẩm</span>
-                    </a>
-                    <a asp-controller="DanhMuc" asp-action="Index"
-                       class="sidebar-link @(currentController == "DanhMuc" ? "active" : "")">
-                        <i class="bi bi-folder2-open"></i>
-                        <span>Danh mục</span>
-                    </a>
-                    <a asp-controller="DonViTinh" asp-action="Index"
-                       class="sidebar-link @(currentController == "DonViTinh" ? "active" : "")">
-                        <i class="bi bi-rulers"></i>
-                        <span>Đơn vị tính</span>
-                    </a>
-                    <a asp-controller="NhaCungCap" asp-action="Index"
-                       class="sidebar-link @(currentController == "NhaCungCap" ? "active" : "")">
-                        <i class="bi bi-buildings"></i>
-                        <span>Nhà cung cấp</span>
-                    </a>
-                </div>
-
-                <!-- NHẬP HÀNG & KHO VẬN -->
-                <div class="sidebar-group">
-                    <div class="sidebar-group-label">
-                        <i class="bi bi-truck me-1"></i> Nhập hàng & Kho vận
-                    </div>
-                    <a asp-controller="PhieuNhap" asp-action="Index"
-                       class="sidebar-link @(currentController == "PhieuNhap" ? "active" : "")">
-                        <i class="bi bi-receipt-cutoff"></i>
-                        <span>Phiếu nhập hàng</span>
-                    </a>
-                    <a asp-controller="TonKho" asp-action="Index"
-                       class="sidebar-link @(currentController == "TonKho" ? "active" : "")">
-                        <i class="bi bi-boxes"></i>
-                        <span>Quản lý tồn kho</span>
-                    </a>
-                    <a asp-controller="LichSuNhapHang" asp-action="Index"
-                       class="sidebar-link @(currentController == "LichSuNhapHang" ? "active" : "")">
-                        <i class="bi bi-clock-history"></i>
-                        <span>Lịch sử biến động</span>
-                    </a>
-                </div>
-
-                <!-- ĐÁNH GIÁ ĐA TIÊU CHÍ AHP -->
-                @if (role == "admin" || role == "quanly")
+                @if (isAdminSan)
                 {
+                    @* =============================================== *@
+                    @* === KHỐI MENU DÀNH RIÊNG CHO ADMIN SÀN B2B === *@
+                    @* =============================================== *@
                     <div class="sidebar-group">
-                        <div class="sidebar-group-label">
-                            <i class="bi bi-diagram-3-fill me-1 text-warning"></i> Đánh giá đa tiêu chí AHP
-                        </div>
-                        <a asp-controller="AHP" asp-action="Index"
-                           class="sidebar-link @(currentController == "AHP" && currentAction == "Index" ? "active" : "")">
-                            <i class="bi bi-calendar3"></i>
-                            <span>Kỳ đánh giá</span>
+                        <div class="sidebar-group-label">Quản trị Sàn B2B</div>
+                        <a asp-controller="DashboardAdmin" asp-action="Index"
+                           class="sidebar-link @(currentController == "DashboardAdmin" ? "active" : "")">
+                            <i class="bi bi-speedometer2 text-primary"></i>
+                            <span>Bảng điều khiển Sàn</span>
                         </a>
-                        <a asp-controller="AHP" asp-action="MaTranSoSanh"
-                           class="sidebar-link @(currentController == "AHP" && currentAction == "MaTranSoSanh" ? "active" : "")">
-                            <i class="bi bi-grid-3x3"></i>
-                            <span>Ma trận so sánh</span>
+                        <a asp-controller="DoanhNghiep" asp-action="Index"
+                           class="sidebar-link @(currentController == "DoanhNghiep" ? "active" : "")">
+                            <i class="bi bi-building-gear text-info"></i>
+                            <span>Quản lý Doanh nghiệp</span>
                         </a>
-                        <a asp-controller="AHP" asp-action="ChamDiemNCC"
-                           class="sidebar-link @(currentController == "AHP" && currentAction == "ChamDiemNCC" ? "active" : "")">
-                            <i class="bi bi-star-fill text-warning"></i>
-                            <span>Chấm điểm NCC</span>
+                        <a asp-controller="NguoiDung" asp-action="Index"
+                           class="sidebar-link @(currentController == "NguoiDung" ? "active" : "")">
+                            <i class="bi bi-people text-warning"></i>
+                            <span>Tài khoản người dùng</span>
                         </a>
-                        <a asp-controller="AHP" asp-action="KetQuaXepHang"
-                           class="sidebar-link @(currentController == "AHP" && (currentAction == "KetQuaXepHang" || currentAction == "KetQuaTrongSo") ? "active" : "")">
-                            <i class="bi bi-trophy-fill text-warning"></i>
-                            <span>Xếp hạng & Đề xuất</span>
+                        <a asp-controller="QuangCao" asp-action="Index"
+                           class="sidebar-link @(currentController == "QuangCao" ? "active" : "")">
+                            <i class="bi bi-badge-ad text-success"></i>
+                            <span>Duyệt Banner & QC</span>
+                        </a>
+                        <a asp-controller="SanB2B" asp-action="Index"
+                           class="sidebar-link @(currentController == "SanB2B" ? "active" : "")">
+                            <i class="bi bi-shop-window text-secondary"></i>
+                            <span>Giám sát Chợ sỉ B2B</span>
                         </a>
                     </div>
                 }
-
-                <!-- HỆ THỐNG -->
-                @if (role == "admin")
+                else
                 {
+                    @* ============================================================= *@
+                    @* === KHỐI MENU DÀNH CHO NHÀ PHÂN PHỐI (CHỦ NPP / NHÂN VIÊN) === *@
+                    @* ============================================================= *@
+
+                    @* === KHỐI 1: TỔNG QUAN DOANH NGHIỆP === *@
                     <div class="sidebar-group">
-                        <div class="sidebar-group-label">
-                            <i class="bi bi-gear-fill me-1"></i> Quản trị
-                        </div>
-                        <a asp-controller="NguoiDung" asp-action="Index"
-                           class="sidebar-link @(currentController == "NguoiDung" ? "active" : "")">
-                            <i class="bi bi-people"></i>
-                            <span>Tài khoản người dùng</span>
+                        <div class="sidebar-group-label">Tổng quan</div>
+                        <a asp-controller="Home" asp-action="Index"
+                           class="sidebar-link @(currentController == "Home" ? "active" : "")">
+                            <i class="bi bi-grid-1x2"></i>
+                            <span>Bảng điều khiển kho</span>
                         </a>
                     </div>
+
+                    @* === KHỐI 2: SÀN B2B & GIAO THƯƠNG SỈ === *@
+                    <div class="sidebar-group">
+                        <div class="sidebar-group-label">Sàn B2B & Bán sỉ</div>
+                        <a asp-controller="SanB2B" asp-action="Index"
+                           class="sidebar-link @(currentController == "SanB2B" ? "active" : "")">
+                            <i class="bi bi-shop-window"></i>
+                            <span>Chợ sỉ B2B</span>
+                        </a>
+                        <a asp-controller="KhoNPP" asp-action="Index"
+                           class="sidebar-link @(currentController == "KhoNPP" ? "active" : "")">
+                            <i class="bi bi-boxes"></i>
+                            <span>Kho chào sỉ của tôi</span>
+                        </a>
+                        <a asp-controller="DonHangB2B" asp-action="DonMua"
+                           class="sidebar-link @(currentController == "DonHangB2B" ? "active" : "")">
+                            <i class="bi bi-receipt"></i>
+                            <span>Đơn hàng sỉ B2B</span>
+                        </a>
+                        <a asp-controller="AHPB2B" asp-action="Index"
+                           class="sidebar-link @(currentController == "AHPB2B" ? "active" : "")">
+                            <i class="bi bi-cpu"></i>
+                            <span>AHP Chọn đối tác B2B</span>
+                        </a>
+                    </div>
+
+                    @* === KHỐI 3: QUẢN LÝ KHO & NHẬP XUẤT === *@
+                    <div class="sidebar-group">
+                        <div class="sidebar-group-label">Kho hàng & Nhập xuất</div>
+                        <a asp-controller="SanPham" asp-action="Index"
+                           class="sidebar-link @(currentController == "SanPham" ? "active" : "")">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Sản phẩm của kho</span>
+                        </a>
+                        <a asp-controller="DanhMuc" asp-action="Index"
+                           class="sidebar-link @(currentController == "DanhMuc" || currentController == "DonViTinh" ? "active" : "")">
+                            <i class="bi bi-tags"></i>
+                            <span>Danh mục & ĐVT</span>
+                        </a>
+                        <a asp-controller="PhieuNhap" asp-action="Index"
+                           class="sidebar-link @(currentController == "PhieuNhap" ? "active" : "")">
+                            <i class="bi bi-box-arrow-in-down"></i>
+                            <span>Phiếu nhập hàng</span>
+                        </a>
+                        <a asp-controller="TonKho" asp-action="Index"
+                           class="sidebar-link @(currentController == "TonKho" || currentController == "LichSuNhapHang" ? "active" : "")">
+                            <i class="bi bi-pie-chart"></i>
+                            <span>Quản lý tồn kho</span>
+                        </a>
+                    </div>
+
+                    @* === KHỐI 4: ĐỐI TÁC CUNG ỨNG & AHP === *@
+                    <div class="sidebar-group">
+                        <div class="sidebar-group-label">Đối tác & Đánh giá AHP</div>
+                        <a asp-controller="NhaCungCap" asp-action="Index"
+                           class="sidebar-link @(currentController == "NhaCungCap" ? "active" : "")">
+                            <i class="bi bi-buildings"></i>
+                            <span>Nhà cung cấp</span>
+                        </a>
+                        @if (isChuNPP)
+                        {
+                            <a asp-controller="AHP" asp-action="Index"
+                               class="sidebar-link @(currentController == "AHP" ? "active" : "")"
+                               title="Quản lý toàn diện các kỳ đánh giá AHP, ma trận so sánh và xếp hạng">
+                                <i class="bi bi-diagram-3-fill text-primary"></i>
+                                <span>Đánh giá AHP</span>
+                            </a>
+                        }
+                    </div>
+
+                    @* === KHỐI 5: DỊCH VỤ SÀN (Chỉ Chủ NPP) === *@
+                    @if (isChuNPP)
+                    {
+                        <div class="sidebar-group">
+                            <div class="sidebar-group-label">Dịch vụ Sàn</div>
+                            <a asp-controller="QuangCao" asp-action="MuaGoi"
+                               class="sidebar-link @(currentController == "QuangCao" && currentAction == "MuaGoi" ? "active" : "")">
+                                <i class="bi bi-award text-warning"></i>
+                                <span>Gói Mall & Quảng cáo</span>
+                            </a>
+                        </div>
+                    }
                 }
             </nav>
 
-            <!-- Sidebar User Profile -->
             <div class="sidebar-footer">
                 <div class="sidebar-user">
                     <div class="sidebar-user-avatar">
@@ -152,12 +206,7 @@
                     </div>
                     <div class="sidebar-user-info">
                         <div class="sidebar-user-name">@username</div>
-                        <div class="sidebar-user-role">
-                            <span class="sidebar-status-dot"></span>
-                            @if (role == "admin") { <span>Quản trị viên</span> }
-                            else if (role == "quanly") { <span>Quản lý</span> }
-                            else { <span>Nhân viên</span> }
-                        </div>
+                        <div class="sidebar-user-role">@roleDisplay</div>
                     </div>
                 </div>
             </div>
@@ -172,53 +221,108 @@
                 <form asp-controller="SanPham" asp-action="Index" method="get" class="header-search-box">
                     <i class="bi bi-search"></i>
                     <input type="text" name="search" id="globalHeaderSearch" placeholder="Tìm sản phẩm, nhà cung cấp, phiếu..." autocomplete="off" />
-                    <span class="header-search-badge" title="Phím tắt: Ctrl + K">⌘K</span>
+                    <span class="header-search-badge">Ctrl+K</span>
                 </form>
             </div>
 
             <div class="header-right">
-                <div class="header-status-pill d-none d-md-flex">
-                    <span class="status-indicator-dot"></span>
-                    <span>Hệ thống trực tuyến</span>
-                </div>
-
-                <div class="header-user-pill">
-                    <div style="width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #1E293B, #334155); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px;">
-                        @(username.Length > 0 ? username[0].ToString().ToUpper() : "U")
+                @if (!isAdminSan)
+                {
+                    <!-- Cảnh báo tồn kho (Chỉ dành cho NPP) -->
+                    <div class="dropdown" id="stockAlertDropdown">
+                        <button class="btn-header-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Cảnh báo tồn kho">
+                            <i class="bi bi-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="stockAlertBadge" style="display: none; font-size: 10px;">
+                                0
+                            </span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-sm border p-0 mt-2 alert-dropdown">
+                            <div class="alert-dropdown-header">
+                                <span>Cảnh báo tồn kho</span>
+                                <span class="code-badge" id="stockAlertHeaderCount">0 mục</span>
+                            </div>
+                            <div id="stockAlertList" class="p-2" style="max-height: 280px; overflow-y: auto;">
+                                <div class="text-center py-3 text-muted small">
+                                    <span class="spinner-border spinner-border-sm text-primary me-1"></span> Đang kiểm tra tồn kho...
+                                </div>
+                            </div>
+                            <div class="alert-dropdown-footer">
+                                <a asp-controller="TonKho" asp-action="Index" asp-route-mucTon="thap" class="fw-semibold" style="font-size: 12.5px;">
+                                    Xem tồn thấp &rarr;
+                                </a>
+                                <a asp-controller="PhieuNhap" asp-action="Create" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus-circle me-1"></i> Lập phiếu nhập
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <span style="font-weight: 600; font-size: 13px; color: var(--slate-800);">@username</span>
-                    @if (role == "admin")
-                    {
-                        <span class="user-role-badge badge-admin">Admin</span>
-                    }
-                    else if (role == "quanly")
-                    {
-                        <span class="user-role-badge badge-quanly">Quản lý</span>
-                    }
-                    else
-                    {
-                        <span class="user-role-badge badge-nhanvien">Nhân viên</span>
-                    }
-                </div>
+                }
 
-                <a asp-controller="Account" asp-action="Logout" class="btn-header-logout" title="Đăng xuất khỏi hệ thống">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span class="d-none d-sm-inline">Thoát</span>
-                </a>
+                <!-- Menu người dùng -->
+                <div class="dropdown">
+                    <button class="header-user-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="header-user-avatar">
+                            @(username.Length > 0 ? username[0].ToString().ToUpper() : "U")
+                        </span>
+                        <span class="header-user-name d-none d-md-inline">@username</span>
+                        <i class="bi bi-chevron-down text-muted" style="font-size: 11px;"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" style="min-width: 200px;">
+                        <li class="px-3 py-2">
+                            <div class="fw-semibold text-dark">@username</div>
+                            <div class="mt-1"><span class="user-role-badge @roleBadgeClass">@roleDisplay</span></div>
+                            @if (isNPP && !string.IsNullOrEmpty(tenDoanhNghiep))
+                            {
+                                <div class="text-muted small mt-1"><i class="bi bi-building me-1"></i>@tenDoanhNghiep</div>
+                            }
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </header>
 
-        <!-- MAIN CONTENT -->
+        <!-- NỘI DUNG CHÍNH -->
         <div class="main-content">
             <main role="main">
                 @RenderBody()
             </main>
 
             <footer class="page-footer">
-                &copy; 2026 <strong>Quản Lý Nhập Hàng & Lựa Chọn Nhà Cung Cấp AHP</strong> &bull; Hệ thống Ra quyết định Đa tiêu chí
+                &copy; 2026 <strong>Quản lý nhập hàng và lựa chọn nhà cung cấp bằng AHP</strong>
             </footer>
         </div>
 
+        @if (HostEnvironment.IsDevelopment())
+        {
+        <div id="demoToken" hidden>@Html.AntiForgeryToken()</div>
+        <!-- QUICK SWITCHER (Demo) -->
+        <div id="quickSwitcher" style="position: fixed; bottom: 16px; right: 16px; z-index: 9999;">
+            <button class="btn btn-dark btn-sm shadow-lg rounded-pill px-3 py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#quickSwitchPanel"
+                    style="font-size: 12px; opacity: 0.85;">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Switch
+            </button>
+            <div class="collapse mt-2" id="quickSwitchPanel">
+                <div class="card shadow-lg border-0" style="border-radius: 12px; width: 260px;">
+                    <div class="card-header bg-dark text-white py-2 px-3" style="border-radius: 12px 12px 0 0; font-size: 12px;">
+                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Chuyển nhanh tài khoản Demo
+                    </div>
+                    <div class="card-body p-2" id="quickSwitchAccounts">
+                        <div class="text-center py-2">
+                            <span class="spinner-border spinner-border-sm"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        }
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
@@ -228,8 +332,8 @@
                 document.getElementById('sidebarOverlay').classList.toggle('show');
             }
 
-            document.querySelectorAll('.sidebar-link').forEach(function(link) {
-                link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar-link').forEach(function (link) {
+                link.addEventListener('click', function () {
                     if (window.innerWidth < 992) {
                         document.getElementById('sidebar').classList.remove('show');
                         document.getElementById('sidebarOverlay').classList.remove('show');
@@ -247,19 +351,288 @@
                     }
                 }
             });
+
+            // Nạp danh sách cảnh báo tồn kho
+            function loadStockAlerts() {
+                fetch('/Home/GetLowStockAlerts')
+                    .then(res => res.json())
+                    .then(data => {
+                        const badge = document.getElementById('stockAlertBadge');
+                        const headerCount = document.getElementById('stockAlertHeaderCount');
+                        const listContainer = document.getElementById('stockAlertList');
+                        const bellBtn = document.querySelector('#stockAlertDropdown button');
+
+                        if (!badge || !headerCount || !listContainer) return;
+
+                        if (data && data.count > 0) {
+                            badge.innerText = data.count;
+                            badge.style.display = 'inline-block';
+                            headerCount.innerText = data.count + ' mục';
+                            if (bellBtn) bellBtn.classList.add('bell-has-alert');
+
+                            let html = '';
+                            data.items.slice(0, 6).forEach(item => {
+                                const isOut = item.isOutOfStock;
+                                html += `
+                                    <a href="/TonKho?search=${encodeURIComponent(item.maCode || item.tenSanPham)}" class="alert-item text-decoration-none mb-1">
+                                        <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+                                            <div class="alert-item-icon ${isOut ? 'out' : 'low'}">
+                                                <i class="bi ${isOut ? 'bi-x-circle' : 'bi-exclamation-triangle'}"></i>
+                                            </div>
+                                            <div style="min-width: 0;">
+                                                <div class="fw-semibold text-truncate" style="font-size: 12.5px;" title="${item.tenSanPham}">${item.tenSanPham}</div>
+                                                <div class="text-muted font-mono" style="font-size: 11px;">${item.maCode || ''}</div>
+                                            </div>
+                                        </div>
+                                        <span class="status-badge ${isOut ? 'status-badge-danger' : 'status-badge-warning'}">${item.soLuongTon} ${item.donViTinh}</span>
+                                    </a>
+                                `;
+                            });
+
+                            if (data.count > 6) {
+                                html += `<div class="text-center text-muted small py-1" style="font-size: 11.5px;">+ ${data.count - 6} mặt hàng khác...</div>`;
+                            }
+                            listContainer.innerHTML = html;
+                        } else {
+                            badge.style.display = 'none';
+                            headerCount.innerText = '0 mục';
+                            if (bellBtn) bellBtn.classList.remove('bell-has-alert');
+                            listContainer.innerHTML = `
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+                                    Kho hàng an toàn, không có mục tồn thấp.
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.log('Stock alerts load error:', err);
+                    });
+            }
+
+            // Nạp danh sách tài khoản demo cho Quick Switcher
+            function escapeDemoText(value) {
+                const element = document.createElement('span'); element.textContent = value; return element.innerHTML;
+            }
+            function loadQuickSwitchAccounts() {
+                if (!document.getElementById("quickSwitcher")) return;
+                fetch('/Account/GetDemoAccounts')
+                    .then(res => res.json())
+                    .then(accounts => {
+                        const container = document.getElementById('quickSwitchAccounts');
+                        if (!container || !accounts) return;
+
+                        let html = '';
+                        const currentUser = '@username';
+                        accounts.forEach(acc => {
+                            const isCurrent = acc.tenDangNhap === currentUser;
+                            const isAdmin = acc.vaiTro === 'admin_san' || acc.vaiTro === 'admin';
+                            const isChu = acc.vaiTro === 'chu_npp' || acc.vaiTro === 'quanly';
+                            const roleIcon = isAdmin ? '🔴' : acc.laGianHangMall ? '🟢' : '🔵';
+                            const roleLabel = isAdmin ? 'Admin Sàn' : isChu ? 'Chủ NPP' : 'NV NPP';
+                            const mallBadge = acc.laGianHangMall ? '<span class="badge bg-danger ms-1" style="font-size: 9px;">MALL</span>' : '';
+                            html += `
+                                <form action="/Account/QuickSwitch" method="post" class="d-block mb-1">
+                                    <input type="hidden" name="userId" value="${acc.maNguoiDung}" />
+                                    <input type="hidden" name="__RequestVerificationToken" value="${document.querySelector('#demoToken input').value}" />
+                                    <button type="submit" class="btn btn-sm w-100 text-start px-2 py-1 ${isCurrent ? 'btn-primary' : 'btn-light'}"
+                                            style="font-size: 12px; border-radius: 8px;" ${isCurrent ? 'disabled' : ''}>
+                                        <span class="me-1">${roleIcon}</span>
+                                        <strong>${escapeDemoText(acc.tenDangNhap)}</strong>
+                                        <span class="text-muted ms-1">${roleLabel}</span>
+                                        ${mallBadge}
+                                        ${isCurrent ? '<i class="bi bi-check-circle-fill text-white ms-1"></i>' : ''}
+                                    </button>
+                                </form>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    })
+                    .catch(err => console.log('Quick switch load error:', err));
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                @if (!isAdminSan)
+                {
+                    <text>loadStockAlerts();</text>
+                }
+                loadQuickSwitchAccounts();
+            });
         </script>
         @await RenderSectionAsync("Scripts", required: false)
     }
     else
     {
-        <div class="container py-5">
+        <!-- PUBLIC TOP NAVBAR -->
+        <header class="public-navbar sticky-top bg-white border-bottom shadow-sm">
+            <div class="container d-flex align-items-center justify-content-between py-2">
+                <a href="/" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <img src="~/favicon.svg" alt="B2B Logo" style="width: 38px; height: 38px;" />
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold text-dark fs-5 lh-1">SÀN B2B <span class="badge bg-primary" style="font-size: 10px; vertical-align: middle;">AHP 2.0</span></span>
+                        <small class="text-muted" style="font-size: 11px;">Cổng Phân Phối & Đánh Giá Đối Tác</small>
+                    </div>
+                </a>
+
+                <nav class="d-none d-lg-flex align-items-center gap-4 public-nav-links">
+                    <a href="/#nguon-hang" class="public-nav-item"><i class="bi bi-shop-window me-1 text-primary"></i> Sàn Hàng Sỉ</a>
+                    <a href="/#nha-phan-phoi" class="public-nav-item"><i class="bi bi-building me-1 text-primary"></i> Danh Bạ Nhà Phân Phối</a>
+                    <a href="/#cong-nghe-ahp" class="public-nav-item"><i class="bi bi-cpu me-1 text-primary"></i> Trợ Lý AHP</a>
+                    <a href="/#tai-khoan-demo" class="public-nav-item"><i class="bi bi-lightning-charge me-1 text-warning"></i> Trải Nghiệm Demo</a>
+                </nav>
+
+                <div class="d-flex align-items-center gap-2">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-sm px-3 py-2 fw-semibold rounded-pill">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm px-3 py-2 fw-semibold rounded-pill shadow-sm">
+                        <i class="bi bi-person-plus me-1"></i> Đăng ký NPP
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main role="main" class="public-main-content">
             @RenderBody()
-        </div>
+        </main>
+
+        <!-- PUBLIC FOOTER -->
+        <footer class="public-footer mt-5 pt-5 pb-4 bg-light border-top">
+            <div class="container">
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <img src="~/favicon.svg" alt="B2B Logo" style="width: 32px; height: 32px;" />
+                            <span class="fw-bold fs-5 text-dark">Sàn Giao Dịch B2B & AHP</span>
+                        </div>
+                        <p class="text-muted small mb-3" style="line-height: 1.6;">
+                            Hệ sinh thái kết nối chuỗi cung ứng giữa Nhà Phân Phối và Doanh Nghiệp Sản Xuất, tích hợp mô hình phân tích thứ bậc AHP (Analytic Hierarchy Process) giúp ra quyết định nhập hàng tối ưu.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-shield-check text-success me-1"></i> Gian hàng Mall xác thực</span>
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-cpu text-primary me-1"></i> AHP Tối ưu chi phí</span>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-6">
+                        <h6 class="fw-bold text-dark mb-3">Dành cho Bên Mua</h6>
+                        <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+                            <li><a href="/#nguon-hang" class="text-decoration-none text-muted">Tìm nguồn hàng sỉ</a></li>
+                            <li><a href="/#nha-phan-phoi" class="text-decoration-none text-muted">Chọn đối tác theo AHP</a></li>
+                            <li><a href="/Account/Login" class="text-decoration-none text-muted">Quản lý kho NPP</a></li>
+                            <li><a href="/Account/Login" class="text-decoration-none text-muted">Lập phiếu nhập hàng</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-6">
+                        <h6 class="fw-bold text-dark mb-3">Dành cho Bên Bán</h6>
+                        <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+                            <li><a href="/Account/Register" class="text-decoration-none text-muted">Mở gian hàng NPP</a></li>
+                            <li><a href="/Account/Login" class="text-decoration-none text-muted">Đăng ký Banner VIP</a></li>
+                            <li><a href="/Account/Login" class="text-decoration-none text-muted">Chào bán sỉ B2B</a></li>
+                            <li><a href="/Account/Login" class="text-decoration-none text-muted">Theo dõi đơn hàng</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <h6 class="fw-bold text-dark mb-3">Hỗ Trợ & Liên Hệ</h6>
+                        <p class="small text-muted mb-2"><i class="bi bi-geo-alt text-primary me-2"></i>Khu Công Nghệ Cao, TP. Thủ Đức, TP. Hồ Chí Minh</p>
+                        <p class="small text-muted mb-2"><i class="bi bi-telephone text-primary me-2"></i>Hotline B2B: 1900 6868 (8:00 - 20:00)</p>
+                        <p class="small text-muted mb-3"><i class="bi bi-envelope text-primary me-2"></i>Email: hotro@b2bahp.vn</p>
+                        <a href="/Account/Login" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Cổng đăng nhập quản trị
+                        </a>
+                    </div>
+                </div>
+                <hr class="my-4 border-slate-200" />
+                <div class="d-flex flex-wrap justify-content-between align-items-center small text-muted">
+                    <span>&copy; 2026 Sàn B2B Nhà Phân Phối — Đề tài Nghiên cứu Ứng dụng Thuật toán AHP.</span>
+                    <div class="d-flex gap-3">
+                        <a href="/#tai-khoan-demo" class="text-decoration-none text-muted">Tài khoản Demo</a>
+                        <a href="#" class="text-decoration-none text-muted">Điều khoản</a>
+                        <a href="#" class="text-decoration-none text-muted">Bảo mật</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
 
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
         @await RenderSectionAsync("Scripts", required: false)
     }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: '@Html.Raw(TempData["SuccessMessage"])',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true
+                    });
+                }
+                </text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: '@Html.Raw(TempData["ErrorMessage"])',
+                        showConfirmButton: false,
+                        timer: 4500,
+                        timerProgressBar: true
+                    });
+                }
+                </text>
+            }
+        });
+
+        function confirmDelete(formId, message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Bạn có chắc chắn?',
+                    text: message || 'Thao tác này không thể hoàn tác.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2563EB',
+                    cancelButtonColor: '#64748B',
+                    confirmButtonText: 'Xác nhận xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            } else {
+                if (confirm(message || 'Bạn có chắc chắn muốn xóa?')) {
+                    document.getElementById(formId).submit();
+                }
+            }
+        }
+
+        // Tự động xử lý lỗi ảnh vỡ toàn hệ thống (Global Image Error Fallback)
+        window.addEventListener('error', function (e) {
+            if (e.target && e.target.tagName === 'IMG') {
+                const img = e.target;
+                if (!img.getAttribute('data-fallback-applied')) {
+                    img.setAttribute('data-fallback-applied', 'true');
+                    // Nếu là ảnh avatar / logo nhà phân phối
+                    if (img.classList.contains('supplier-logo') || img.closest('.supplier-avatar-box')) {
+                        img.src = '/images/placeholder-supplier.svg';
+                    } else {
+                        img.src = '/images/placeholder-product.svg';
+                    }
+                }
+            }
+        }, true);
+    </script>
 </body>
 </html>

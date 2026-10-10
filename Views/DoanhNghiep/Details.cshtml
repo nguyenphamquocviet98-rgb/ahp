@@ -1,0 +1,302 @@
+@model code.Models.DoanhNghiep
+
+@{
+    ViewData["Title"] = "Chi tiết Doanh nghiệp - " + Model.TenDoanhNghiep;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small text-muted">
+                <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Quản lý Doanh nghiệp</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h3 class="fw-bold mb-0 text-dark">@Model.TenDoanhNghiep</h3>
+            @if (Model.LaGianHangMall)
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1">
+                    <i class="bi bi-patch-check-fill me-1"></i> GIAN HÀNG MALL
+                </span>
+            }
+            @if (Model.TrangThai)
+            {
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">
+                    <i class="bi bi-check-circle-fill me-1"></i> Đang hoạt động
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1">
+                    <i class="bi bi-lock-fill me-1"></i> Tạm khóa
+                </span>
+            }
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.MaDoanhNghiep" class="btn btn-outline-primary px-3">
+            <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
+        </a>
+        <a asp-action="Index" class="btn btn-light border px-3">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Cột trái: Thông tin doanh nghiệp & Mall -->
+    <div class="col-lg-4">
+        <!-- Thẻ tóm tắt -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius-lg);">
+            <div class="card-body text-center p-4">
+                <div class="avatar-wrapper mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold fs-2" 
+                     style="width: 76px; height: 76px; border-radius: 50%; background: #EFF6FF; color: var(--primary); border: 2px solid #DBEAFE;">
+                    @(string.IsNullOrEmpty(Model.Logo) ? Model.TenDoanhNghiep.Substring(0, 1).ToUpper() : "")
+                </div>
+                <h5 class="fw-bold mb-1 text-dark">@Model.TenDoanhNghiep</h5>
+                <p class="text-muted small font-mono mb-3">MST: @(Model.MaSoThue ?? "Chưa cập nhật")</p>
+                
+                <div class="d-flex justify-content-center align-items-center gap-3 py-2 px-3 bg-light rounded-3 mb-3 border">
+                    <div class="text-center">
+                        <small class="text-muted d-block" style="font-size: 11px;">Điểm uy tín</small>
+                        <span class="fw-bold text-warning fs-6">⭐ @Model.DiemUyTin / 10</span>
+                    </div>
+                    <div class="vr"></div>
+                    <div class="text-center">
+                        <small class="text-muted d-block" style="font-size: 11px;">Mặt hàng sỉ</small>
+                        <span class="fw-bold text-primary fs-6">@(Model.TonKhoNPPs?.Count ?? 0)</span>
+                    </div>
+                    <div class="vr"></div>
+                    <div class="text-center">
+                        <small class="text-muted d-block" style="font-size: 11px;">Nhân sự</small>
+                        <span class="fw-bold text-dark fs-6">@(Model.NguoiDungs?.Count ?? 0)</span>
+                    </div>
+                </div>
+
+                @if (Model.LaGianHangMall)
+                {
+                    <div class="alert alert-warning border-warning-subtle text-start mb-0 py-2 px-3 small" style="border-radius: var(--radius-md);">
+                        <strong class="text-dark"><i class="bi bi-shield-check text-danger me-1"></i> Chứng chỉ Mall chính hãng:</strong>
+                        <div class="mt-1 text-muted">Ngày gia nhập: @Model.NgayThamGiaMall?.ToString("dd/MM/yyyy")</div>
+                        <div class="text-muted">Thời hạn Mall: <span class="fw-semibold text-dark">@Model.HanMall?.ToString("dd/MM/yyyy")</span></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Thẻ liên hệ -->
+        <div class="card border-0 shadow-sm" style="border-radius: var(--radius-lg);">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <span class="fw-bold text-dark fs-6">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>Thông tin liên hệ & Địa điểm
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <small class="text-muted d-block">Trụ sở / Tổng kho:</small>
+                    <span class="fw-medium text-dark">@(Model.DiaChi ?? "Chưa cập nhật")</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Số điện thoại giao dịch:</small>
+                    <a href="tel:@Model.SoDienThoai" class="fw-semibold text-primary font-mono text-decoration-none">
+                        @(Model.SoDienThoai ?? "Chưa cập nhật")
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Email:</small>
+                    <a href="mailto:@Model.Email" class="fw-medium text-dark text-decoration-none">
+                        @(Model.Email ?? "Chưa cập nhật")
+                    </a>
+                </div>
+                <div>
+                    <small class="text-muted d-block">Mô tả năng lực:</small>
+                    <span class="text-secondary small">@(Model.MoTa ?? "Chưa có mô tả chi tiết.")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Kho hàng & Tài khoản liên kết -->
+    <div class="col-lg-8">
+        <!-- Bảng danh mục hàng hóa trong kho NPP -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius-lg); overflow: hidden;">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark fs-6">
+                    <i class="bi bi-box-seam text-primary me-2"></i>Kho hàng & Giá chào sỉ (@(Model.TonKhoNPPs?.Count ?? 0))
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F8FAFC;">
+                        <tr>
+                            <th class="py-3 px-3">Sản phẩm</th>
+                            <th class="text-center py-3">Tồn kho sỉ</th>
+                            <th class="text-end py-3">Giá chào sỉ (VNĐ)</th>
+                            <th class="text-center py-3">Giao hàng</th>
+                            <th class="text-center py-3">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TonKhoNPPs != null && Model.TonKhoNPPs.Any())
+                        {
+                            @foreach (var kho in Model.TonKhoNPPs)
+                            {
+                                <tr>
+                                    <td class="px-3">
+                                        <div class="fw-bold text-dark">@kho.SanPham?.TenSanPham</div>
+                                        <small class="text-muted font-mono">Mã: @(kho.SanPham?.MaSanPhamCode ?? $"SP{kho.MaSanPham:D3}")</small>
+                                    </td>
+                                    <td class="text-center font-mono fw-semibold">
+                                        <span class="badge bg-secondary-subtle text-dark border px-2 py-1">@kho.SoLuongTon</span>
+                                    </td>
+                                    <td class="text-end font-mono fw-bold text-primary text-nowrap">
+                                        @kho.GiaSi.ToString("N0") đ
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                            @kho.ThoiGianGiaoHang ngày
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (kho.DangChaoBan)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Đang chào sỉ</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border">Tạm ẩn</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-1 text-muted"></i>
+                                    Doanh nghiệp này chưa đăng ký mặt hàng nào vào kho sỉ.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tài khoản nhân sự liên kết -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius-lg); overflow: hidden;">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <span class="fw-bold text-dark fs-6">
+                    <i class="bi bi-people text-primary me-2"></i>Tài khoản nhân sự liên kết (@(Model.NguoiDungs?.Count ?? 0))
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F8FAFC;">
+                        <tr>
+                            <th class="py-3 px-3">Tài khoản</th>
+                            <th class="py-3">Vai trò</th>
+                            <th class="py-3">Ngày tạo</th>
+                            <th class="text-center py-3">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.NguoiDungs != null && Model.NguoiDungs.Any())
+                        {
+                            @foreach (var user in Model.NguoiDungs)
+                            {
+                                <tr>
+                                    <td class="px-3 fw-semibold text-dark">
+                                        <i class="bi bi-person-circle me-1 text-primary"></i>
+                                        @user.TenDangNhap
+                                    </td>
+                                    <td>
+                                        @if (user.VaiTro == "chu_npp" || user.VaiTro == "quanly")
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1">Chủ NPP / Quản lý</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-dark border px-3 py-1">Nhân viên NPP</span>
+                                        }
+                                    </td>
+                                    <td class="text-muted small font-mono">@user.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        @if (user.TrangThai == true)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Khóa</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    Chưa có tài khoản nào được gán vào doanh nghiệp này.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Đánh giá từ các đối tác mua hàng trên sàn -->
+        <div class="card border-0 shadow-sm" style="border-radius: var(--radius-lg);">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <span class="fw-bold text-dark fs-6">
+                    <i class="bi bi-star-fill text-warning me-2"></i>Đánh giá từ khách hàng & đối tác B2B (@(ViewBag.DanhGias != null ? ((List<code.Models.DanhGiaNPP>)ViewBag.DanhGias).Count : 0))
+                </span>
+            </div>
+            <div class="card-body p-4">
+                @if (ViewBag.DanhGias != null && ((List<code.Models.DanhGiaNPP>)ViewBag.DanhGias).Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var dg in (List<code.Models.DanhGiaNPP>)ViewBag.DanhGias)
+                        {
+                            <div class="list-group-item px-0 py-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-semibold text-dark">
+                                        <i class="bi bi-building text-primary me-1"></i>
+                                        @dg.NPPMua?.TenDoanhNghiep
+                                    </div>
+                                    <small class="text-muted font-mono">@dg.NgayDanhGia?.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <div class="text-warning mb-1 small">
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        if (s <= dg.SoSao)
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                    <span class="text-dark fw-semibold ms-1">(@dg.SoSao sao)</span>
+                                </div>
+                                <p class="mb-0 text-secondary small">@(dg.NoiDung ?? "Không có nhận xét chi tiết.")</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-square-dots fs-3 d-block mb-1 text-muted"></i>
+                        Doanh nghiệp này chưa nhận được đánh giá nào từ đối tác.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

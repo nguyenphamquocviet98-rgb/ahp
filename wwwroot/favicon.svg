@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Nền sáng bo góc -->
+  <rect width="512" height="512" rx="96" fill="#f0f0f0"/>
+
+  <!-- Logo nhà kho warehouse -->
+  <g transform="translate(48, 80)">
+    <!-- Phần thân nhà bên trái (fill xanh dương) -->
+    <path d="M20 330 L20 160 Q20 130 50 115 L210 30 L210 330 Z" fill="#50C8E8"/>
+
+    <!-- Mái nhà - đường viền xanh dương kéo sang phải -->
+    <path d="M50 115 L210 30 L400 110 L400 330" fill="none" stroke="#50C8E8" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+
+    <!-- Cửa nhà kho (hình chữ nhật đen, góc phải dưới) -->
+    <path d="M230 180 Q230 175 235 175 L370 175 Q375 175 375 180 L375 330 L230 330 Z" fill="#2D3436"/>
+  </g>
+</svg>

@@ -5,109 +5,111 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-8 col-md-10">
-        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-            <div class="d-flex align-items-center mb-3">
-                <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle me-3" title="Quay lại">
-                    <i class="bi bi-arrow-left"></i>
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0"><i class="bi bi-buildings text-primary me-1"></i> Thêm Nhà Cung Cấp Mới</h5>
+                <a asp-action="Index" class="btn btn-sm btn-custom btn-custom-outline">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
                 </a>
-                <h4 class="fw-bold text-dark mb-0">Thêm Nhà Cung Cấp Mới</h4>
             </div>
 
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
+            <div class="card-body-custom">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" class="form-custom">
+                    @Html.AntiForgeryToken()
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label asp-for="MaNhaCungCapCode" class="form-label fw-semibold d-flex justify-content-between align-items-center">
-                            <span>Mã NCC</span>
-                            <span class="badge bg-secondary-subtle text-secondary small fw-normal"><i class="bi bi-lock-fill me-1"></i>Tự động tăng</span>
-                        </label>
-                        <input asp-for="MaNhaCungCapCode" class="form-control rounded-3 font-monospace text-uppercase" readonly style="background-color: #f1f5f9; cursor: not-allowed;" title="Mã nhà cung cấp được hệ thống sinh tự động" />
-                        <span asp-validation-for="MaNhaCungCapCode" class="text-danger small"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="MaNhaCungCapCode" class="form-label d-flex justify-content-between align-items-center">
+                                <span>Mã NCC</span>
+                                <span class="status-badge status-badge-secondary fw-normal"><i class="bi bi-lock me-1"></i>Tự động</span>
+                            </label>
+                            <input asp-for="MaNhaCungCapCode" class="form-control font-mono text-uppercase" readonly style="background: var(--slate-100);" title="Mã nhà cung cấp được hệ thống sinh tự động" />
+                            <span asp-validation-for="MaNhaCungCapCode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="TenNhaCungCap" class="form-label">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                            <input asp-for="TenNhaCungCap" class="form-control" placeholder="Nhập tên công ty / nhà phân phối..." required maxlength="100" />
+                            <span asp-validation-for="TenNhaCungCap" class="text-danger small"></span>
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <label asp-for="TenNhaCungCap" class="form-label fw-semibold">Tên nhà cung cấp <span class="text-danger">*</span></label>
-                        <input asp-for="TenNhaCungCap" class="form-control rounded-3" placeholder="Nhập tên công ty / nhà phân phối..." required maxlength="100" />
-                        <span asp-validation-for="TenNhaCungCap" class="text-danger small"></span>
-                    </div>
-                </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label asp-for="NguoiLienHe" class="form-label fw-semibold">Người liên hệ</label>
-                        <input asp-for="NguoiLienHe" class="form-control rounded-3" placeholder="Họ và tên..." maxlength="50" />
-                        <span asp-validation-for="NguoiLienHe" class="text-danger small"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="NguoiLienHe" class="form-label">Người liên hệ</label>
+                            <input asp-for="NguoiLienHe" class="form-control" placeholder="Họ và tên..." maxlength="50" />
+                            <span asp-validation-for="NguoiLienHe" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="SoDienThoai" class="form-label">Số điện thoại</label>
+                            <input asp-for="SoDienThoai" class="form-control" placeholder="0901234567" maxlength="15" />
+                            <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="contact@domain.com" maxlength="50" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label asp-for="SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
-                        <input asp-for="SoDienThoai" class="form-control rounded-3" placeholder="0901234567" maxlength="15" />
-                        <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
-                        <input asp-for="Email" type="email" class="form-control rounded-3" placeholder="contact@domain.com" maxlength="50" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
-                </div>
 
-                <div class="mb-3">
-                    <label asp-for="DiaChi" class="form-label fw-semibold">Địa chỉ</label>
-                    <input asp-for="DiaChi" class="form-control rounded-3" placeholder="Địa chỉ trụ sở / kho hàng..." maxlength="150" />
-                    <span asp-validation-for="DiaChi" class="text-danger small"></span>
-                </div>
+                    <div class="mb-3">
+                        <label asp-for="DiaChi" class="form-label">Địa chỉ</label>
+                        <input asp-for="DiaChi" class="form-control" placeholder="Địa chỉ trụ sở / kho hàng..." maxlength="150" />
+                        <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                    </div>
 
-                <!-- Khu vực Upload Logo / Ảnh Nhà Cung Cấp -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Logo / Ảnh đại diện đối tác</label>
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-7">
-                            <div class="image-upload-wrapper" id="dropZoneNCC" onclick="document.getElementById('fileInputNCC').click()">
-                                <input type="file" id="fileInputNCC" name="hinhAnhUpload" accept="image/*" class="d-none" onchange="previewSupplierImage(this)" />
-                                <div class="image-upload-icon">
+                    <!-- Logo / Ảnh đại diện -->
+                    <div class="mb-3">
+                        <label class="form-label">Logo / Ảnh đại diện đối tác</label>
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-7">
+                                <div class="image-upload-wrapper" id="dropZoneNCC" onclick="document.getElementById('fileInputNCC').click()">
+                                    <input type="file" id="fileInputNCC" name="hinhAnhUpload" accept="image/*" class="d-none" onchange="previewSupplierImage(this)" />
+                                    <div class="image-upload-icon">
+                                        <i class="bi bi-building"></i>
+                                    </div>
+                                    <div class="fw-semibold" style="color: var(--slate-800);">Kéo thả logo vào đây hoặc nhấp để chọn</div>
+                                    <div class="text-muted small">Hỗ trợ JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text"><i class="bi bi-link-45deg"></i> Link</span>
+                                        <input asp-for="HinhAnh" id="urlInputNCC" class="form-control" placeholder="Hoặc dán URL logo nhà cung cấp..." oninput="previewSupplierUrl(this.value)" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 text-center">
+                                <div id="previewContainerNCC" class="d-none">
+                                    <div class="image-preview-card" style="max-width: 160px;">
+                                        <img id="imgPreviewNCC" src="" alt="Xem trước logo" style="height: 140px; object-fit: contain; padding: 8px;" />
+                                        <button type="button" class="btn-remove-preview" title="Xóa logo này" onclick="clearSupplierPreview()">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Logo xem trước</small>
+                                </div>
+                                <div id="emptyPreviewNCC" class="table-product-placeholder mx-auto" style="width: 110px; height: 110px; border-radius: 50%; font-size: 28px;">
                                     <i class="bi bi-building"></i>
                                 </div>
-                                <div class="fw-semibold text-dark mb-1">Kéo thả logo vào đây hoặc nhấp để chọn</div>
-                                <div class="text-muted small">Hỗ trợ JPG, PNG, WEBP, GIF (Tối đa 5MB)</div>
-                            </div>
-                            <div class="mt-2">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white"><i class="bi bi-link-45deg"></i> Link logo</span>
-                                    <input asp-for="HinhAnh" id="urlInputNCC" class="form-control" placeholder="Hoặc dán URL logo nhà cung cấp..." oninput="previewSupplierUrl(this.value)" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-5 text-center">
-                            <div id="previewContainerNCC" class="d-none">
-                                <div class="image-preview-card" style="max-width: 160px;">
-                                    <img id="imgPreviewNCC" src="" alt="Xem trước logo" style="height: 140px; object-fit: contain; padding: 8px;" />
-                                    <button type="button" class="btn-remove-preview" title="Xóa logo này" onclick="clearSupplierPreview()">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </div>
-                                <small class="text-muted d-block mt-1">Logo xem trước</small>
-                            </div>
-                            <div id="emptyPreviewNCC" class="table-product-placeholder mx-auto" style="width: 110px; height: 110px; border-radius: 50%; font-size: 28px;">
-                                <i class="bi bi-building"></i>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold d-block">Trạng thái hợp tác</label>
-                    <div class="form-check form-switch mt-2">
-                        <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
-                        <label class="form-check-label" for="chkTrangThai">Đang hợp tác</label>
+                    <div class="mb-4">
+                        <label class="form-label d-block">Trạng thái hợp tác</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="TrangThai" id="chkTrangThai" value="true" checked>
+                            <label class="form-check-label" for="chkTrangThai">Đang hợp tác</label>
+                        </div>
                     </div>
-                </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a asp-action="Index" class="btn btn-light rounded-3 px-4">Hủy</a>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">
-                        <i class="bi bi-check-lg me-1"></i> Lưu nhà cung cấp
-                    </button>
-                </div>
-            </form>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-custom btn-custom-outline">Hủy</a>
+                        <button type="submit" class="btn btn-custom btn-custom-primary">
+                            <i class="bi bi-check-lg me-1"></i> Lưu nhà cung cấp
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
